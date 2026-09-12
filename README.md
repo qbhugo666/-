@@ -1,109 +1,110 @@
-# 言出法随
+# YanChuFaSui (言出法随)
 
 <p align="center">
-  <b>系统级 · 全离线 · 零数据上传 · 中文原生</b><br>
-  安卓语音控制应用：说出指令，手机执行。
+  <b>System-level · Fully offline · Zero data upload · Chinese-native</b><br>
+  Voice control for Android — you speak, the phone obeys.
 </p>
+
+**Language / 语言**: English | [简体中文](README_zh-CN.md)
 
 ---
 
-## 一、项目解决什么问题
+## 1. The problem it solves
 
-SMA（脊髓性肌萎缩症）等肢体障碍用户无法触屏操作手机，而「打不了字」与「点不了屏幕」之间，隔着一整个数字生活。
+Users with motor disabilities such as SMA (spinal muscular atrophy) cannot operate a touchscreen — and the gap between "can't type" and "can't tap" cuts off the entire digital life.
 
-与此同时，国产安卓阵营几乎没有任何厂商投入系统级的语音控制；唯一跟进过的小米，其语音辅助也长期缺乏更新与维护，难以适配当前复杂的应用生态。
+Meanwhile, the Chinese Android ecosystem has almost no vendor investment in system-level voice control; the only major attempt (Xiaomi's) has long been unmaintained.
 
-**言出法随**用「无障碍服务 + 离线语音识别」把操作权交还给声音：无需联网、无需专用硬件、无需电脑常伴——一部普通安卓手机，说话即可完成滑动、点击、输入等几乎全部操作。
+**YanChuFaSui** returns control to the voice, built on the Accessibility service + an offline speech recognition engine: no internet required, no special hardware, no PC companion — an ordinary Android phone, operated entirely by speech.
 
-## 二、主要功能
+## 2. Features
 
-- **屏幕编号**：说「显示编号」，屏幕上可点击的元素标注数字，说「点击 18」即可精准点击
-- **屏幕网格**：全屏划分十二宫格，可逐级细化，说编号即可触达屏幕任意位置
-- **滑动与摇移**：「向上滑动」翻页浏览；「向上摇移」小步微调对准位置
-- **双指放大 / 缩小**：看图片、看网页的捏合手势
-- **语音输入**：说「输入」→ 说出内容 → 停顿后自动填入输入框（微信等聊天场景）
-- **文字编辑**：「删除」逐字回退、「光标左移 / 右移」、「把不错替换成很好」语音纠错
-- **自定义指令**：用自己的说法绑定任意动作（语音录入，零打字）
-- **个人词典**：人名、地名加入词典后优先识别（如「黄信豪」）
-- **设备控制**：音量调节（80% 安全上限）、静音、锁屏、通知中心、控制中心
-- **全离线识别**：内置 SenseVoice 离线中文识别引擎，无网络也能用
-- **安全设计**：会话制占用麦克风、看门狗自动退出、静音自动释放、误触发熔断、无障碍静默自愈
+- **Number overlay**: say "show numbers" and every tappable element gets labeled — say "tap 18" to tap it precisely
+- **Grid overlay**: full-screen 12-cell grid, drill down up to 5 levels to reach any pixel
+- **Swipe & precise nudge**: full-page scrolling, plus short precise adjustments
+- **Two-finger pinch zoom**: for photos and web pages
+- **Voice dictation**: say "输入" (input) → speak → pause → text lands in the focused input box (WeChat, etc.)
+- **Text editing**: delete character by character, move the cursor, or "把A替换成B" (replace A with B) by voice
+- **Custom commands**: bind your own phrase to any action — voice enrollment, zero typing
+- **Personal dictionary**: names and places recognized preferentially (e.g. 黄信豪)
+- **Device control**: volume (80% safety cap), mute, lock screen, notification shade, quick settings
+- **Fully offline**: SenseVoice on-device Chinese ASR — no internet, zero data upload
+- **Safety by design**: session-based microphone with watchdog auto-release, silence detection, misfire circuit breaker, and silent self-healing of the accessibility switch
 
 <p align="center">
-  <img src="docs/images/home.png" width="270" alt="主页" />
-  <img src="docs/images/settings.png" width="270" alt="设置" />
+  <img src="docs/images/home.png" width="270" alt="Home" />
+  <img src="docs/images/settings.png" width="270" alt="Settings" />
 </p>
 
-## 三、安装方法
+## 3. Installation
 
-### 普通用户
+### Users
 
-1. 前往 [Releases](../../releases) 页面，下载最新的 APK 文件
-2. 安装（需要允许安装未知来源应用）
-3. 首次启动后按引导依次完成：电池优化豁免 → 自启动授权 → 开启无障碍服务
-4. 建议在最近任务中锁定本应用，以保持后台长期运行
+1. Grab the latest APK from the [Releases](../../releases) page
+2. Install (allow installing from unknown sources)
+3. Follow the first-run guide: battery optimization exemption → autostart permission → enable the Accessibility service
+4. Recommended: lock the app in Recents so system cleanup never kills it
 
-要求：Android 7.0 及以上。
+Requires Android 7.0+.
 
-### 开发者构建
+### Building from source
 
 ```bash
-# 1. 克隆本仓库
+# 1. Clone
 git clone https://github.com/qb200310-hash/YanChuFaSui.git
 
-# 2. 下载识别模型（约 240MB，不入仓库）
+# 2. Download the recognition models (~240MB, kept out of the repo)
 powershell -ExecutionPolicy Bypass -File scripts/download_models.ps1
 
-# 3. 用 Android Studio 打开，或命令行构建
-./gradlew assembleDebug
+# 3. Open in Android Studio, or build from the CLI
+gradlew assembleDebug
 ```
 
-## 四、使用方法
+## 4. Usage
 
-打开应用 → 点「开始控制」→ 胶囊变蓝表示正在聆听 → 说出指令 → 手机执行。说「退出」随时结束会话并归还麦克风。
+Open the app → tap "开始控制" (start control) → the capsule turns blue and listens → speak a command → the phone executes it. Say 「退出」 (exit) at any time to end the session and release the microphone.
 
-常用指令速查：
+Command quick reference (the app understands Mandarin; commands are listed in Chinese with meanings):
 
-| 类别 | 指令 |
+| Category | Commands |
 |---|---|
-| 浏览 | 向上滑动 / 向下滑动 / 向左滑动 / 向右滑动 |
-| 定位 | 显示编号 → 点击 18 ｜ 显示网格 → 点击 5 |
-| 操作 | 轻点 ｜ 双击 ｜ 长按 → 3 ｜ 长按抖音 |
-| 导航 | 返回 ｜ 前往主屏幕 ｜ 打开 App 切换器 |
-| 微调 | 向上摇移 / 向左摇移 ｜ 双指放大 / 双指缩小 |
-| 文字 | 输入 → 说出内容 ｜ 删除 ｜ 光标左移 / 右移 ｜ 把 A 替换成 B |
-| 个性化 | 自定义指令（设置页）｜ 个人词典（设置页）|
-| 设备 | 增加音量 / 降低音量 / 静音 ｜ 锁屏 ｜ 通知中心 / 控制中心 |
-| 结束 | 退出 |
+| Browse | 向上滑动 / 向下滑动 / 向左滑动 / 向右滑动 (swipe up / down / left / right) |
+| Target | 显示编号 (show numbers) → 点击 18 (tap 18) ｜ 显示网格 (show grid) → 点击 5 (tap cell 5) |
+| Act | 轻点 (tap) ｜ 双击 (double-tap) ｜ 长按 → 3 (long-press, then 3) ｜ 长按抖音 (long-press "Douyin") |
+| Navigate | 返回 (back) ｜ 前往主屏幕 (home) ｜ 打开 App 切换器 (recents) |
+| Fine-tune | 向上摇移 / 向左摇移 (precise nudge) ｜ 双指放大 / 双指缩小 (pinch zoom) |
+| Text | 输入 → 说出内容 (dictate) ｜ 删除 (delete char) ｜ 光标左移 / 右移 (cursor) ｜ 把 A 替换成 B (replace A with B) |
+| Devices | 增加音量 / 降低音量 / 静音 (volume, 80% cap) ｜ 锁屏 (lock screen) ｜ 通知中心 / 控制中心 |
+| End | 退出 (exit session) |
 
-设置页可调：识别灵敏度（适配轻声与含糊语音）、自定义指令、个人词典、深色模式、震动反馈。
+The settings page offers: recognition sensitivity (tune for soft or slurred speech), custom commands, personal dictionary, dark mode, and haptic feedback.
 
-## 五、输入输出示例
+## 5. Input / output examples
 
-| 你说 | 手机做什么 |
+| You say | The phone does |
 |---|---|
-| 「显示编号」 | 屏幕上可点击的元素全部标注数字 |
-| 「点击 18」 | 点击编号 18 对应的元素 |
-| 「向上滑动」 | 屏幕内容向上滚动一页 |
-| 「输入」→「今天天气不错」 | 输入框出现文字「今天天气不错」 |
-| 「把不错替换成很好」 | 输入框中的「不错」被替换为「很好」 |
-| 「增加音量」 | 媒体音量加一格（80% 封顶，防误触失控） |
-| 「退出」 | 结束会话，麦克风归还系统 |
+| 「显示编号」 | Every tappable element is labeled with a number |
+| 「点击 18」 | Taps the element labeled 18 |
+| 「向上滑动」 | The content scrolls up one page |
+| 「输入」→「今天天气不错」 | The text lands in the focused input box |
+| 「把不错替换成很好」 | "不错" in the input box is replaced with "很好" |
+| 「增加音量」 | Media volume +1 step (hard-capped at 80%) |
+| 「退出」 | The session ends and the microphone returns to the system |
 
-## 隐私承诺
+## Privacy
 
-全离线识别，语音数据不出手机；无障碍服务读取的屏幕内容仅在本机用于指令解析；应用不收集、不上传、不存储任何个人数据。
+Recognition is fully offline — speech never leaves the phone. Screen content read by the Accessibility service is used on-device for command parsing only. The app collects, uploads, and stores no personal data.
 
-## 支持与联系
+## Support & Contact
 
-- 应用名「言出法随」与品牌归属：**黄信豪 (Hugo)**
-- 支持作者：[爱发电 · afdian.com/a/hugoqb](https://afdian.com/a/hugoqb)
+- The app name 「言出法随」 and its brand belong to **黄信豪 (Hugo)**
+- Support the author: [Afdian · afdian.com/a/hugoqb](https://afdian.com/a/hugoqb)
 
 ## License
 
 [Apache-2.0](LICENSE) © 2026 黄信豪 (Hugo)
 
-## 致谢
+## Acknowledgements
 
-- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 与 [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) —— 离线中文语音识别引擎
-- [pinyin4j](https://github.com/belerweb/pinyin4j) —— 拼音转换
+- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) & [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) — offline Chinese ASR engine
+- [pinyin4j](https://github.com/belerweb/pinyin4j) — pinyin conversion

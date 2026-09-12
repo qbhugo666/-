@@ -49,7 +49,7 @@ SMA（脊髓性肌萎缩症）等肢体障碍用户无法触屏操作手机，�
 
 ```bash
 # 1. 克隆本仓库
-git clone https://github.com/hugoqb/yanchufasui.git
+git clone https://github.com/qb200310-hash/-.git
 
 # 2. 下载识别模型（约 240MB，不入仓库）
 powershell -ExecutionPolicy Bypass -File scripts/download_models.ps1

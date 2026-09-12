@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态卡：失败（红色叹号圆） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,2 a10,10 0 1 0 0.001,0 z"
+        android:fillColor="#FF3B30" />
+    <path
+        android:pathData="M12,7 V13.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:fillColor="@null" />
+    <path
+        android:pathData="M12,16.4 V16.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:fillColor="@null" />
+</vector>

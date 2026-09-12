@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 设置行图标：蓝色圆角方块 + 白色问号（指令说明行）
+     v0.28：tile 路径与 ic_row_stop/ic_row_coffee 完全一致（统一 22% 圆角） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="29dp"
+    android:height="29dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5.2,1 h13.6 a5.2,5.2 0 0 1 5.2,5.2 v13.6 a5.2,5.2 0 0 1 -5.2,5.2 h-13.6 a5.2,5.2 0 0 1 -5.2,-5.2 v-13.6 a5.2,5.2 0 0 1 5.2,-5.2 z"
+        android:fillColor="#0A84FF" />
+    <path
+        android:pathData="M12,5.8 c-2.25,0 -3.9,1.5 -3.9,3.55 h2.15 c0,-0.92 0.7,-1.62 1.75,-1.62 c1.05,0 1.75,0.7 1.75,1.62 c0,1.02 -0.82,1.5 -1.85,2.15 c-0.6,0.35 -0.92,0.8 -0.92,1.72 h2.15 c0,-0.6 0.12,-0.8 0.7,-1.12 c1.12,-0.7 2.05,-1.5 2.05,-2.85 c0,-2.05 -1.62,-3.45 -3.88,-3.45 z M10.85,15.8 h2.3 v2.3 h-2.3 z"
+        android:fillColor="#FFFFFF" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 列表卡片：18dp 圆角，浅色白 / 深色 @color/card_bg -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/card_bg" />
+    <corners android:radius="18dp" />
+</shape>

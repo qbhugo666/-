@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 使用记录入口：时钟线条图标（设计稿风格） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,4 a8,8 0 1 0 0.001,0 z"
+        android:strokeColor="#0A84FF"
+        android:strokeWidth="1.8"
+        android:fillColor="@null" />
+    <path
+        android:pathData="M12,8 V12 L15,14"
+        android:strokeColor="#0A84FF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@null" />
+</vector>

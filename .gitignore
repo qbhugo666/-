@@ -1,0 +1,44 @@
+# 构建产物
+.gradle/
+app/build/
+build/
+cxx/
+
+# 本机配置
+local.properties
+
+# 正式签名密钥与密码（绝对不能入库；本机保留 + 务必备份，丢失将无法覆盖安装升级）
+keystore/
+keystore.properties
+
+# 归档与临时产物（发布 APK 走 releases/ 目录，不入库）
+releases/
+_test/matrix/
+*.apk
+*.log
+__pycache__/
+
+# 2026-09-13 GitHub 上架排雷：以下内容永不进版本库
+# ——调试与测试产物（含手机 UI 私人截图：微信聊天/联系人/银行 App 等）
+_test/
+# ——识别模型大文件（单文件最大 237MB 超 GitHub 100MB 限；构建经 scripts/download_models.ps1 下载）
+_models/
+*.onnx
+# ——临时 AAR 提取物与签名库扩展名双保险
+_aar_extract/
+.tmp_aar/
+*.jks
+reports/
+# ——根目录历史调试截图（闲鱼/设置页等个人界面）
+/_debug_before.png
+/_debug_after.png
+/_sa.png
+/_sb.png
+/_seta.png
+/_setb.png
+/_vc_screen.png
+
+# IDE
+.idea/
+*.iml
+captures/

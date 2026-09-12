@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 主按钮胶囊：系统蓝 #0A84FF，按下加深（26dp 圆角=高度一半） -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#0066CC" />
+            <corners android:radius="26dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#0A84FF" />
+            <corners android:radius="26dp" />
+        </shape>
+    </item>
+</selector>

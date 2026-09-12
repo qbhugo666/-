@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 录音权限：会话期间占用麦克风做语音识别 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 前台服务权限 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14+ 要求：前台服务使用麦克风需单独声明 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- 请求忽略电池优化：无障碍服务长期存活的系统级前提（MIUI 省电策略会杀进程→无障碍被解绑）。
+         国内市场无 Play 政策限制，这是国内保活的标准做法（一次授权、永久生效） -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 安全设置写入权：设置界面无法授予，只能由电脑 adb 一次性授权（pm grant）。
+         授权后 App 可在无障碍开关被系统撤销时静默自愈（写回开关），用户无需手动重开。
+         未授权时一切功能照常，仅退回「弹窗引导手动开启」的旧路径 -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- 震动反馈（设置页开关，默认关） -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- 包可见性（Android 11+）：自愈兜底需检测系统「随选朗读」是否安装
+         （微信无障碍白名单依赖其在场，见 AccessibilityHelper.SELECT_TO_SPEAK） -->
+    <queries>
+        <package android:name="com.google.android.marvin.talkback" />
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity android:name=".UsageActivity" android:exported="false" />
+        <activity android:name=".AboutActivity" android:exported="false" />
+        <activity android:name=".BindingActivity" android:exported="false" />
+        <activity android:name=".VocabActivity" android:exported="false" />
+
+        <!-- 前台服务：会话期间占麦 + 离线语音识别 -->
+        <!-- exported=true 仅开发期：允许 adb 注入 SIMULATE 命令做真机自动化验证（商用前改回 false 并移除 SIMULATE） -->
+        <service
+            android:name=".VoiceService"
+            android:exported="true"
+            android:foregroundServiceType="microphone" />
+
+        <!-- 无障碍服务：后续用于执行滑动/点按等操作（本版暂未接入） -->
+        <service
+            android:name=".VoiceControlService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+    </application>
+</manifest>

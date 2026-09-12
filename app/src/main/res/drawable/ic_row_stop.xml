@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 设置行图标：石墨圆角方块 + 白色电源符号（退出会话行，v0.27.4 从红色改为石墨——
+     红色是「警报色」，与整体安静优雅的基调冲突；石墨=沉稳的「结束」语义） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="29dp"
+    android:height="29dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5.2,1 h13.6 a5.2,5.2 0 0 1 5.2,5.2 v13.6 a5.2,5.2 0 0 1 -5.2,5.2 h-13.6 a5.2,5.2 0 0 1 -5.2,-5.2 v-13.6 a5.2,5.2 0 0 1 5.2,-5.2 z"
+        android:fillColor="#5B5F66" />
+    <path
+        android:pathData="M12,4.6 V10.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.3"
+        android:strokeLineCap="round"
+        android:fillColor="@null" />
+    <path
+        android:pathData="M7.1,7.6 a6.4,6.4 0 1 0 9.8,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.3"
+        android:strokeLineCap="round"
+        android:fillColor="@null" />
+</vector>

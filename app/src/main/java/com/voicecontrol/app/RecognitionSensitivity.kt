@@ -1,0 +1,49 @@
+package com.voicecontrol.app
+
+import android.content.Context
+
+/**
+ * 识别灵敏度（v0.38.0，用户为声音小/口齿不清的病友提出）：
+ * 滑块 1~10 格，默认 5 = 作者日常基准（恰好等于历史常量：增益 1.0×、VAD 门槛 0.6），默认零行为变化。
+ *
+ * 双旋钮联动（用户拍板）：
+ *  - 软件增益：识别循环里把麦克风采样按倍数放大再喂 VAD/识别引擎（安卓无公开麦克风硬件增益 API，
+ *    数字放大是"功率更强"的等价实现）；小声话被放大，识别器"听得清"。
+ *  - VAD 说话门槛：Silero 概率阈值，越低越小的声音也算"在说话"，极小声才开得了闸。
+ *    只放大不降门槛，极小声开不了闸；只降门槛不放大，听到了也认不准——所以两旋钮必须联动。
+ *
+ * 风险边界：滑块只是一个开会话时读一次的浮点数，零结构变化、无崩溃面；
+ * 高灵敏度的最坏情况是误识别变多，由既有三道保险兜底——媒体音量 80% 硬帽 / 同命令 1.5s 冷却 /
+ * 8s≥6 次熔断（均为抖音外放事故定过的铁闸）。
+ */
+object RecognitionSensitivity {
+    const val MIN_LEVEL = 1
+    const val MAX_LEVEL = 10
+    const val DEFAULT_LEVEL = 5
+    private const val PREF_KEY = "sensitivity_level"
+
+    fun level(context: Context): Int =
+        context.getSharedPreferences("app", Context.MODE_PRIVATE)
+            .getInt(PREF_KEY, DEFAULT_LEVEL).coerceIn(MIN_LEVEL, MAX_LEVEL)
+
+    fun save(context: Context, level: Int) {
+        context.getSharedPreferences("app", Context.MODE_PRIVATE)
+            .edit().putInt(PREF_KEY, level.coerceIn(MIN_LEVEL, MAX_LEVEL)).apply()
+    }
+
+    /**
+     * 软件增益（倍数）：两段居中线性格式，格 5 恰好 1.0×。
+     * 格 1=0.5×（嘈杂环境防误触），格 10=2.25×（小声说话放大）。
+     * 调整映射时必须保持格 5 = 1.0×、格 5 阈值 = 0.60f（历史基准，默认零变化）。
+     */
+    fun gain(level: Int): Float = when {
+        level <= 5 -> 0.5f + (level - 1) * 0.125f   // 1→0.50 … 5→1.00
+        else -> 1.0f + (level - 5) * 0.25f          // 5→1.00 … 10→2.25
+    }
+
+    /** VAD 说话门槛（Silero 概率阈值）：格 5 恰好 0.60（历史值）。格 1=0.80（更严），格 10=0.42（更灵） */
+    fun vadThreshold(level: Int): Float = when {
+        level <= 5 -> 0.6f + (5 - level) * 0.05f    // 1→0.80 … 5→0.60
+        else -> 0.6f - (level - 5) * 0.036f         // 5→0.60 … 10→0.42
+    }
+}

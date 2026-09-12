@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 深色模式（黑夜模式）：AMOLED 纯黑底 + 深灰卡 + 蓝调英雄卡
+     图形/文字对比度对齐浅色版层级；品牌蓝与状态色昼夜共用 -->
+<resources>
+    <color name="page_bg">#0B0B0B</color>
+    <color name="card_bg">#161618</color>
+    <color name="hero_bg">#12203A</color>
+    <color name="btn_gray">#2C2C2E</color>
+    <color name="btn_gray_pressed">#3A3A3C</color>
+    <color name="btn_gray_text">#E5E5E5</color>
+    <color name="text_primary">#F2F2F2</color>
+    <color name="text_secondary">#98989E</color>
+    <color name="text_hint">#5A5A5E</color>
+    <color name="text_body">#D1D1D3</color>
+    <color name="text_footer">#5A5A5E</color>
+    <color name="divider">#2C2C2E</color>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 蓝色胶囊按钮（开始会话）：按压加深 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#0066CC" />
+            <corners android:radius="29dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#0A84FF" />
+            <corners android:radius="29dp" />
+        </shape>
+    </item>
+</selector>

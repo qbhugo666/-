@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态圆点（主页状态卡）：默认绿色=就绪，代码按会话状态切换颜色 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#34C759" />
+    <corners android:radius="5dp" />
+    <size android:width="10dp" android:height="10dp" />
+</shape>

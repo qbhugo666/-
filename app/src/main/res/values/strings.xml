@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">言出法随</string>
+    <string name="session_starting">正在加载语音模型…</string>
+    <string name="btn_start_session">开始会话</string>
+    <string name="btn_stop_session">退出会话</string>
+    <string name="btn_help">指令说明</string>
+    <string name="coffee_title">请作者喝杯咖啡</string>
+    <string name="btn_done">完成</string>
+    <string name="accessibility_service_label">言出法随</string>
+    <string name="accessibility_service_description">用语音控制手机：滑动、点按、返回等操作。专为行动不便人士设计。</string>
+</resources>

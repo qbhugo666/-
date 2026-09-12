@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知小图标：纯白 alpha 图形（几何=像素级拟合值，跨度16映射到24画布） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M7.6,8.34 a3.66,3.66 0 1 0 0,7.32 a3.66,3.66 0 1 0 0,-7.32 z" />
+    <path
+        android:pathData="M13.3,7.2 L18,12 L13.3,16.8"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.05"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@null" />
+</vector>

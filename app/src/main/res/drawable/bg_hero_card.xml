@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 英雄卡背景：浅色 #E8F0FE / 深色 @color/hero_bg，24dp 圆角 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/hero_bg" />
+    <corners android:radius="24dp" />
+</shape>

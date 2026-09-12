@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 指令入口：书本线条图标（设计稿风格，细线圆角） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,6.5 C10.5,5 8,4.5 5,4.8 C4.4,4.86 4,5.36 4,5.96 V17.4 C4,18 4.44,18.44 5.04,18.38 C7.6,18.14 10,18.5 12,20 C14,18.5 16.4,18.14 18.96,18.38 C19.56,18.44 20,18 20,17.4 V5.96 C20,5.36 19.56,4.86 18.96,4.8 C16,4.5 13.5,5 12,6.5 Z M12,6.5 V20"
+        android:strokeColor="#0A84FF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@null" />
+</vector>

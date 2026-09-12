@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 列表行右侧箭头 ›（标准灰 #C7C7CC，2.5pt 描边） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="8dp"
+    android:height="14dp"
+    android:viewportWidth="8"
+    android:viewportHeight="14">
+    <path
+        android:pathData="M1,1 L7,7 L1,13"
+        android:strokeColor="#C7C7CC"
+        android:strokeWidth="2.5"
+        android:fillColor="@null" />
+</vector>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应启动图标前景（v0.32.2 起）：设计规范图原样抠取的白色图形位图，
+     40dp 宽 ≈ 可见遮罩 72dp 的 56%，与规范深色方块实测比例 0.567 一致 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="40dp"
+        android:height="34dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_logo_glyph_white" />
+</layer-list>

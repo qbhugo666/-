@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "name": "言出法随 · 命令词表",
+    "version": 7,
+    "language": "zh-CN",
+    "note": "只保留已实现的命令，保证「能说的 = 能做的」。v7 新增文字输入组（听写触发为特殊拦截不入词表：输入/听写）。"
+  },
+  "groups": [
+    {
+      "id": "basic_navigation",
+      "name": "基本浏览",
+      "commands": [
+        { "id": "swipe_up",    "command": "向上轻扫",     "aliases": ["向上滑动", "上滑", "往上滑", "向上滚动", "往上滚", "上滚"], "action": "swipe_up" },
+        { "id": "swipe_down",  "command": "向下轻扫",     "aliases": ["向下滑动", "下滑", "往下滑", "向下滚动", "往下滚", "下滚"], "action": "swipe_down" },
+        { "id": "swipe_left",  "command": "向左轻扫",     "aliases": ["向左滑动", "左滑", "往左滑", "向左滚动", "往左滚"], "action": "swipe_left" },
+        { "id": "swipe_right", "command": "向右轻扫",     "aliases": ["向右滑动", "右滑", "往右滑", "向右滚动", "往右滚"], "action": "swipe_right" },
+        { "id": "go_back",     "command": "返回",         "aliases": ["后退", "上一页", "返回上一页"], "action": "go_back" },
+        { "id": "go_home",     "command": "前往主屏幕",   "aliases": ["回主屏幕", "回桌面", "回主页", "主页", "回首页", "桌面"], "action": "go_home" },
+        { "id": "open_recents","command": "打开 App 切换器", "aliases": ["最近任务", "后台任务", "后台", "最近应用"], "action": "open_recents" },
+        { "id": "tap",         "command": "轻点",         "aliases": ["点一下"], "action": "tap" },
+        { "id": "double_tap",  "command": "双击",         "aliases": ["轻点两下", "点两下"], "action": "double_tap" },
+        { "id": "long_press",  "command": "长按",         "aliases": ["按住", "按住不动"], "action": "long_press" }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "name": "辅助功能",
+      "commands": [
+        { "id": "exit_session", "command": "退出",         "aliases": ["退出会话", "停止", "结束会话", "关闭", "结束"], "action": "exit_session" },
+        { "id": "show_labels",  "command": "显示编号",     "aliases": ["显示数字", "编号", "显示标签"], "action": "show_labels" },
+        { "id": "show_grid",    "command": "显示网格",     "aliases": ["网格", "显示格子", "格子"], "action": "show_grid" },
+        { "id": "hide_grid",    "command": "退出网格",     "aliases": ["取消网格", "关闭网格"], "action": "hide_grid" },
+        { "id": "grid_back",    "command": "退回",         "aliases": ["回退", "取消缩放"], "action": "grid_back" },
+        { "id": "hide_overlays","command": "隐藏显示",     "aliases": ["隐藏", "关闭显示", "清除", "取消显示"], "action": "hide_overlays" }
+      ]
+    },
+    {
+      "id": "precise_scroll",
+      "name": "精准摇移",
+      "commands": [
+        { "id": "nudge_up",    "command": "向上摇移", "aliases": ["上摇", "往上摇移", "摇上去"], "action": "nudge_up" },
+        { "id": "nudge_down",  "command": "向下摇移", "aliases": ["下摇", "往下摇移", "摇下去"], "action": "nudge_down" },
+        { "id": "nudge_left",  "command": "向左摇移", "aliases": ["左摇", "往左摇移"], "action": "nudge_left" },
+        { "id": "nudge_right", "command": "向右摇移", "aliases": ["右摇", "往右摇移"], "action": "nudge_right" }
+      ]
+    },
+    {
+      "id": "device_control",
+      "name": "设备控制",
+      "commands": [
+        { "id": "volume_up",    "command": "增加音量",     "aliases": ["调大音量", "加大音量", "提高音量", "音量大点", "大声点"], "action": "volume_up" },
+        { "id": "volume_down",  "command": "降低音量",     "aliases": ["调小音量", "减小音量", "调低音量", "音量小点", "小声点"], "action": "volume_down" },
+        { "id": "volume_mute",  "command": "静音",         "aliases": ["声音关掉", "全部静音"], "action": "volume_mute" },
+        { "id": "lock_screen",  "command": "锁屏",         "aliases": ["熄屏", "锁上手机"], "action": "lock_screen" },
+        { "id": "show_notifications", "command": "通知中心", "aliases": ["通知栏", "下拉通知"], "action": "show_notifications" },
+        { "id": "show_quick_settings", "command": "控制中心", "aliases": ["快捷中心", "快捷开关", "下拉控制"], "action": "show_quick_settings" }
+      ]
+    },
+    {
+      "id": "pinch_zoom",
+      "name": "双指缩放",
+      "commands": [
+        { "id": "zoom_in",  "command": "双指放大", "aliases": ["放大", "图片放大", "捏合放大", "放大图片"], "action": "zoom_in" },
+        { "id": "zoom_out", "command": "双指缩小", "aliases": ["缩小", "图片缩小", "捏合缩小", "缩小图片"], "action": "zoom_out" }
+      ]
+    },
+    {
+      "id": "text_edit",
+      "name": "文字输入",
+      "commands": [
+        { "id": "text_cursor_left",  "command": "光标左移", "aliases": ["光标向左", "左移光标"], "action": "text_cursor_left" },
+        { "id": "text_cursor_right", "command": "光标右移", "aliases": ["光标向右", "右移光标"], "action": "text_cursor_right" },
+        { "id": "text_delete",       "command": "删除",     "aliases": ["删掉", "删一个字", "退格"], "action": "text_delete" },
+        { "id": "text_clear",        "command": "清空输入", "aliases": ["清空输入框", "清空"], "action": "text_clear" }
+      ]
+    }
+  ]
+}

@@ -121,6 +121,11 @@ object AccessibilityHelper {
             )
             Settings.Secure.putInt(context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
             Log.i("AccessibilityHelper", "无障碍开关已修复（双组件）: ${parts.joinToString(":")}")
+            // ③ 悬浮图标不指派（v0.46.0）：快捷方式图标对听写/编号无用且碍事——清空指派，
+            //    服务已启用不受影响（2026-09-13 真机实测：图标消失、微信编号照常）
+            Settings.Secure.putString(
+                context.contentResolver, "accessibility_button_targets", ""
+            )
             true
         }.getOrDefault(false)
     }

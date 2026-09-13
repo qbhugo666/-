@@ -84,50 +84,6 @@ class SettingsActivity : ThemedActivity() {
             startActivity(Intent(this, VocabActivity::class.java))
         }
 
-        // 微信支持（v0.45.0）：引导开启系统「随选朗读」——微信编号/点击/听写的白名单钥匙
-        val stsState = findViewById<TextView>(R.id.tv_sts_state)
-        fun refreshSts() {
-            val on = stsEnabled()
-            stsState.text = if (on) "已就绪" else "未开启 · 点击前往"
-            stsState.setTextColor(if (on) 0xFF34C759.toInt() else 0xFFFF9500.toInt())
-        }
-        refreshSts()
-        findViewById<android.view.View>(R.id.row_sts_support).setOnClickListener {
-            if (stsEnabled()) {
-                Toast.makeText(this, "已就绪：微信里编号、点击、听写均可使用", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            AlertDialog.Builder(this)
-                .setTitle("开启微信支持")
-                .setMessage(
-                    "在微信里使用编号、点击和听写，需要开启系统自带的「随选朗读」。\n\n" +
-                    "点「一键前往」后，把页面顶部的开关打开，再返回即可（一次性设置）。"
-                )
-                .setPositiveButton("一键前往") { _, _ ->
-                    val sts = android.content.ComponentName(
-                        "com.google.android.marvin.talkback",
-                        "com.google.android.accessibility.selecttospeak.SelectToSpeakService"
-                    )
-                    val opened = runCatching {
-                        val deep = Intent().apply {
-                            setClassName(
-                                "com.android.settings",
-                                "com.android.settings.accessibility.Settings\$AccessibilityDetailsActivity"
-                            )
-                            putExtra(Intent.EXTRA_COMPONENT_NAME, sts)
-                        }
-                        startActivity(deep)
-                        true
-                    }.getOrDefault(false)
-                    if (!opened) {
-                        runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-                        Toast.makeText(this, "请在列表中找到「随选朗读」并开启", Toast.LENGTH_LONG).show()
-                    }
-                }
-                .setNegativeButton("暂不", null)
-                .show()
-        }
-
         // 无障碍服务：状态展示 + 点击跳系统设置
         val state = findViewById<TextView>(R.id.tv_a11y_state)
         fun refreshA11y() {
@@ -170,11 +126,6 @@ class SettingsActivity : ThemedActivity() {
         val on = AccessibilityHelper.isServiceEnabled(this)
         state.text = if (on) "已开启" else "未开启"
         state.setTextColor(if (on) 0xFF34C759.toInt() else 0xFFFF3B30.toInt())
-        // 微信支持状态同步刷新（v0.45.0）
-        val sts = findViewById<TextView>(R.id.tv_sts_state)
-        val stsOn = stsEnabled()
-        sts.text = if (stsOn) "已就绪" else "未开启 · 点击前往"
-        sts.setTextColor(if (stsOn) 0xFF34C759.toInt() else 0xFFFF9500.toInt())
     }
 
     /** iOS 卡片式深色模式选择弹窗：居中标题 + 三行单选（右侧蓝圆勾）+ 完成胶囊；选中即生效 */

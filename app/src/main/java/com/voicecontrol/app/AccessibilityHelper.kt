@@ -64,32 +64,8 @@ object AccessibilityHelper {
             return false
         }
         if (isServiceEnabled(context)) return true // 本来就开着，无需修
-        return runCatching {
-            val expected = ComponentName(context, VoiceControlService::class.java)
-            // 写完整组件名（与 adb 验证过的写法一致）；只追加自己，不动用户的其他无障碍服务
-            val current = Settings.Secure.getString(
-                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            ) ?: ""
-            val mine = expected.flattenToString()
-            val others = current.split(':')
-                .filter { it.isNotBlank() && !it.equals(mine, ignoreCase = true) }
-            val merged = when {
-                others.isNotEmpty() -> (others + mine).joinToString(":")
-                // 2026-09-12 实测 HyperOS 撤开关是「外科手术式」只删本服务、其他服务保留，
-                // 正常走上面分支即可；但若整串被清空（极端情况），只恢复自己会静默弄丢微信编号
-                // （微信白名单依赖系统随选朗读在场，见 FEATURES/HANDOFF）——此时把它一起带上
-                isSelectToSpeakInstalled(context) -> "$mine:$SELECT_TO_SPEAK"
-                else -> mine
-            }
-            Settings.Secure.putString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                merged
-            )
-            Settings.Secure.putInt(context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
-            Log.i("AccessibilityHelper", "自愈：无障碍开关已写回，等待系统重绑")
-            true
-        }.getOrDefault(false)
+        // v0.44.0 起统一走「保活双组件」路径：本服务 + 随选朗读（微信白名单钥匙）一起确保在场
+        return ensureWeChatCompat(context)
     }
 
     /** 系统「随选朗读」完整组件名——微信无障碍白名单兼容所需（2026-09-12 实测定论，勿删） */
@@ -100,4 +76,62 @@ object AccessibilityHelper {
         context.packageManager.getPackageInfo("com.google.android.marvin.talkback", 0)
         true
     }.getOrDefault(false)
+
+    /**
+     * 微信编号兼容（v0.44.0，默认强制保活，零用户决策）：确保系统「随选朗读」与我们的服务同时在场——
+     * 微信 8.0.52+ 只把界面树交给「场上有可信读屏服务」的设备（2026-09-12 对照实测定论）。
+     * 每次 VoiceService 启动时调用：若随选朗读未启用且我们持有 WRITE_SECURE_SETTINGS，
+     * 自动并入无障碍开关（幂等，不删他人服务）——HyperOS 清后台/撤开关后下次启动自动带回来。
+     *
+     * 边界（GUARDRAILS A4 三问）：触发=每次服务启动；最坏=多开一个系统自带无障碍服务
+     * （实测零可见副作用，可随时在系统设置手动关闭，但下次会话会自动恢复——设计意图）；
+     * 叫停=关闭言出法随的无障碍服务或卸载。
+     * 返回 true = 随选朗读已在场（原本就开或本次已并入）。
+     */
+    fun ensureWeChatCompat(context: Context): Boolean {
+        if (context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.w("AccessibilityHelper", "微信兼容跳过：未授权 WRITE_SECURE_SETTINGS")
+            return false
+        }
+        val current = Settings.Secure.getString(
+            context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: ""
+        val parts = current.split(':').filter { it.isNotBlank() }.toMutableList()
+        val mine = ComponentName(context, VoiceControlService::class.java).flattenToString()
+        var changed = false
+        // ① 本服务必须在场（自愈核心：被系统/清后台撤销时写回）
+        if (parts.none { it.equals(mine, ignoreCase = true) }) {
+            parts.add(mine)
+            changed = true
+        }
+        // ② 随选朗读在场（微信白名单钥匙；已安装才带——无谷歌套件的品牌走各自读屏适配）
+        if (isSelectToSpeakInstalled(context) &&
+            parts.none { it.equals(SELECT_TO_SPEAK, ignoreCase = true) }
+        ) {
+            parts.add(SELECT_TO_SPEAK)
+            changed = true
+        }
+        if (!changed) return true
+        return runCatching {
+            Settings.Secure.putString(
+                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                parts.joinToString(":")
+            )
+            Settings.Secure.putInt(context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
+            Log.i("AccessibilityHelper", "无障碍开关已修复（双组件）: ${parts.joinToString(":")}")
+            true
+        }.getOrDefault(false)
+    }
+
+    /** 无障碍状态一行（导出反馈诊断用） */
+    fun statusLine(context: Context): String {
+        val enabled = Settings.Secure.getString(
+            context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: "(空)"
+        val bound = isServiceEnabled(context)
+        val sts = enabled.contains("SelectToSpeakService", ignoreCase = true)
+        return "已启用=[$enabled]；本服务绑定=$bound；随选朗读在场=$sts"
+    }
 }

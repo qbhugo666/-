@@ -70,6 +70,9 @@ class UsageActivity : ThemedActivity() {
         // 内存画像（v0.43.0）：低配机诊断一线信息
         runCatching { sb.appendLine("内存：${CrashCatcher.memoryLine(this)}") }
         sb.appendLine()
+        // 无障碍状态（v0.44.0）：远程诊断微信编号问题的一线信息
+        runCatching { sb.appendLine("无障碍：${AccessibilityHelper.statusLine(this)}") }
+        sb.appendLine()
         sb.appendLine("---- 崩溃记录 ----")
         val crashes = CrashCatcher.dumpAll(this)
         sb.appendLine(crashes ?: "（无崩溃记录）")

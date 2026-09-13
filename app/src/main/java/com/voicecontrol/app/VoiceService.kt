@@ -320,6 +320,8 @@ class VoiceService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         UsageLog.init(applicationContext)   // 幂等：加载使用记录
         CrashCatcher.register(applicationContext)   // v0.43.0：崩溃记录器（幂等）
+        // v0.44.0 微信编号兼容：确保系统「随选朗读」与我们同场（幂等；无授权/未安装时静默跳过）
+        runCatching { AccessibilityHelper.ensureWeChatCompat(applicationContext) }
         if (intent?.action == ACTION_STOP) {
             releaseAndStop("用户退出")
             return START_NOT_STICKY

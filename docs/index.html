@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>言出法随 · YanChuFaSui — 安卓全离线语音控制</title>
+<meta name="description" content="言出法随（YanChuFaSui）：系统级 · 全离线 · 零数据上传 · 中文原生的安卓语音控制。说出指令，手机执行。">
+<style>
+  :root{
+    --blue:#0A84FF; --bg:#121214; --bg2:#1a1a1e; --card:#1e1e22;
+    --text:#f5f5f7; --muted:#a1a1aa; --border:#2a2a30; --green:#30d158;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.7}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+  nav .brand{font-size:20px;font-weight:700}
+  nav .links a{margin-left:18px;font-size:14px;color:var(--muted)}
+  nav .links a:hover{color:var(--text);text-decoration:none}
+  .hero{text-align:center;padding:80px 0 60px}
+  .hero h1{font-size:56px;letter-spacing:2px;margin-bottom:8px}
+  .hero .en{font-size:20px;color:var(--muted);margin-bottom:22px}
+  .hero .tags{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;padding:8px 26px;font-size:15px;margin-bottom:26px}
+  .hero p{font-size:18px;color:var(--muted)}
+  .btns{margin-top:34px}
+  .btn{display:inline-block;padding:13px 34px;border-radius:999px;font-size:16px;margin:0 8px;transition:.2s}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn.primary:hover{filter:brightness(1.15);text-decoration:none}
+  .btn.ghost{border:1px solid var(--border);color:var(--text)}
+  .btn.ghost:hover{border-color:var(--blue);text-decoration:none}
+  section{padding:56px 0;border-top:1px solid var(--border)}
+  section h2{font-size:30px;margin-bottom:26px}
+  section h3{font-size:19px;margin:22px 0 8px;color:var(--blue)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px}
+  .card b{display:block;font-size:17px;margin-bottom:6px;color:var(--text)}
+  .card span{font-size:14px;color:var(--muted)}
+  .shot{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:24px}
+  .shot img{width:100%;border-radius:16px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden}
+  th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:15px}
+  th{color:var(--muted);font-weight:600}
+  td b{color:var(--blue)}
+  .safety{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .safety .card{text-align:center}
+  .timeline{list-style:none}
+  .timeline li{padding:10px 0;border-bottom:1px dashed var(--border);display:flex;gap:14px}
+  .timeline li b{min-width:110px;color:var(--blue)}
+  .about{background:var(--bg2);border-radius:16px;padding:28px;margin-top:10px}
+  .footer{border-top:1px solid var(--border);padding:30px 0;color:var(--muted);font-size:13px;text-align:center}
+  .footer a{color:var(--muted)}
+  .note{font-size:13px;color:var(--muted);margin-top:10px}
+  @media(max-width:640px){.hero h1{font-size:40px}.hero{padding:56px 0 40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <div class="brand">言出法随 · YanChuFaSui</div>
+    <div class="links">
+      <a href="#features">功能</a><a href="#examples">示例</a><a href="#safety">安全</a><a href="#download">下载</a><a href="#about">关于</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <h1>言出法随</h1>
+    <div class="en">YanChuFaSui — voice control for Android</div>
+    <div class="tags">系统级 · 全离线 · 零数据上传 · 中文原生</div>
+    <p>说出指令，手机执行。<br>为无法精细触屏的用户，把操作权交还给声音。</p>
+    <div class="btns">
+      <a class="btn primary" href="https://github.com/qb200310-hash/YanChuFaSui/releases" target="_blank" rel="noopener">下载安装包</a>
+      <a class="btn ghost" href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub 仓库</a>
+    </div>
+  </header>
+
+  <section id="why">
+    <h2>解决什么问题</h2>
+    <p>SMA 等肢体障碍用户无法触屏操作手机，而「打不了字」与「点不了屏幕」之间，隔着一整个数字生活。与此同时，国产安卓阵营几乎没有任何厂商投入系统级的语音控制。</p>
+    <p style="margin-top:14px">言出法随用「无障碍服务 + 离线语音识别」把操作权交还给声音：无需联网、无需专用硬件、无需电脑常伴——一部普通安卓手机，说话即可完成滑动、点击、输入等几乎全部操作。</p>
+  </section>
+
+  <section id="features">
+    <h2>核心能力</h2>
+    <div class="grid">
+      <div class="card"><b>屏幕编号</b><span>说「显示编号」，可点击元素全部标注数字；「点击 18」精准触达</span></div>
+      <div class="card"><b>屏幕网格</b><span>十二宫格覆盖全屏，可逐级细化，任意位置都有编号</span></div>
+      <div class="card"><b>滑动与摇移</b><span>四方向整页滚动；摇移小步微调，对准位置</span></div>
+      <div class="card"><b>双指缩放</b><span>捏合放大 / 缩小，看图片看网页</span></div>
+      <div class="card"><b>语音听写</b><span>说「输入」→ 说话 → 停顿后文字填入输入框（微信等）</span></div>
+      <div class="card"><b>文字编辑</b><span>「删除」「光标左移 / 右移」「把 A 替换成 B」语音纠错</span></div>
+      <div class="card"><b>自定义指令</b><span>用自己的说法绑定动作，语音录入零打字</span></div>
+      <div class="card"><b>个人词典</b><span>人名地名加入词典后优先识别（如「黄信豪」）</span></div>
+      <div class="card"><b>设备控制</b><span>音量（80% 安全上限）、静音、锁屏、通知中心、控制中心</span></div>
+      <div class="card"><b>全离线识别</b><span>SenseVoice 引擎内置，无网络完整可用</span></div>
+      <div class="card"><b>识别灵敏度</b><span>1~10 格滑块，适配轻声与含糊语音</span></div>
+      <div class="card"><b>深色模式</b><span>跟随系统 / 浅色 / 深色三选项</span></div>
+    </div>
+  </section>
+
+  <section id="examples">
+    <h2>你说 → 手机做</h2>
+    <table>
+      <tr><th>你说</th><th>手机做</th></tr>
+      <tr><td>「显示编号」</td><td>可点击元素全部标注数字</td></tr>
+      <tr><td>「点击 18」</td><td>点击编号 18 对应的元素</td></tr>
+      <tr><td>「向上滑动」</td><td>内容向上滚动一页</td></tr>
+      <tr><td>「输入」→「今天天气不错」</td><td>文字填入输入框</td></tr>
+      <tr><td>「把不错替换成很好」</td><td>输入框中的「不错」被替换为「很好」</td></tr>
+      <tr><td>「增加音量」</td><td>音量加一格（80% 封顶，防失控）</td></tr>
+      <tr><td>「退出」</td><td>结束会话，麦克风归还系统</td></tr>
+    </table>
+    <p class="note">完整指令表见仓库 README 与应用内「指令说明」。</p>
+  </section>
+
+  <section id="safety">
+    <h2>安全设计</h2>
+    <p style="margin-bottom:20px">语音控制最怕两件事：麦克风失控、误触发连环执行。言出法随的安全机制是产品设计的一部分，不是补丁：</p>
+    <div class="safety">
+      <div class="card"><b>会话制</b><span>占用即隔离、用完即归还；不长期持有麦克风</span></div>
+      <div class="card"><b>看门狗</b><span>每段 3 分钟，最长 15 分钟，到点自动还麦</span></div>
+      <div class="card"><b>静音释放</b><span>60 秒无语音自动归还麦克风</span></div>
+      <div class="card"><b>熔断保护</b><span>短窗口内连续执行过多即判定误触发，立即停止</span></div>
+      <div class="card"><b>音量安全帽</b><span>媒体音量 80% 封顶，杜绝误识别炸音量</span></div>
+      <div class="card"><b>静默自愈</b><span>无障碍开关被系统撤销后，下次启动自动写回</span></div>
+    </div>
+  </section>
+
+  <section id="shots">
+    <h2>应用截图</h2>
+    <div class="shot">
+      <img src="images/home.png" alt="主页">
+      <img src="images/settings.png" alt="设置">
+    </div>
+  </section>
+
+  <section id="history">
+    <h2>版本历程</h2>
+    <ul class="timeline">
+      <li><b>v0.1 – v0.3</b>项目启动：确立「会话制」核心架构</li>
+      <li><b>v0.4</b>离线识别接入，四级命令纠错，滑动与熔断保护</li>
+      <li><b>v0.5 – v0.7</b>文字点击、网格一步点击、锁屏自动释放</li>
+      <li><b>v0.8 – v0.9</b>短视频回声误识别根治；「识别对了才反馈」原则确立</li>
+      <li><b>v0.13 – v0.14</b>动作闭环校验与页面机制学习</li>
+      <li><b>v0.15 – v0.25</b>界面全面 iOS 化：灵动岛胶囊</li>
+      <li><b>v0.26</b>设备控制、80% 音量安全帽、静默自愈</li>
+      <li><b>v0.27 – v0.29</b>实时声波指示</li>
+      <li><b>v0.30 – v0.31</b>主页 / 设置 / 关于全量重构</li>
+      <li><b>v0.33 – v0.34</b>深色模式、双指缩放</li>
+      <li><b>v0.35 – v0.36</b>看门狗放宽、指令说明教程化、使用记录导出</li>
+      <li><b>v0.37 – v0.38</b>微信编号兼容、识别灵敏度滑块</li>
+      <li><b>v0.39 – v0.40</b>自定义指令、语音听写与文字编辑</li>
+      <li><b>v0.41 – v0.42</b>语音替换、个人词典</li>
+      <li><b>v0.43</b>崩溃诊断与问题反馈升级</li>
+    </ul>
+    <p class="note">完整流水账见仓库 CHANGELOG.md。</p>
+  </section>
+
+  <section id="download">
+    <h2>下载</h2>
+    <p>最新安装包（含离线识别模型，约 285MB）：<a href="https://github.com/qb200310-hash/YanChuFaSui/releases" target="_blank" rel="noopener">GitHub Releases</a></p>
+    <p class="note">要求 Android 7.0 及以上。安装后按应用内引导开启无障碍服务即可。</p>
+  </section>
+
+  <section id="about">
+    <h2>关于作者</h2>
+    <div class="about">
+      <p>黄信豪（Hugo），SMA 患者开发者。言出法随的第一位用户就是他自己——这个项目的每一个功能，都来自真实的使用需求。</p>
+      <p style="margin-top:12px">如果这个项目对你有帮助，欢迎在 <a href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener">爱发电</a> 支持作者。</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Apache-2.0 License · © 2026 黄信豪 (Hugo) · <a href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub</a></p>
+    <p style="margin-top:6px">全离线 · 零数据上传 · 语音数据不出手机</p>
+  </footer>
+
+</div>
+</body>
+</html>

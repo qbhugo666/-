@@ -266,6 +266,7 @@ class VoiceService : Service() {
 
     private val watchdogRunnable = Runnable {
         Log.i(TAG, "看门狗到点，强制释放")
+        DiagnosticsHelper.log("看门狗到点，强制释放")
         releaseAndStop("看门狗强制释放")
     }
     private val silenceRunnable: Runnable by lazy {
@@ -1356,6 +1357,7 @@ class VoiceService : Service() {
         }
         execHistory.addLast(now)
         if (execHistory.size >= CIRCUIT_MAX_EXEC) {
+            DiagnosticsHelper.log("熔断触发：${CIRCUIT_WINDOW_MS / 1000}s 内 ${execHistory.size} 次")
             releaseAndStop("连续误触发，熔断保护")
             return false
         }
@@ -1373,6 +1375,7 @@ class VoiceService : Service() {
     }
 
     private fun releaseAndStop(reason: String) {
+        DiagnosticsHelper.log("会话结束: $reason")
         SessionState.phase = SessionState.Phase.IDLE   // 主页状态卡回到未启动态
         // 安全红线：麦克风立即释放，不依赖 stopSelf() → onDestroy 的异步时序。
         // recognizer/vad 的 native 释放交给 onDestroy 里的后台 teardown——

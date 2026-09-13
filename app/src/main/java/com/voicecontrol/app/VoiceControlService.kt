@@ -38,7 +38,7 @@ import android.widget.TextView
  *
  * 悬浮层用 TYPE_ACCESSIBILITY_OVERLAY：无需额外「悬浮窗」授权，无障碍服务开启即生效。
  */
-class VoiceControlService : AccessibilityService() {
+open class VoiceControlService : AccessibilityService() {
 
     companion object {
         private const val TAG = "VoiceControlService"

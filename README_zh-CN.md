@@ -4,14 +4,12 @@
 
 **让 Android 手机听懂你的话。**
 
-System-level voice control for Android, built for Chinese users and accessibility.
-
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/qb200310-hash/YanChuFaSui)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Android%207.0%2B-3DDC84.svg)](#安装方法)
 [![Offline](https://img.shields.io/badge/processing-fully%20offline-0A84FF.svg)](#隐私)
 
-**语言 / Language**：[简体中文](README.md) ｜ [English](README_en.md)
+**语言 / Language**：简体中文 ｜ [English](README_en.md)
 
 </div>
 
@@ -19,17 +17,33 @@ System-level voice control for Android, built for Chinese users and accessibilit
 
 > 「言出法随」——说出口的指令，随即被执行。
 
-> 本页与 [README.md](README.md) 内容一致（简体中文镜像）。
+## 看看它怎么工作
 
-## Demo
-
-> **（演示 GIF 录制中——本图位将在录制真实操作后替换）**
+**屏幕编号：说「显示编号」，再说「点击 18」**
 
 <p align="center">
-  <img src="docs/images/demo.png" width="480" alt="Demo GIF 录制中" />
+  <img src="docs/images/demo-numbers.gif" width="300" alt="屏幕编号演示" />
 </p>
 
-## Why
+**语音听写：说「输入」，说话，文字自动进入输入框**
+
+<p align="center">
+  <img src="docs/images/demo-dictation.gif" width="300" alt="语音听写演示" />
+</p>
+
+**语音替换：说「把天气替换成气候」，输入框里的字被纠正**
+
+<p align="center">
+  <img src="docs/images/demo-replace.gif" width="300" alt="语音替换演示" />
+</p>
+
+**语音滑动：不碰屏幕，内容照样滚动**
+
+<p align="center">
+  <img src="docs/images/demo-swipe.gif" width="300" alt="语音滑动演示" />
+</p>
+
+## 为什么做这个
 
 触摸屏对大多数人来说非常方便。但对另一些用户来说——精确点击一个目标、完成一次长距离滑动、在输入框里打字——这些操作本身就是障碍。
 

@@ -23,11 +23,31 @@ System-level voice control for Android, built for Chinese users and accessibilit
 
 ## Demo
 
-> **(Demo GIF in progress — this slot will be replaced with a real recording)**
+**Number overlay**: say "show numbers", then "tap 18" — every tappable element gets labeled.
 
 <p align="center">
-  <img src="docs/images/demo.png" width="480" alt="Demo GIF placeholder" />
+  <img src="docs/images/demo-numbers.gif" width="300" alt="Number overlay demo" />
 </p>
+
+**Voice dictation**: say "input", speak — the text lands in the focused search box of WeChat.
+
+<p align="center">
+  <img src="docs/images/demo-dictation.gif" width="300" alt="Dictation demo" />
+</p>
+
+**Voice replace**: "replace 天气 with 气候" — the text in the box is corrected by voice.
+
+<p align="center">
+  <img src="docs/images/demo-replace.gif" width="300" alt="Replace demo" />
+</p>
+
+**Voice swipe**: scrolling without touching the screen.
+
+<p align="center">
+  <img src="docs/images/demo-swipe.gif" width="300" alt="Swipe demo" />
+</p>
+
+> Note: the app UI and commands are in Mandarin Chinese — the recognition engine is Chinese-native by design.
 
 ## Why
 

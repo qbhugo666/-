@@ -113,6 +113,19 @@ object AccessibilityHelper {
             parts.add(SELECT_TO_SPEAK)
             changed = true
         }
+        // ③ 悬浮图标指派清空（v0.46.1 根治）：每次服务启动无条件检查——MIUI 会在用户拨动
+        //    快捷方式开关时重新指派图标，组件无变化时旧逻辑会漏清导致图标复活（2026-09-13
+        //    用户实测）。仅清指向随选朗读的指派，不误伤用户指派给其他读屏服务的场景
+        val btnTarget = Settings.Secure.getString(
+            context.contentResolver, "accessibility_button_targets"
+        ) ?: ""
+        if (btnTarget.contains("selecttospeak", ignoreCase = true)) {
+            Settings.Secure.putString(
+                context.contentResolver, "accessibility_button_targets", ""
+            )
+            changed = true
+            Log.i("AccessibilityHelper", "悬浮图标指派已清空（微信兼容保活）")
+        }
         if (!changed) return true
         return runCatching {
             Settings.Secure.putString(
@@ -121,11 +134,6 @@ object AccessibilityHelper {
             )
             Settings.Secure.putInt(context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
             Log.i("AccessibilityHelper", "无障碍开关已修复（双组件）: ${parts.joinToString(":")}")
-            // ③ 悬浮图标不指派（v0.46.0）：快捷方式图标对听写/编号无用且碍事——清空指派，
-            //    服务已启用不受影响（2026-09-13 真机实测：图标消失、微信编号照常）
-            Settings.Secure.putString(
-                context.contentResolver, "accessibility_button_targets", ""
-            )
             true
         }.getOrDefault(false)
     }

@@ -1123,10 +1123,11 @@ open class VoiceControlService : AccessibilityService() {
     /** 在指定屏幕坐标模拟一次真实点击（对桌面小组件等 performAction 无效的元素同样生效） */
     private fun tapAt(x: Float, y: Float): Boolean {
         // 2026-09-14 裘晨阳三次崩溃实证：负坐标（目标在屏幕外，如桌面旁页/负一屏）会让
-        // StrokeDescription 直接 FATAL 炸进程、语音会话陪葬——先 clamp 屏幕内，再兜 runCatching
-        val dm = resources.displayMetrics
-        val cx = x.coerceIn(0f, dm.widthPixels.toFloat())
-        val cy = y.coerceIn(0f, dm.heightPixels.toFloat())
+        // StrokeDescription 直接 FATAL 炸进程、语音会话陪葬——先 clamp 屏幕内，再兜 runCatching。
+        // 参考系=realScreenRect：displayMetrics 偏小，会把底栏点击硬拉上去点错位置
+        val sb = realScreenRect()
+        val cx = x.coerceIn(0f, sb.right)
+        val cy = y.coerceIn(0f, sb.bottom)
         val path = Path().apply {
             moveTo(cx, cy)
             lineTo(cx, cy)
@@ -1140,10 +1141,10 @@ open class VoiceControlService : AccessibilityService() {
 
     /** 原地长按：同一点、时长拉长，系统识别为长按（如桌面图标长按出菜单） */
     private fun longPressAt(x: Float, y: Float): Boolean {
-        // 同 tapAt：负坐标必炸进程，clamp + runCatching 双保险
-        val dm = resources.displayMetrics
-        val cx = x.coerceIn(0f, dm.widthPixels.toFloat())
-        val cy = y.coerceIn(0f, dm.heightPixels.toFloat())
+        // 同 tapAt：负坐标必炸进程，clamp + runCatching 双保险（参考系=realScreenRect）
+        val sb = realScreenRect()
+        val cx = x.coerceIn(0f, sb.right)
+        val cy = y.coerceIn(0f, sb.bottom)
         val path = Path().apply {
             moveTo(cx, cy)
             lineTo(cx, cy)
@@ -1382,12 +1383,34 @@ open class VoiceControlService : AccessibilityService() {
         return onScreenCenter(rect, number)
     }
 
-    /** 中心点必须在屏幕内（防旁页/负一屏负坐标炸手势，2026-09-14 崩溃修复的体检保留）；不在返回 null */
+    /** 真实屏幕边界（含手势条区域）。2026-09-14 抖音真机实锤：服务上下文的
+     *  resources.displayMetrics 比物理屏矮一截，edge-to-edge 底栏元素（bounds 铺到 2756）
+     *  的中心被误判「屏幕外」→ 用户报「点不到最底下编号」。API 30+ 用 maximumWindowMetrics，
+     *  更早回退 Display.getRealMetrics（同为物理尺寸），失败才退 displayMetrics */
+    private fun realScreenRect(): RectF {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            runCatching {
+                val wm = getSystemService(WindowManager::class.java) as? WindowManager ?: return@runCatching
+                val b = wm.maximumWindowMetrics.bounds
+                RectF(0f, 0f, b.width().toFloat(), b.height().toFloat())
+            }.getOrNull()?.let { return it }
+        }
+        return runCatching {
+            val dm = android.util.DisplayMetrics()
+            @Suppress("DEPRECATION")
+            (getSystemService(DISPLAY_SERVICE) as android.hardware.display.DisplayManager)
+                .getDisplay(android.view.Display.DEFAULT_DISPLAY)?.getRealMetrics(dm)
+            RectF(0f, 0f, dm.widthPixels.toFloat(), dm.heightPixels.toFloat())
+        }.getOrDefault(RectF(0f, 0f, resources.displayMetrics.widthPixels.toFloat(), resources.displayMetrics.heightPixels.toFloat()))
+    }
+
+    /** 中心点必须在真实屏幕内（防旁页/负一屏负坐标炸手势，2026-09-14 崩溃修复的体检保留）；
+     *  参考系=realScreenRect（displayMetrics 偏小会误杀底栏元素）。不在返回 null */
     private fun onScreenCenter(rect: Rect, number: Int): Pair<Float, Float>? {
         val cx = rect.exactCenterX()
         val cy = rect.exactCenterY()
-        val dm = resources.displayMetrics
-        if (cx < 0f || cy < 0f || cx > dm.widthPixels || cy > dm.heightPixels) {
+        val sb = realScreenRect()
+        if (cx < 0f || cy < 0f || cx > sb.right || cy > sb.bottom) {
             Log.w(TAG, "定位失败：编号 $number 在屏幕外（bounds=$rect）")
             return null
         }
@@ -1526,10 +1549,10 @@ open class VoiceControlService : AccessibilityService() {
         }
         // 优先用可点击节点（自己或祖先）；都没有就用文字节点中心。
         // 2026-09-14：目标在屏幕外（MIUI 桌面旁页/负一屏，getBoundsInScreen 可为负）时中心为负，
-        // 交给 tapAt 会炸进程——中心不在屏幕内的候选直接跳过/返回 null（顺带治好「屏幕外假成功记 ✅」）
-        val dm = resources.displayMetrics
-        fun onScreen(cx: Float, cy: Float) =
-            cx >= 0f && cy >= 0f && cx <= dm.widthPixels && cy <= dm.heightPixels
+        // 交给 tapAt 会炸进程——中心不在屏幕内的候选直接跳过/返回 null（顺带治好「屏幕外假成功记 ✅」）。
+        // 参考系=realScreenRect：displayMetrics 偏小，edge-to-edge 底栏文字（抖音「消息/我的」）会误杀
+        val sb = realScreenRect()
+        fun onScreen(cx: Float, cy: Float) = cx >= 0f && cy >= 0f && cx <= sb.right && cy <= sb.bottom
         for (node in candidates) {
             val clickable = findClickableAncestor(node)
             if (clickable != null) {

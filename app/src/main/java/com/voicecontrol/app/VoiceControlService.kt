@@ -1318,12 +1318,13 @@ open class VoiceControlService : AccessibilityService() {
         val rects = nodes.map {
             val r = Rect(); it.getBoundsInScreen(r); r
         }
-        labelRects = rects   // 快照与屏幕所画严格一致（600ms 落定复查会再刷新）
         labelRetryCount = 0
         // 指纹与上次相同（页面稳定）→ 不重画；不同（切页/滚动）→ 重画并安排一次落定复查
         val sig = rects.joinToString(",") { "${it.left},${it.top},${it.right},${it.bottom}" }
         if (sig != lastLabelSig) {
             lastLabelSig = sig
+            // 注意：removeLabelsOverlay 会清空快照，labelRects 必须在重画之后回填——
+            // 首版写在前面，抖音信息流持续翻腾→持续重画→快照刚存就被清，7 分钟后点击仍失败（真机实锤）
             removeLabelsOverlay()
             val view = LabelsOverlayView(this, rects)
             val params = WindowManager.LayoutParams(
@@ -1341,6 +1342,8 @@ open class VoiceControlService : AccessibilityService() {
             mainHandler.removeCallbacks(settleLabelsRunnable)
             mainHandler.postDelayed(settleLabelsRunnable, 600)
         }
+        // 快照与屏幕所画严格一致：重画分支或稳定分支都在此回填（落定复查会再刷新）
+        labelRects = rects
     }
 
     /** 落定复查：600ms 后再刷新一次，纠正切换过渡期可能画错的位置 */

@@ -39,10 +39,10 @@ import java.io.File
  *
  * 安全设计（本项目最高优先级约束，不可妥协）：
  *  1. 识别出「退出」 → 立刻释放麦克风并停止；
- *  2. 连续 [SILENCE_RELEASE_MILLIS] 没有识别出文字 → 自动释放。
- *     注意：这里【不用音量阈值】，而是靠语音识别模型判断——
- *     背景噪音（风扇/空调/电视）不会产生中文文字，所以不会误判；
- *  3. [WATCHDOG_MILLIS] 看门狗强制释放——即使程序卡死，也保证把麦克风还给系统。
+ *  2. [WATCHDOG_MILLIS] 看门狗强制释放——时间制独挑大梁：到点前 20 秒预警，
+ *     预警期说「继续」续期（仅预警期有效），不续期到点释放（2026-09-14 用户拍板
+ *     删除静音自动释放——60s 安静就断太激进，交给看门狗时间制即可）；
+ *  3. 锁屏立即释放，保证紧急通道随叫随到。
  */
 class VoiceService : Service() {
 
@@ -130,8 +130,7 @@ class VoiceService : Service() {
         // 休眠预警：看门狗到点前多久提示「即将休眠」（毫秒）
         private const val WARN_BEFORE_MILLIS = 20_000L
 
-        // 静音自动释放：这么久没识别出文字就还麦
-        private const val SILENCE_RELEASE_MILLIS = 60_000L
+        // 静音自动释放已于 2026-09-14 用户拍板删除：会话时长完全由看门狗时间制管理
 
         // 退出命令词
         private const val CMD_EXIT = "退出"
@@ -278,19 +277,7 @@ class VoiceService : Service() {
         DiagnosticsHelper.log("看门狗到点，强制释放")
         releaseAndStop("看门狗强制释放")
     }
-    private val silenceRunnable: Runnable by lazy {
-        Runnable {
-            if (!sleepWarned) {
-                // 会话还没到休眠预警阶段就安静了：重新计时，把释放交给预警/看门狗链路。
-                // 否则 60s 静音会先于 100s 预警触发，用户永远看不到「即将休眠」，「继续」延期形同虚设
-                Log.i(TAG, "SILENCE_HOLD 静音未到预警阶段，续计时 ${SILENCE_RELEASE_MILLIS / 1000}s")
-                handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
-            } else {
-                Log.i(TAG, "休眠预警已显示且长时间无语音，静音自动释放")
-                releaseAndStop("静音自动释放")
-            }
-        }
-    }
+    // 静音自动释放 runnable 已删（2026-09-14 用户拍板）：安静不再提前断会话，看门狗时间制独挑大梁
     // 锁屏自动释放：黑屏（SCREEN_OFF）立即还麦，保证锁屏状态下随时能唤起小爱
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -315,6 +302,9 @@ class VoiceService : Service() {
 
     // 本次会话开始的 elapsedRealtime（0 = 无真实会话上下文，如 SIMULATE 注入）
     private var sessionStartElapsed = 0L
+
+    // 当前段（基础段/延期段）开始的 elapsedRealtime：算「继续」早说时距预警还有多久
+    private var segmentStartElapsed = 0L
 
     // 停止请求：释放后置 true，后台初始化线程逐阶段检查，防止「停止后初始化完成又抢麦」的竞态
     @Volatile
@@ -481,16 +471,16 @@ class VoiceService : Service() {
                 // 显示顶部识别状态横条
                 VoiceControlService.showBar()
                 VoiceControlService.updateBar("🎤 正在聆听…")
-                // 启动看门狗（最终兜底）、休眠预警与静音自动释放
+                // 启动看门狗（时间制独挑大梁）与休眠预警
                 extensionCount = 0
                 // 飞行记录仪（v0.51.0）：会话出生留档（异常终检在 onStartCommand 顶部，任何启动形式都先过一遍）
                 sessionStartElapsed = SystemClock.elapsedRealtime()
                 getSharedPreferences("app", MODE_PRIVATE)
                     .edit().putLong(KEY_SESSION_ACTIVE_SINCE, System.currentTimeMillis()).apply()
                 sleepWarned = false
+                segmentStartElapsed = SystemClock.elapsedRealtime()   // 本段起点（「继续」早说检测用）
                 handler.postDelayed(watchdogRunnable, WATCHDOG_MILLIS)
                 handler.postDelayed(warnRunnable, WATCHDOG_MILLIS - WARN_BEFORE_MILLIS)
-                handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
                 // 锁屏自动释放：注册黑屏广播，锁屏即把麦克风还给系统
                 registerScreenOffReceiver()
                 SessionState.phase = SessionState.Phase.LISTENING
@@ -505,7 +495,6 @@ class VoiceService : Service() {
         runCatching { unregisterReceiver(screenOffReceiver) }
         handler.removeCallbacks(watchdogRunnable)
         handler.removeCallbacks(warnRunnable)
-        handler.removeCallbacks(silenceRunnable)
         handler.removeCallbacks(barResetRunnable)
         repeatRunnable?.let { handler.removeCallbacks(it) }
         repeatRunnable = null
@@ -824,25 +813,35 @@ class VoiceService : Service() {
                 SessionState.lastMatch = if (ok) "→ 输入「$corrected」✅" else "→ 未找到输入框"
                 if (ok) vibrateFeedback()
             }
-            handler.removeCallbacks(silenceRunnable)
-            handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
             return
         }
 
         // 纯语气词：静默忽略，横条保持当前状态继续聆听（商用原则：不把误识别展示给用户）
         if (text in NOISE_WORDS) {
             Log.i(TAG, "忽略语气词: [$text]")
-            handler.removeCallbacks(silenceRunnable)
-            handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
             return
         }
 
-        // 「继续」：看门狗延期（有次数上限，防 bug 自动无限延期导致彻底占麦）
+        // 「继续」：看门狗延期——**仅预警期有效**（2026-09-14 裘晨阳报 bug：没到预警说继续
+        // 也会扣延期名额并重置 5 分钟计时=提前浪费。修复：预警未出现时明确拒绝并告知还差多久）
         if (text.contains(CMD_CONTINUE)) {
+            if (!sleepWarned) {
+                val waitText = if (segmentStartElapsed != 0L) {
+                    val remainSec = ((segmentStartElapsed + WATCHDOG_MILLIS - WARN_BEFORE_MILLIS -
+                        SystemClock.elapsedRealtime()) / 1000).coerceAtLeast(0)
+                    val m = remainSec / 60
+                    if (m > 0) "${m} 分 ${remainSec % 60} 秒" else "${remainSec} 秒"
+                } else null
+                Log.i(TAG, "CONTINUE_EARLY 「继续」被拒：预警未出现${waitText?.let { "（距预警还有 $it）" } ?: ""}")
+                VoiceControlService.updateBar(
+                    if (waitText != null) "⏳ 还没到续期时间（$waitText 后提醒）" else "⏳ 还没到续期时间"
+                )
+                SessionState.lastMatch = "→ 「继续」太早，预警出现后再说${waitText?.let { "（还有 $it）" } ?: ""}"
+                handler.removeCallbacks(barResetRunnable)
+                handler.postDelayed(barResetRunnable, 1500L)
+                return
+            }
             handleExtendSession()
-            // 说「继续」也是真人说话，重置静音倒计时
-            handler.removeCallbacks(silenceRunnable)
-            handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
             // 横条稍后恢复为「正在聆听」
             handler.removeCallbacks(barResetRunnable)
             handler.postDelayed(barResetRunnable, 1500L)
@@ -856,8 +855,6 @@ class VoiceService : Service() {
             handler.postDelayed(dictationTimeoutRunnable, 12_000L)
             VoiceControlService.updateBar("✍️ 请说出内容，停顿即填入")
             SessionState.lastMatch = "→ 听写中（说完停顿即填入）"
-            handler.removeCallbacks(silenceRunnable)
-            handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
             return
         }
 
@@ -886,8 +883,6 @@ class VoiceService : Service() {
                     if (ok) vibrateFeedback()
                 }
             }
-            handler.removeCallbacks(silenceRunnable)
-            handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
             return
         }
 
@@ -1004,13 +999,9 @@ class VoiceService : Service() {
         // 横条稍后恢复为「正在聆听」
         handler.removeCallbacks(barResetRunnable)
         handler.postDelayed(barResetRunnable, 1500L)
-
-        // 识别到真人说话 → 重置静音倒计时
-        handler.removeCallbacks(silenceRunnable)
-        handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
     }
 
-    /** 「继续」：看门狗延期。带次数上限，防 bug 自动无限延期导致彻底占麦。 */
+    /** 「继续」：看门狗延期（调用方已保证预警期）。带次数上限，防 bug 自动无限延期导致彻底占麦。 */
     private fun handleExtendSession() {
         if (extensionCount >= MAX_EXTENSIONS) {
             VoiceControlService.updateBar("⚠️ 已达最长 $SESSION_MAX_MINUTES 分钟，无法再延长")
@@ -1019,6 +1010,7 @@ class VoiceService : Service() {
         }
         extensionCount++
         sleepWarned = false
+        segmentStartElapsed = SystemClock.elapsedRealtime()
         Log.i(TAG, "EXTEND 已延期 $extensionCount/$MAX_EXTENSIONS 次")
         handler.removeCallbacks(watchdogRunnable)
         handler.removeCallbacks(warnRunnable)
@@ -1153,11 +1145,9 @@ class VoiceService : Service() {
         if (!longPressMode) return
         longPressMode = false
         handler.removeCallbacks(longPressModeRunnable)
-        // 退出长按模式后，横条稍后恢复「聆听中」、重置静音倒计时（与普通命令一致）
+        // 退出长按模式后，横条稍后恢复「聆听中」（与普通命令一致）
         handler.removeCallbacks(barResetRunnable)
         handler.postDelayed(barResetRunnable, 1500L)
-        handler.removeCallbacks(silenceRunnable)
-        handler.postDelayed(silenceRunnable, SILENCE_RELEASE_MILLIS)
     }
 
     /** 长按待命模式下处理下一句：数字→长按编号；中间→长按屏幕；退出→取消 */
@@ -1465,7 +1455,6 @@ class VoiceService : Service() {
         releaseMicrophone()
         handler.removeCallbacks(watchdogRunnable)
         handler.removeCallbacks(warnRunnable)
-        handler.removeCallbacks(silenceRunnable)
         repeatRunnable?.let { handler.removeCallbacks(it) }
         repeatRunnable = null
         longPressMode = false

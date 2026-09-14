@@ -57,6 +57,10 @@ class VoiceService : Service() {
         const val ACTION_SIMULATE = "com.voicecontrol.app.action.SIMULATE"
         const val EXTRA_TEXT = "com.voicecontrol.app.extra.TEXT"
 
+        // 飞行记录仪（v0.51.0）：会话出生在偏好里留档、正常结束销档——
+        // 下次启动若档还在 = 上次会话没落地（进程被杀/崩溃，当时无法记录），事后追认
+        private const val KEY_SESSION_ACTIVE_SINCE = "session_active_since"
+
         // 自定义说法录入（v0.39.0）：绑定页请求捕获下一句识别原文——复用正常会话链路
         // （前台服务/看门狗/静音释放全在），听到第一句自动还麦。绑定页轮询 lastCaptured 取结果
         @Volatile
@@ -309,6 +313,9 @@ class VoiceService : Service() {
     // 已延期次数（0 ~ MAX_EXTENSIONS）
     private var extensionCount = 0
 
+    // 本次会话开始的 elapsedRealtime（0 = 无真实会话上下文，如 SIMULATE 注入）
+    private var sessionStartElapsed = 0L
+
     // 停止请求：释放后置 true，后台初始化线程逐阶段检查，防止「停止后初始化完成又抢麦」的竞态
     @Volatile
     private var stopRequested = false
@@ -326,6 +333,16 @@ class VoiceService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         UsageLog.init(applicationContext)   // 幂等：加载使用记录
         CrashCatcher.register(applicationContext)   // v0.43.0：崩溃记录器（幂等）
+        // 飞行记录仪（v0.51.0）黑匣子终检：上次会话的出生档还在 = 它没落地（进程被杀/崩溃，当时无法记录）。
+        // 在此事后追认一条使用记录（任何启动形式必经：真实会话/SIMULATE/探针）；检测即销档防重复补记
+        val bb = getSharedPreferences("app", MODE_PRIVATE)
+        val orphan = bb.getLong(KEY_SESSION_ACTIVE_SINCE, 0L)
+        if (orphan > 0L) {
+            val fmt = java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.CHINA)
+            SessionState.lastMatch = "→ ⚠️ 上次会话异常终止（${fmt.format(java.util.Date(orphan))} 开始，无结束记录——进程被杀或崩溃，详见导出反馈）"
+            Log.w(TAG, "BLACKBOX 上次会话无结束记录（开始于 $orphan），已补记异常终止")
+            bb.edit().remove(KEY_SESSION_ACTIVE_SINCE).apply()
+        }
         if (intent?.action == ACTION_STOP) {
             releaseAndStop("用户退出")
             return START_NOT_STICKY
@@ -464,6 +481,10 @@ class VoiceService : Service() {
                 VoiceControlService.updateBar("🎤 正在聆听…")
                 // 启动看门狗（最终兜底）、休眠预警与静音自动释放
                 extensionCount = 0
+                // 飞行记录仪（v0.51.0）：会话出生留档（异常终检在 onStartCommand 顶部，任何启动形式都先过一遍）
+                sessionStartElapsed = SystemClock.elapsedRealtime()
+                getSharedPreferences("app", MODE_PRIVATE)
+                    .edit().putLong(KEY_SESSION_ACTIVE_SINCE, System.currentTimeMillis()).apply()
                 sleepWarned = false
                 handler.postDelayed(watchdogRunnable, WATCHDOG_MILLIS)
                 handler.postDelayed(warnRunnable, WATCHDOG_MILLIS - WARN_BEFORE_MILLIS)
@@ -1421,6 +1442,18 @@ class VoiceService : Service() {
 
     private fun releaseAndStop(reason: String) {
         DiagnosticsHelper.log("会话结束: $reason")
+        // 飞行记录仪（v0.51.0）：每次退出严格留痕。底层日志永远记；
+        // 使用记录（用户可见+随导出走）只记真实会话——带时长与延期数，「时间没到就断」一眼可辨
+        if (sessionStartElapsed != 0L) {
+            val durSec = (SystemClock.elapsedRealtime() - sessionStartElapsed) / 1000
+            val durText = if (durSec >= 60) "${durSec / 60} 分 ${durSec % 60} 秒" else "$durSec 秒"
+            Log.i(TAG, "SESSION_END reason=$reason dur=${durSec}s ext=$extensionCount/$MAX_EXTENSIONS")
+            SessionState.lastMatch = "→ 会话结束：$reason（本次 $durText · 延期 $extensionCount/$MAX_EXTENSIONS 次）"
+            sessionStartElapsed = 0L
+            getSharedPreferences("app", MODE_PRIVATE).edit().remove(KEY_SESSION_ACTIVE_SINCE).apply()
+        } else {
+            Log.i(TAG, "SESSION_END reason=$reason（无真实会话上下文，不记使用记录）")
+        }
         SessionState.phase = SessionState.Phase.IDLE   // 主页状态卡回到未启动态
         // 安全红线：麦克风立即释放，不依赖 stopSelf() → onDestroy 的异步时序。
         // recognizer/vad 的 native 释放交给 onDestroy 里的后台 teardown——

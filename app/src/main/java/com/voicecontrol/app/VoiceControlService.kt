@@ -767,6 +767,13 @@ open class VoiceControlService : AccessibilityService() {
             "lock_screen" -> runCatching { performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN) }.getOrDefault(false)
             "show_notifications" -> runCatching { performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS) }.getOrDefault(false)
             "show_quick_settings" -> runCatching { performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS) }.getOrDefault(false)
+            // 语音截屏（v0.53.0）：走系统全局截屏动作（Android 9+），动画/编辑/保存全由系统接管
+            "take_screenshot" -> if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                runCatching { performGlobalAction(GLOBAL_ACTION_TAKE_SCREENSHOT) }.getOrDefault(false)
+            } else {
+                actionNote = "需要安卓 9 及以上才支持语音截屏"
+                false
+            }
             "show_labels" -> {
                 doHideGrid() // 互斥：编号与网格不可同时显示（2026-09-08 用户实测发现重叠）
                 doShowLabels()

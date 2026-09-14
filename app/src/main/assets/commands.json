@@ -53,7 +53,8 @@
         { "id": "volume_mute",  "command": "静音",         "aliases": ["声音关掉", "全部静音"], "action": "volume_mute" },
         { "id": "lock_screen",  "command": "锁屏",         "aliases": ["熄屏", "锁上手机"], "action": "lock_screen" },
         { "id": "show_notifications", "command": "通知中心", "aliases": ["通知栏", "下拉通知"], "action": "show_notifications" },
-        { "id": "show_quick_settings", "command": "控制中心", "aliases": ["快捷中心", "快捷开关", "下拉控制"], "action": "show_quick_settings" }
+        { "id": "show_quick_settings", "command": "控制中心", "aliases": ["快捷中心", "快捷开关", "下拉控制"], "action": "show_quick_settings" },
+        { "id": "take_screenshot", "command": "截屏", "aliases": ["截图", "截个屏", "屏幕截图", "截一下屏"], "action": "take_screenshot" }
       ]
     },
     {

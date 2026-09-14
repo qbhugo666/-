@@ -31,6 +31,7 @@ object CustomBindings {
         "nudge_left" to "向左摇移", "nudge_right" to "向右摇移",
         "volume_up" to "增加音量", "volume_down" to "降低音量", "volume_mute" to "静音",
         "lock_screen" to "锁屏", "show_notifications" to "通知中心", "show_quick_settings" to "控制中心",
+        "take_screenshot" to "截屏",
         "zoom_in" to "双指放大", "zoom_out" to "双指缩小", "grid_back" to "退回",
         "text_cursor_left" to "光标左移", "text_cursor_right" to "光标右移",
         "text_delete" to "删除", "text_clear" to "清空输入",

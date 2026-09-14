@@ -154,6 +154,7 @@ class VoiceService : Service() {
             "nudge_up", "nudge_down", "nudge_left", "nudge_right",
             "zoom_in", "zoom_out",
             "text_cursor_left", "text_cursor_right", "text_delete", "text_clear",
+            "take_screenshot",
         )
 
         // 熔断：时间窗与阈值——窗口内执行次数过多即判定误循环，释放麦克风

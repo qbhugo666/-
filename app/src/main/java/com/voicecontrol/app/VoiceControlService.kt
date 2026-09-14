@@ -1117,24 +1117,37 @@ open class VoiceControlService : AccessibilityService() {
 
     /** 在指定屏幕坐标模拟一次真实点击（对桌面小组件等 performAction 无效的元素同样生效） */
     private fun tapAt(x: Float, y: Float): Boolean {
+        // 2026-09-14 裘晨阳三次崩溃实证：负坐标（目标在屏幕外，如桌面旁页/负一屏）会让
+        // StrokeDescription 直接 FATAL 炸进程、语音会话陪葬——先 clamp 屏幕内，再兜 runCatching
+        val dm = resources.displayMetrics
+        val cx = x.coerceIn(0f, dm.widthPixels.toFloat())
+        val cy = y.coerceIn(0f, dm.heightPixels.toFloat())
         val path = Path().apply {
-            moveTo(x, y)
-            lineTo(x, y)
+            moveTo(cx, cy)
+            lineTo(cx, cy)
         }
-        val stroke = GestureDescription.StrokeDescription(path, 0, TAP_DURATION_MS)
-        val gesture = GestureDescription.Builder().addStroke(stroke).build()
-        return dispatchGesture(gesture, null, null)
+        return runCatching {
+            val stroke = GestureDescription.StrokeDescription(path, 0, TAP_DURATION_MS)
+            val gesture = GestureDescription.Builder().addStroke(stroke).build()
+            dispatchGesture(gesture, null, null)
+        }.getOrDefault(false)
     }
 
     /** 原地长按：同一点、时长拉长，系统识别为长按（如桌面图标长按出菜单） */
     private fun longPressAt(x: Float, y: Float): Boolean {
+        // 同 tapAt：负坐标必炸进程，clamp + runCatching 双保险
+        val dm = resources.displayMetrics
+        val cx = x.coerceIn(0f, dm.widthPixels.toFloat())
+        val cy = y.coerceIn(0f, dm.heightPixels.toFloat())
         val path = Path().apply {
-            moveTo(x, y)
-            lineTo(x, y)
+            moveTo(cx, cy)
+            lineTo(cx, cy)
         }
-        val stroke = GestureDescription.StrokeDescription(path, 0, LONG_PRESS_DURATION_MS)
-        val gesture = GestureDescription.Builder().addStroke(stroke).build()
-        return dispatchGesture(gesture, null, null)
+        return runCatching {
+            val stroke = GestureDescription.StrokeDescription(path, 0, LONG_PRESS_DURATION_MS)
+            val gesture = GestureDescription.Builder().addStroke(stroke).build()
+            dispatchGesture(gesture, null, null)
+        }.getOrDefault(false)
     }
 
     /** 当前「点击目标」坐标：网格模式=网格中心，否则屏幕中心；网格浮层未就绪返回 null */
@@ -1348,7 +1361,16 @@ open class VoiceControlService : AccessibilityService() {
         }
         val rect = Rect()
         nodes[number - 1].getBoundsInScreen(rect)
-        return rect.exactCenterX() to rect.exactCenterY()
+        val cx = rect.exactCenterX()
+        val cy = rect.exactCenterY()
+        // 2026-09-14：目标在屏幕外（旁页/负一屏）中心可为负——交给 tapAt 会炸进程，
+        // 返回 null 走「没有编号 N」提示分支
+        val dm = resources.displayMetrics
+        if (cx < 0f || cy < 0f || cx > dm.widthPixels || cy > dm.heightPixels) {
+            Log.w(TAG, "定位失败：编号 $number 在屏幕外（bounds=$rect）")
+            return null
+        }
+        return cx to cy
     }
 
     /** 点击第 number 个可点击元素（与编号显示共用同一套遍历+排序，保证一致） */
@@ -1475,16 +1497,27 @@ open class VoiceControlService : AccessibilityService() {
             Log.w(TAG, "文字定位：当前页面没有「$target」")
             return null
         }
-        // 优先用可点击节点（自己或祖先）；都没有就用文字节点中心
+        // 优先用可点击节点（自己或祖先）；都没有就用文字节点中心。
+        // 2026-09-14：目标在屏幕外（MIUI 桌面旁页/负一屏，getBoundsInScreen 可为负）时中心为负，
+        // 交给 tapAt 会炸进程——中心不在屏幕内的候选直接跳过/返回 null（顺带治好「屏幕外假成功记 ✅」）
+        val dm = resources.displayMetrics
+        fun onScreen(cx: Float, cy: Float) =
+            cx >= 0f && cy >= 0f && cx <= dm.widthPixels && cy <= dm.heightPixels
         for (node in candidates) {
             val clickable = findClickableAncestor(node)
             if (clickable != null) {
                 val r = Rect(); clickable.getBoundsInScreen(r)
-                if (r.width() > 0 && r.height() > 0) return r.exactCenterX() to r.exactCenterY()
+                if (r.width() > 0 && r.height() > 0) {
+                    val cx = r.exactCenterX()
+                    val cy = r.exactCenterY()
+                    if (onScreen(cx, cy)) return cx to cy
+                }
             }
         }
         val r = Rect(); candidates[0].getBoundsInScreen(r)
-        return r.exactCenterX() to r.exactCenterY()
+        val cx = r.exactCenterX()
+        val cy = r.exactCenterY()
+        return if (onScreen(cx, cy)) cx to cy else null
     }
 
     /** 根据文字点击：遍历无障碍树找 text/内容描述 匹配的节点，点它（或最近可点击祖先）。返回是否找到并派发。 */

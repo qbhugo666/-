@@ -248,6 +248,11 @@ open class VoiceControlService : AccessibilityService() {
     private val gridStack = mutableListOf<RectF>()  // 网格缩放栈（归一化比例 0~1），末位=当前区域
     private var labelsVisible = false
 
+    // 「显示编号」快照：屏幕上画着的编号 → 元素屏幕矩形。点击/长按优先按它定位——
+    // 所见即所点。2026-09-14 抖音真机实锤：信息流元素实时增删，点时重新遍历会错位/越界
+    // （显示时 25+ 个、53 秒后只剩 8 个 → 明明画着 28 号却报「没有编号」）
+    private var labelRects: List<Rect> = emptyList()
+
     // 动作附加提示（音量上限、桌面不支持摇移等），由 performAction/nudgeCommand 写入、
     // 识别层经 consumeActionNote 取走并清空
     @Volatile
@@ -1313,6 +1318,7 @@ open class VoiceControlService : AccessibilityService() {
         val rects = nodes.map {
             val r = Rect(); it.getBoundsInScreen(r); r
         }
+        labelRects = rects   // 快照与屏幕所画严格一致（600ms 落定复查会再刷新）
         labelRetryCount = 0
         // 指纹与上次相同（页面稳定）→ 不重画；不同（切页/滚动）→ 重画并安排一次落定复查
         val sig = rects.joinToString(",") { "${it.left},${it.top},${it.right},${it.bottom}" }
@@ -1349,9 +1355,18 @@ open class VoiceControlService : AccessibilityService() {
         mainHandler.post { removeLabelsOverlay() }
     }
 
-    /** 取第 number 个可编号元素的中心坐标（使用调用方传入的窗口根；越界返回 null） */
+    /** 取第 number 个可编号元素的中心坐标。优先按「显示编号」快照（屏幕画着几号就点几号）；
+     *  无快照（编号未显示时的兜底）按原逻辑现遍历。越界/屏幕外返回 null */
     private fun labelCenter(root: AccessibilityNodeInfo, number: Int): Pair<Float, Float>? {
         if (number < 1) return null
+        val snap = labelRects
+        if (snap.isNotEmpty()) {
+            if (number > snap.size) {
+                Log.w(TAG, "定位失败：编号 $number 超出快照范围（快照共 ${snap.size} 个）")
+                return null
+            }
+            return onScreenCenter(snap[number - 1], number)
+        }
         val nodes = mutableListOf<AccessibilityNodeInfo>()
         runCatching { collectLabelNodes(root, nodes) }
         sortNodes(nodes)
@@ -1361,10 +1376,13 @@ open class VoiceControlService : AccessibilityService() {
         }
         val rect = Rect()
         nodes[number - 1].getBoundsInScreen(rect)
+        return onScreenCenter(rect, number)
+    }
+
+    /** 中心点必须在屏幕内（防旁页/负一屏负坐标炸手势，2026-09-14 崩溃修复的体检保留）；不在返回 null */
+    private fun onScreenCenter(rect: Rect, number: Int): Pair<Float, Float>? {
         val cx = rect.exactCenterX()
         val cy = rect.exactCenterY()
-        // 2026-09-14：目标在屏幕外（旁页/负一屏）中心可为负——交给 tapAt 会炸进程，
-        // 返回 null 走「没有编号 N」提示分支
         val dm = resources.displayMetrics
         if (cx < 0f || cy < 0f || cx > dm.widthPixels || cy > dm.heightPixels) {
             Log.w(TAG, "定位失败：编号 $number 在屏幕外（bounds=$rect）")
@@ -1373,32 +1391,38 @@ open class VoiceControlService : AccessibilityService() {
         return cx to cy
     }
 
-    /** 点击第 number 个可点击元素（与编号显示共用同一套遍历+排序，保证一致） */
+    /** 点击第 number 个可点击元素（优先按「显示编号」快照定位：所见即所点） */
     private fun doTapLabel(number: Int): Boolean {
         if (number < 1) return false
-        mainHandler.post {
-            // 与编号显示同一套窗口兜底：激活窗口拿不到时从窗口列表找
-            var root = rootInActiveWindow
-            if (root == null) {
-                val w = runCatching { windows }.getOrNull()
-                root = w?.firstOrNull { it.isFocused }?.root ?: w?.firstOrNull()?.root
-            }
-            if (root == null) {
-                updateBar("⚠️ 拿不到当前窗口，请重试")
-                Log.w(TAG, "点击编号 $number 失败：拿不到当前窗口")
-                return@post
-            }
-            val c = labelCenter(root, number)
-            if (c == null) {
-                // 假成功是欺骗：编号越界必须明确告知，而不是闪一下「已执行」
-                updateBar("⚠️ 没有编号 $number（看清屏幕编号范围）")
-                Log.w(TAG, "点击编号 $number 失败：越界/无窗口")
-                return@post
-            }
-            val ok = tapWithVerify(c.first, c.second, "编号 $number")
-            Log.i(TAG, "点击编号 $number @(${c.first.toInt()},${c.second.toInt()}) -> $ok")
+        // 主线程（识别回调本就在主线程）直接执行并如实返回——旧版派发即返回 true，
+        // 抖音现场实锤：使用记录出现「没点上却记 ✅ 已执行」的假成功
+        if (android.os.Looper.myLooper() == mainLooper) return tapLabelInternal(number)
+        mainHandler.post { tapLabelInternal(number) }
+        return true   // 非主线程兜底：无法同步取结果（正常调用都走主线程分支）
+    }
+
+    private fun tapLabelInternal(number: Int): Boolean {
+        // 与编号显示同一套窗口兜底：激活窗口拿不到时从窗口列表找
+        var root = rootInActiveWindow
+        if (root == null) {
+            val w = runCatching { windows }.getOrNull()
+            root = w?.firstOrNull { it.isFocused }?.root ?: w?.firstOrNull()?.root
         }
-        return true
+        if (root == null) {
+            updateBar("⚠️ 拿不到当前窗口，请重试")
+            Log.w(TAG, "点击编号 $number 失败：拿不到当前窗口")
+            return false
+        }
+        val c = labelCenter(root, number)
+        if (c == null) {
+            // 假成功是欺骗：编号越界必须明确告知，而不是闪一下「已执行」
+            updateBar("⚠️ 没有编号 $number（看清屏幕编号范围）")
+            Log.w(TAG, "点击编号 $number 失败：越界/无窗口")
+            return false
+        }
+        val ok = tapWithVerify(c.first, c.second, "编号 $number")
+        Log.i(TAG, "点击编号 $number @(${c.first.toInt()},${c.second.toInt()}) -> $ok")
+        return ok
     }
 
     /** 长按第 number 个可编号元素（编号模式：显示编号后说「长按 1」） */
@@ -1575,6 +1599,7 @@ open class VoiceControlService : AccessibilityService() {
     private fun removeLabelsOverlay() {
         labelsOverlayView?.let { runCatching { windowManager?.removeView(it) } }
         labelsOverlayView = null
+        labelRects = emptyList()   // 覆盖层摘除，快照同步作废
     }
 
     // ===== 网格（元素识别不到的兜底，逐级缩小定位） =====

@@ -37,27 +37,41 @@ object RecognitionSensitivity {
      * 调整映射时必须保持格 5 = 1.0×、格 5 阈值 = 0.60f（历史基准，默认零变化）。
      */
     fun gain(level: Int): Float = when {
-        level <= 5 -> 0.5f + (level - 1) * 0.125f   // 1→0.50 … 5→1.00
-        else -> 1.0f + (level - 5) * 0.25f          // 5→1.00 … 10→2.25
+        level >= 10 -> 3.0f                          // v0.54.1 极限远场：3 倍放大（远场信号弱，clip 风险远场可忽略）
+        level <= 5 -> 0.5f + (level - 1) * 0.125f    // 1→0.50 … 5→1.00
+        else -> 1.0f + (level - 5) * 0.25f           // 5→1.00 … 9→2.00
     }
 
     /** VAD 说话门槛（Silero 概率阈值）：格 5 恰好 0.60（历史值）。
-     *  v0.54.0 弱声专档：格 9=0.44、格 10=0.36（Silero 实践下限约 0.3，留余量防噪音开门）；格 1~8 不变 */
+     *  v0.54.0 弱声专档：格 9=0.44；v0.54.1 极限远场：格 10=0.30（Silero 实践下限，再低开始把噪音当语音）；
+     *  格 1~8 不变 */
     fun vadThreshold(level: Int): Float = when {
         level <= 5 -> 0.6f + (5 - level) * 0.05f    // 1→0.80 … 5→0.60
         level == 9 -> 0.44f
-        level >= 10 -> 0.36f
+        level >= 10 -> 0.30f
         else -> 0.6f - (level - 5) * 0.036f         // 6→0.564 … 8→0.492
     }
 
     /** 弱声专档总开关（v0.54.0）：9~10 格=病友模式——更低门槛 + 停顿容忍 + 慢语速切句放宽 + AGC 强制开。
-     *  适用：声音小/构音不清（鼻音重）的病友；代价是对环境声更敏感，嘈杂环境用 1~8 格 */
+     *  适用：声音小/构音不清（鼻音重）的病友；代价是对环境声更敏感，嘈杂环境用 1~8 格。
+     *  格 10 为极限远场（v0.54.1）：稍远距离/极弱声操控，近距离正常音量建议 9 格以下（3 倍增益近讲易削波） */
     fun weakVoiceMode(level: Int): Boolean = level >= 9
 
-    /** VAD 句间停顿容忍（秒）：v0.54.0 弱声档 0.55s（构音障碍者字间停顿长，0.4s 会把句子拦腰斩断）；
-     *  其余格保持 0.4s（说完到动手的延迟不变） */
-    fun minSilence(level: Int): Float = if (weakVoiceMode(level)) 0.55f else 0.4f
+    /** VAD 句间停顿容忍（秒）：格 9=0.55s（构音障碍者字间停顿长）；v0.54.1 格 10=0.7s（远场混响+远距离停顿更散）；
+     *  其余格 0.4s（说完到动手的延迟不变） */
+    fun minSilence(level: Int): Float = when {
+        level >= 10 -> 0.7f
+        level == 9 -> 0.55f
+        else -> 0.4f
+    }
 
-    /** VAD 超长句强制切句（秒）：v0.54.0 弱声档 5s（慢语速长句不被腰斩），其余格 3s */
-    fun maxSpeech(level: Int): Float = if (weakVoiceMode(level)) 5f else 3f
+    /** VAD 超长句强制切句（秒）：格 9=5s（慢语速长句不被腰斩）；v0.54.1 格 10=8s（远场慢语速极限容忍）；其余格 3s */
+    fun maxSpeech(level: Int): Float = when {
+        level >= 10 -> 8f
+        level == 9 -> 5f
+        else -> 3f
+    }
+
+    /** VAD 最短开口时长（秒）：v0.54.1 格 10=0.2s（远场/极弱声的短促开口也能开门），其余格 0.25s */
+    fun minSpeech(level: Int): Float = if (level >= 10) 0.2f else 0.25f
 }

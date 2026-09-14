@@ -572,7 +572,9 @@ class VoiceService : Service() {
                     minSilenceDuration = RecognitionSensitivity.minSilence(
                         RecognitionSensitivity.level(applicationContext)
                     ),
-                    minSpeechDuration = 0.25f,
+                    minSpeechDuration = RecognitionSensitivity.minSpeech(
+                        RecognitionSensitivity.level(applicationContext)
+                    ),
                     windowSize = 512,
                     // v0.54.0 弱声专档放宽到 5s：慢语速长句不被腰斩；其余格 3s 不变
                     maxSpeechDuration = RecognitionSensitivity.maxSpeech(

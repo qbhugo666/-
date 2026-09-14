@@ -58,6 +58,14 @@
       ]
     },
     {
+      "id": "media_control",
+      "name": "媒体控制",
+      "commands": [
+        { "id": "play_media",  "command": "播放", "aliases": ["播放音乐", "接着播放"], "action": "play_media" },
+        { "id": "pause_media", "command": "暂停", "aliases": ["暂停播放"], "action": "pause_media" }
+      ]
+    },
+    {
       "id": "pinch_zoom",
       "name": "双指缩放",
       "commands": [

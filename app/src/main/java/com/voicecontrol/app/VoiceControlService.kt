@@ -21,6 +21,7 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
@@ -171,6 +172,10 @@ open class VoiceControlService : AccessibilityService() {
             val svc = instance ?: return false
             return svc.doTapText(target)
         }
+
+        // 最近一次文字点击的落点（v0.55）：供「重复一次」复点同一位置；仅成功时写入
+        @Volatile
+        var lastTextTapPoint: Pair<Float, Float>? = null
 
         /** 长按第 number 个可点击元素（编号模式：显示编号后说「长按 1」） */
         fun longPressLabel(number: Int): Boolean {
@@ -773,6 +778,26 @@ open class VoiceControlService : AccessibilityService() {
             } else {
                 actionNote = "需要安卓 9 及以上才支持语音截屏"
                 false
+            }
+            // 媒体控制（v0.55.0）：走系统媒体会话键（等价耳机线控），任何播放器通用——
+            // 不依赖 App 给按钮做无障碍标记（网易云实测按钮标记是「播放暂停」二合一，
+            // 说「播放」文字点击会误中「播放模式/播放列表」）
+            "play_media" -> {
+                val am = getSystemService(android.media.AudioManager::class.java)
+                am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY))
+                am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY))
+                true
+            }
+            "pause_media" -> {
+                val am = getSystemService(android.media.AudioManager::class.java)
+                if (am.isMusicActive) {
+                    am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PAUSE))
+                    am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PAUSE))
+                    true
+                } else {
+                    // 无活动媒体（可能是带「暂停」按钮的非媒体页面）→ 回落文字点击旧通道
+                    tapText("暂停")
+                }
             }
             "show_labels" -> {
                 doHideGrid() // 互斥：编号与网格不可同时显示（2026-09-08 用户实测发现重叠）
@@ -1582,6 +1607,7 @@ open class VoiceControlService : AccessibilityService() {
         val c = textCenter(target) ?: return false
         mainHandler.post {
             val ok = tapWithVerify(c.first, c.second, "文字「$target」")
+            if (ok) lastTextTapPoint = c
             Log.i(TAG, "文字点击「$target」@(${c.first.toInt()},${c.second.toInt()}) -> $ok")
         }
         return true

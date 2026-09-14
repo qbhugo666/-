@@ -1001,6 +1001,11 @@ class VoiceService : Service() {
                                     if (VoiceControlService.tapText(target)) {
                                         VoiceControlService.updateBar("⚡ 点击「$target」")
                                         SessionState.lastMatch = "→ 点击「$target」 ✅"
+                                        // 文字点击成功也登记为可重复（v0.55）：媒体播放器里
+                                        // 「暂停」就是文字点击，「重复一次」复点同一位置即可切回
+                                        VoiceControlService.lastTextTapPoint?.let { p ->
+                                            lastAction = LastAction.TapPoint(p.first, p.second)
+                                        }
                                     } else {
                                         val fuzzy = currentMatcher().matchFuzzy(text)
                                         if (fuzzy != null) {

@@ -1171,6 +1171,16 @@ class VoiceService : Service() {
 
     /** 执行匹配到的命令；含「退出」安全红线。 */
     private fun dispatchMatched(matched: CommandMatcher.Match) {
+        // 2026-09-14 用户日志实锤：闲话「走出」被 pinyin_fuzzy 掰成「退出」→ 会话无辜断开
+        // （"用一半自动退出聆听"）。会话终结类命令（退出/锁屏）不接受模糊命中——
+        // 同音字仍可退（pinyin_exact），只有"差一个音"这种最易误触的档位对危险命令闭嘴
+        if (matched.method == "pinyin_fuzzy" &&
+            (matched.action == "exit_session" || matched.action == "lock_screen")
+        ) {
+            Log.i(TAG, "FUZZY_GUARD 拒绝模糊命中危险命令：[${SessionState.lastText}] -> ${matched.matchedWord}")
+            DiagnosticsHelper.log("模糊命中危险命令已忽略：${SessionState.lastText} ≈ ${matched.matchedWord}")
+            return
+        }
         if (matched.action == "exit_session") {
             releaseAndStop("识别到「退出」")
             return

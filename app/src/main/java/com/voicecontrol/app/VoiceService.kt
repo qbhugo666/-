@@ -334,10 +334,12 @@ class VoiceService : Service() {
         UsageLog.init(applicationContext)   // 幂等：加载使用记录
         CrashCatcher.register(applicationContext)   // v0.43.0：崩溃记录器（幂等）
         // 飞行记录仪（v0.51.0）黑匣子终检：上次会话的出生档还在 = 它没落地（进程被杀/崩溃，当时无法记录）。
-        // 在此事后追认一条使用记录（任何启动形式必经：真实会话/SIMULATE/探针）；检测即销档防重复补记
+        // 在此事后追认一条使用记录（任何启动形式必经：真实会话/SIMULATE/探针）；检测即销档防重复补记。
+        // 活体检查：本进程会话还在录（如会话中收到停止/重开/注入）时档属于活会话，不是孤儿——
+        // 真机验收 A 组实锤的误报（会话 21:36:44 出生、21:36:59 注入退出，终检把活会话当失踪）
         val bb = getSharedPreferences("app", MODE_PRIVATE)
         val orphan = bb.getLong(KEY_SESSION_ACTIVE_SINCE, 0L)
-        if (orphan > 0L) {
+        if (orphan > 0L && !recording) {
             val fmt = java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.CHINA)
             SessionState.lastMatch = "→ ⚠️ 上次会话异常终止（${fmt.format(java.util.Date(orphan))} 开始，无结束记录——进程被杀或崩溃，详见导出反馈）"
             Log.w(TAG, "BLACKBOX 上次会话无结束记录（开始于 $orphan），已补记异常终止")

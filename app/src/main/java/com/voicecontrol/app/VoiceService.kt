@@ -567,13 +567,17 @@ class VoiceService : Service() {
                     threshold = RecognitionSensitivity.vadThreshold(
                         RecognitionSensitivity.level(applicationContext)
                     ),
-                    // 0.5→0.4s（2026-09-09 提速）：说完到动手的总延迟里这是大头。
-                    // 0.4s 仍是安全垫：正常换气停顿 (<0.3s) 不会被斩断；
-                    // 若真机出现句子被截断，回退 0.45/0.5 并记录
-                    minSilenceDuration = 0.4f,
+                    // 0.4s：说完到动手延迟的大头，正常换气停顿 (<0.3s) 不会被斩断。
+                    // v0.54.0 弱声专档（9~10 格）放宽到 0.55s：构音障碍者字间停顿长，0.4s 会拦腰斩句
+                    minSilenceDuration = RecognitionSensitivity.minSilence(
+                        RecognitionSensitivity.level(applicationContext)
+                    ),
                     minSpeechDuration = 0.25f,
                     windowSize = 512,
-                    maxSpeechDuration = 3f,
+                    // v0.54.0 弱声专档放宽到 5s：慢语速长句不被腰斩；其余格 3s 不变
+                    maxSpeechDuration = RecognitionSensitivity.maxSpeech(
+                        RecognitionSensitivity.level(applicationContext)
+                    ),
                 ),
                 sampleRate = SAMPLE_RATE,
                 numThreads = 1,
@@ -687,8 +691,15 @@ class VoiceService : Service() {
         runCatching {
             if (AutomaticGainControl.isAvailable()) {
                 AutomaticGainControl.create(sessionId)?.apply {
-                    if (enabled) { agcEffect = this; Log.i(TAG, "AGC 自动增益已启用") }
-                    else runCatching { release() }
+                    // v0.54.0 弱声专档（9~10 格）强制开启 AGC：系统层把小声/含糊嗓音拉到正常音量。
+                    // 机型相关行为，实测不佳就降回 8 格（一行回退）；≤8 格维持平台默认
+                    val weak = RecognitionSensitivity.weakVoiceMode(
+                        RecognitionSensitivity.level(applicationContext)
+                    )
+                    if (enabled || (weak && runCatching { this.enabled = true }.isSuccess)) {
+                        agcEffect = this
+                        Log.i(TAG, "AGC 自动增益已启用${if (!enabled) "（弱声专档强制开启）" else ""}")
+                    } else runCatching { release() }
                 }
             }
         }

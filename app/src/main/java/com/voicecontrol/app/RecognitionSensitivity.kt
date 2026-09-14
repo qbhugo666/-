@@ -41,9 +41,23 @@ object RecognitionSensitivity {
         else -> 1.0f + (level - 5) * 0.25f          // 5→1.00 … 10→2.25
     }
 
-    /** VAD 说话门槛（Silero 概率阈值）：格 5 恰好 0.60（历史值）。格 1=0.80（更严），格 10=0.42（更灵） */
+    /** VAD 说话门槛（Silero 概率阈值）：格 5 恰好 0.60（历史值）。
+     *  v0.54.0 弱声专档：格 9=0.44、格 10=0.36（Silero 实践下限约 0.3，留余量防噪音开门）；格 1~8 不变 */
     fun vadThreshold(level: Int): Float = when {
         level <= 5 -> 0.6f + (5 - level) * 0.05f    // 1→0.80 … 5→0.60
-        else -> 0.6f - (level - 5) * 0.036f         // 5→0.60 … 10→0.42
+        level == 9 -> 0.44f
+        level >= 10 -> 0.36f
+        else -> 0.6f - (level - 5) * 0.036f         // 6→0.564 … 8→0.492
     }
+
+    /** 弱声专档总开关（v0.54.0）：9~10 格=病友模式——更低门槛 + 停顿容忍 + 慢语速切句放宽 + AGC 强制开。
+     *  适用：声音小/构音不清（鼻音重）的病友；代价是对环境声更敏感，嘈杂环境用 1~8 格 */
+    fun weakVoiceMode(level: Int): Boolean = level >= 9
+
+    /** VAD 句间停顿容忍（秒）：v0.54.0 弱声档 0.55s（构音障碍者字间停顿长，0.4s 会把句子拦腰斩断）；
+     *  其余格保持 0.4s（说完到动手的延迟不变） */
+    fun minSilence(level: Int): Float = if (weakVoiceMode(level)) 0.55f else 0.4f
+
+    /** VAD 超长句强制切句（秒）：v0.54.0 弱声档 5s（慢语速长句不被腰斩），其余格 3s */
+    fun maxSpeech(level: Int): Float = if (weakVoiceMode(level)) 5f else 3f
 }

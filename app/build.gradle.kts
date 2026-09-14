@@ -19,8 +19,8 @@ android {
         applicationId = "com.voicecontrol.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 76
-        versionName = "0.54.1"
+        versionCode = 77
+        versionName = "0.54.2"
 
         // 只打包真机需要的两种 ARM 架构，减小 APK 体积
         // （arm64-v8a = 现代手机；armeabi-v7a = 老旧 32 位手机）

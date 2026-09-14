@@ -120,8 +120,9 @@ class VoiceService : Service() {
         // 看门狗延期：每次「继续」延长的时长（毫秒）
         private const val EXTEND_MILLIS = 300_000L
 
-        // 看门狗最多延期次数（基础 5 分钟 + 2 次 × 5 分钟 = 最多 15 分钟）
-        private const val MAX_EXTENSIONS = 2
+        // 看门狗最多延期次数（基础 5 分钟 + 4 次 × 5 分钟 = 最多 25 分钟）
+        // 2026-09-15 用户拍板：×2 → ×4（"四五二十"），总量 5+20=25 分钟
+        private const val MAX_EXTENSIONS = 4
 
         // 胶囊文案统一由上面三个常量推导（2026-09-14 教训：常量改成 3 分钟、写死的「2 分钟」文案没跟上）
         private val EXTEND_MINUTES = EXTEND_MILLIS / 60_000L

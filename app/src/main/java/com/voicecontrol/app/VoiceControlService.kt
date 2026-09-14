@@ -1877,10 +1877,16 @@ open class VoiceControlService : AccessibilityService() {
             val size = 20f * density
             val corner = 5f * density
             for ((idx, r) in items.withIndex()) {
-                val cx = r.exactCenterX() - offX
-                val cy = r.exactCenterY() - offY
-                val left = cx - size / 2f
-                val top = cy - size / 2f
+                // v0.55 徽章改挂元素左上角（对齐小米原生编号样式，用户拍板）：
+                // 中心=元素左上角点，不再居中遮挡头像/文字；点击仍走元素中心不受影响
+                var cx = (r.left - offX).toFloat()
+                var cy = (r.top - offY).toFloat()
+                // 屏幕边缘防出界：徽章必须完整留在屏内
+                val half = size / 2f
+                cx = cx.coerceIn(half, width - half)
+                cy = cy.coerceIn(half, height - half)
+                val left = cx - half
+                val top = cy - half
                 canvas.drawRoundRect(left, top, left + size, top + size, corner, corner, bgPaint)
                 val ty = cy - (fm.ascent + fm.descent) / 2f
                 canvas.drawText((idx + 1).toString(), cx, ty, textPaint)

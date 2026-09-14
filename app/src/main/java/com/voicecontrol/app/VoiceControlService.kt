@@ -1877,10 +1877,11 @@ open class VoiceControlService : AccessibilityService() {
             val size = 20f * density
             val corner = 5f * density
             for ((idx, r) in items.withIndex()) {
-                // v0.55 徽章改挂元素左上角（对齐小米原生编号样式，用户拍板）：
-                // 中心=元素左上角点，不再居中遮挡头像/文字；点击仍走元素中心不受影响
-                var cx = (r.left - offX).toFloat()
-                var cy = (r.top - offY).toFloat()
+                // v0.55 徽章挂元素左上角（对齐小米原生编号样式，用户拍板）；
+                // v0.55 微调：纯角落锚点在整行元素上会贴屏幕边缘显得「太偏」，
+                // 向中心回移 18%——整行列表刚好落在头像左上角附近。点击仍走元素中心不受影响
+                var cx = (r.left + (r.exactCenterX() - r.left) * 0.18f - offX).toFloat()
+                var cy = (r.top + (r.exactCenterY() - r.top) * 0.18f - offY).toFloat()
                 // 屏幕边缘防出界：徽章必须完整留在屏内
                 val half = size / 2f
                 cx = cx.coerceIn(half, width - half)

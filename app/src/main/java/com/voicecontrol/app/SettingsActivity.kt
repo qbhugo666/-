@@ -51,19 +51,34 @@ class SettingsActivity : ThemedActivity() {
         val sensValue = findViewById<TextView>(R.id.tv_sens_value)
         val seek = findViewById<SeekBar>(R.id.seek_sensitivity)
         fun refreshSensText(level: Int) {
-            sensValue.text = if (level == RecognitionSensitivity.DEFAULT_LEVEL) {
-                "$level（默认推荐）"
-            } else {
-                "$level"
+            sensValue.text = when {
+                level == RecognitionSensitivity.DEFAULT_LEVEL -> "$level（默认推荐）"
+                level >= RecognitionSensitivity.MAX_LEVEL -> "$level · 远场"
+                level == 9 -> "$level · 弱声"
+                else -> "$level"
             }
+        }
+        // 档位色（v0.55 UI）：1~8 绿=日常 · 9 橙=弱声 · 10 红=远场，整条进度与滑块同色，拖到哪变到哪
+        fun refreshSensColor(level: Int) {
+            val color = when {
+                level >= RecognitionSensitivity.MAX_LEVEL -> 0xFFFF3B30
+                level == 9 -> 0xFFFF9500
+                else -> 0xFF34C759
+            }.toInt()
+            val tint = android.content.res.ColorStateList.valueOf(color)
+            seek.progressTintList = tint
+            seek.thumbTintList = tint
         }
         val savedLevel = RecognitionSensitivity.level(this)
         seek.max = RecognitionSensitivity.MAX_LEVEL - RecognitionSensitivity.MIN_LEVEL
         seek.progress = savedLevel - RecognitionSensitivity.MIN_LEVEL
         refreshSensText(savedLevel)
+        refreshSensColor(savedLevel)
         seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                refreshSensText(progress + RecognitionSensitivity.MIN_LEVEL)
+                val level = progress + RecognitionSensitivity.MIN_LEVEL
+                refreshSensText(level)
+                refreshSensColor(level)
             }
 
             override fun onStartTrackingTouch(sb: SeekBar?) {}

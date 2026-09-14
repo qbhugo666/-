@@ -110,13 +110,18 @@ class VoiceService : Service() {
 
         // 看门狗：占用麦克风的基础时长（毫秒），到点强制释放
         // 2026-09-11 用户拍板：2 分钟 → 3 分钟（用着更从容，不必频繁喊「继续」）
-        private const val WATCHDOG_MILLIS = 180_000L
+        // 2026-09-14 用户拍板：3 分钟 → 5 分钟（每段更长，喊「继续」更少；硬顶 15 分钟不变）
+        private const val WATCHDOG_MILLIS = 300_000L
 
         // 看门狗延期：每次「继续」延长的时长（毫秒）
-        private const val EXTEND_MILLIS = 180_000L
+        private const val EXTEND_MILLIS = 300_000L
 
-        // 看门狗最多延期次数（基础 3 分钟 + 4 次 × 3 分钟 = 最多 15 分钟）
-        private const val MAX_EXTENSIONS = 4
+        // 看门狗最多延期次数（基础 5 分钟 + 2 次 × 5 分钟 = 最多 15 分钟）
+        private const val MAX_EXTENSIONS = 2
+
+        // 胶囊文案统一由上面三个常量推导（2026-09-14 教训：常量改成 3 分钟、写死的「2 分钟」文案没跟上）
+        private val EXTEND_MINUTES = EXTEND_MILLIS / 60_000L
+        private val SESSION_MAX_MINUTES = (WATCHDOG_MILLIS + MAX_EXTENSIONS * EXTEND_MILLIS) / 60_000L
 
         // 休眠预警：看门狗到点前多久提示「即将休眠」（毫秒）
         private const val WARN_BEFORE_MILLIS = 20_000L
@@ -985,7 +990,7 @@ class VoiceService : Service() {
     /** 「继续」：看门狗延期。带次数上限，防 bug 自动无限延期导致彻底占麦。 */
     private fun handleExtendSession() {
         if (extensionCount >= MAX_EXTENSIONS) {
-            VoiceControlService.updateBar("⚠️ 已达最长 10 分钟，无法再延长")
+            VoiceControlService.updateBar("⚠️ 已达最长 $SESSION_MAX_MINUTES 分钟，无法再延长")
             SessionState.lastMatch = "→ 延期已达上限（最多 $MAX_EXTENSIONS 次）"
             return
         }
@@ -997,7 +1002,7 @@ class VoiceService : Service() {
         handler.postDelayed(watchdogRunnable, EXTEND_MILLIS)
         handler.postDelayed(warnRunnable, EXTEND_MILLIS - WARN_BEFORE_MILLIS)
         val remaining = MAX_EXTENSIONS - extensionCount
-        VoiceControlService.updateBar("✅ 已延长 2 分钟（还可延长 $remaining 次）")
+        VoiceControlService.updateBar("✅ 已延长 $EXTEND_MINUTES 分钟（还可延长 $remaining 次）")
         SessionState.lastMatch = "→ 已延长，剩余可延期 $remaining 次"
         updateNotification("🔴 会话中 · 已延长（剩余 $remaining 次）")
     }

@@ -40,6 +40,43 @@ object CustomBindings {
     val BINDABLE_ACTIONS: List<Pair<String, String>> =
         ACTION_LABELS.entries.map { it.key to it.value }.sortedBy { it.second }
 
+    // 数字绑定（v0.50.0 用户提议，二级入口选数字避免摊平动作列表）：
+    // tap_number_N=点击编号 N（编号 1~50，用户拍板）；grid_tap_N=点击第 N 格——
+    // 网格 3×4 一层就 12 格，「第 N 格」永远指当前层，绑 13+ 永远点不到=坑用户，故上限 12
+    const val MAX_NUMBER = 50
+    const val GRID_CELLS = 12
+    const val ACTION_PREFIX_TAP_NUMBER = "tap_number_"
+    const val ACTION_PREFIX_GRID_TAP = "grid_tap_"
+
+    /** 数字动作 → N（正数）；非数字动作返回 null */
+    fun numberedActionValue(action: String): Int? {
+        val n = when {
+            action.startsWith(ACTION_PREFIX_TAP_NUMBER) ->
+                action.removePrefix(ACTION_PREFIX_TAP_NUMBER).toIntOrNull()
+            action.startsWith(ACTION_PREFIX_GRID_TAP) ->
+                action.removePrefix(ACTION_PREFIX_GRID_TAP).toIntOrNull()
+            else -> null
+        }
+        return if (n != null && n > 0) n else null
+    }
+
+    /** 动作 id 是否可绑：固定动作（ACTION_LABELS）或合法范围的数字动作（备份导入共用此门） */
+    fun isValidAction(action: String): Boolean {
+        if (action in ACTION_LABELS) return true
+        val n = numberedActionValue(action) ?: return false
+        return when {
+            action.startsWith(ACTION_PREFIX_TAP_NUMBER) -> n in 1..MAX_NUMBER
+            else -> n in 1..GRID_CELLS
+        }
+    }
+
+    /** 动作展示名：固定动作查表；数字动作拼显示（「点击编号 7」「点击第 3 格」）；未知原样返回 */
+    fun displayAction(action: String): String {
+        ACTION_LABELS[action]?.let { return it }
+        val n = numberedActionValue(action) ?: return action
+        return if (action.startsWith(ACTION_PREFIX_TAP_NUMBER)) "点击编号 $n" else "点击第 $n 格"
+    }
+
     // 保护词：求救/看门狗专用通道，不允许被自定义说法占用
     private val PROTECTED = setOf("退出", "继续")
 
@@ -77,7 +114,7 @@ object CustomBindings {
     /** 新增/覆盖（同短语覆盖旧绑定）。返回错误提示；null = 成功 */
     fun upsert(context: Context, rawPhrase: String, action: String): String? {
         val phrase = rawPhrase.replace(" ", "").trim()
-        if (action !in ACTION_LABELS) return "未知动作"
+        if (!isValidAction(action)) return "未知动作"
         if (phrase.length < 2 || phrase.length > 10) return "说法需要 2~10 个汉字"
         if (!phrase.all { it.code in 0x4E00..0x9FFF }) return "只能是汉字"
         if (phrase in NOISE) return "这是语气词，换一个有内容的说法"

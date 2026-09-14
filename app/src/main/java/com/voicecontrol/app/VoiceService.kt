@@ -1181,6 +1181,36 @@ class VoiceService : Service() {
             SessionState.lastMatch = "→ 长按模式（说数字或「中间」）"
             return
         }
+        // 数字绑定动作（v0.50.0）：执行路径与原生「点击编号 N / 点击第 N 格」完全一致，
+        // 含「重复一次」的 lastAction 记录；横条/使用记录口径也对齐原生
+        if (matched.action.startsWith("tap_number_")) {
+            val n = matched.action.removePrefix("tap_number_").toIntOrNull() ?: return
+            val ok = VoiceControlService.tapLabel(n)
+            if (ok) lastAction = LastAction.TapLabel(n)
+            VoiceControlService.updateBar(if (ok) "⚡ 点击编号 $n" else "🎤 识别：${SessionState.lastText}")
+            SessionState.lastMatch = if (ok) "→ 点击编号 $n ✅ 已执行" else "→ 点击编号 $n"
+            if (ok) vibrateFeedback()
+            return
+        }
+        if (matched.action.startsWith("grid_tap_")) {
+            val n = matched.action.removePrefix("grid_tap_").toIntOrNull() ?: return
+            // 网格没显示时不能点：currentTapPoint 无网格会兜底屏幕中心（原生路径有 gridShowing 前置，此处对齐）
+            if (!VoiceControlService.isGridShowing()) {
+                VoiceControlService.updateBar("⚠️ 网格未显示，说「显示网格」")
+                SessionState.lastMatch = "→ 点击第 $n 格（网格未显示）"
+                return
+            }
+            val ok = VoiceControlService.tapGridCell(n)
+            if (ok) {
+                VoiceControlService.lastGridTapPoint?.let { p ->
+                    lastAction = LastAction.TapPoint(p.first, p.second)
+                }
+            }
+            VoiceControlService.updateBar(if (ok) "⚡ 点击第 $n 格" else "🎤 识别：${SessionState.lastText}")
+            SessionState.lastMatch = if (ok) "→ 点击第 $n 格 ✅" else "→ 点击第 $n 格"
+            if (ok) vibrateFeedback()
+            return
+        }
         // 音量/摇移命令：执行器可能带回附加提示（如「已达安全上限」「桌面不支持摇移」），
         // 优先展示提示，不被通用文案顶掉
         if (matched.action in NOTE_ACTIONS) {

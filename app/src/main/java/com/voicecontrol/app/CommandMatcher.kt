@@ -243,8 +243,15 @@ class CommandMatcher private constructor(
                     }
                 }
                 for ((phrase, action) in customBindings) {
-                    val base = entries.firstOrNull { it.action == action } ?: continue
-                    entries.add(0, Entry(base.id, base.action, base.group, phrase, pinyinOf(phrase)))
+                    val base = entries.firstOrNull { it.action == action }
+                    if (base != null) {
+                        entries.add(0, Entry(base.id, base.action, base.group, phrase, pinyinOf(phrase)))
+                    } else if (action.startsWith("tap_number_") || action.startsWith("grid_tap_")) {
+                        // 数字绑定（v0.50.0）：commands.json 无本体可搭车，自成条目前插（自定义优先）。
+                        // action 合法性由 CustomBindings.isValidAction 在存储层把关，此处信任存储
+                        entries.add(0, Entry("custom_$action", action, "custom", phrase, pinyinOf(phrase)))
+                    }
+                    // 动作既不存在也非数字 → 跳过（UI 只列可绑动作，正常不会发生）
                 }
                 CommandMatcher(entries)
             } catch (e: Exception) {

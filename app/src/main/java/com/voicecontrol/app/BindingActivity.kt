@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 
@@ -55,18 +56,79 @@ class BindingActivity : ThemedActivity() {
         super.onPause()
     }
 
-    /** 第一步：选目标动作（全部既有动作，按展示名排序） */
+    /** 第一步：选目标动作（既有动作按展示名排序 + 末尾「选择数字」二级入口——50 个数字不摊平列表） */
     private fun pickAction() {
         val actions = CustomBindings.BINDABLE_ACTIONS
         val labels = actions.map { it.second }.toTypedArray()
+        val items = labels + "选择数字（点击编号 / 网格格子）"
         AlertDialog.Builder(this)
             .setTitle("绑定到哪个动作？")
-            .setItems(labels) { _, which ->
-                pendingAction = actions[which].first
-                startCapture()
+            .setItems(items) { _, which ->
+                if (which < actions.size) {
+                    pendingAction = actions[which].first
+                    startCapture()
+                } else {
+                    pickNumberType()
+                }
             }
             .setNegativeButton("取消", null)
             .show()
+    }
+
+    /** 二级入口第一步：选数字类型（编号 1~50 / 网格格子 1~12） */
+    private fun pickNumberType() {
+        val types = arrayOf(
+            "点击编号 N（屏幕元素编号，1~${CustomBindings.MAX_NUMBER}）",
+            "点击第 N 格（网格，1~${CustomBindings.GRID_CELLS}）",
+        )
+        AlertDialog.Builder(this)
+            .setTitle("选择数字类型")
+            .setItems(types) { _, which ->
+                val isGrid = which == 1
+                val max = if (isGrid) CustomBindings.GRID_CELLS else CustomBindings.MAX_NUMBER
+                showNumberGrid(isGrid, max)
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    /** 二级入口第二步：数字大按钮网格（5 列排开、可滚动，点选即进入语音录入——不打字不报数） */
+    private fun showNumberGrid(isGrid: Boolean, max: Int) {
+        val dp = { v: Int -> (v * resources.displayMetrics.density + 0.5f).toInt() }
+        var dlg: AlertDialog? = null
+        val perRow = 5
+        val scroll = ScrollView(this)
+        val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        var num = 1
+        while (num <= max) {
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            repeat(perRow) {
+                val value = num++
+                row.addView(TextView(this).apply {
+                    text = if (value <= max) value.toString() else ""
+                    gravity = android.view.Gravity.CENTER
+                    textSize = 15f
+                    setTextColor(getColor(R.color.text_primary))
+                    background = getDrawable(R.drawable.bg_card)
+                    layoutParams = LinearLayout.LayoutParams(dp(52), dp(44)).apply {
+                        setMargins(dp(4), dp(4), dp(4), dp(4))
+                    }
+                    if (value <= max) setOnClickListener {
+                        pendingAction = if (isGrid) "grid_tap_$value" else "tap_number_$value"
+                        dlg?.dismiss()
+                        startCapture()
+                    }
+                })
+            }
+            column.addView(row)
+        }
+        scroll.addView(column)
+        dlg = AlertDialog.Builder(this)
+            .setTitle(if (isGrid) "点击第 N 格：选格子（1~$max）" else "点击编号：选数字（1~$max）")
+            .setView(scroll)
+            .setNegativeButton("取消", null)
+            .create()
+        dlg.show()
     }
 
     /** 第二步：语音录入——武装捕获标志并启动正常会话（安全链全在），说完第一句自动结束 */
@@ -93,7 +155,7 @@ class BindingActivity : ThemedActivity() {
         val action = pendingAction
         pendingAction = null
         if (action == null) return
-        val actionLabel = CustomBindings.ACTION_LABELS[action] ?: action
+        val actionLabel = CustomBindings.displayAction(action)
         AlertDialog.Builder(this)
             .setTitle("确认绑定")
             .setMessage("识别结果：「$captured」\n\n是否将其绑定为「$actionLabel」的触发说法？\n绑定后，说出这句话即执行「$actionLabel」。")
@@ -128,7 +190,7 @@ class BindingActivity : ThemedActivity() {
         }
 
         bindings.forEach { b ->
-            val label = CustomBindings.ACTION_LABELS[b.action] ?: b.action
+            val label = CustomBindings.displayAction(b.action)
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(14), dp(12), dp(14), dp(12))

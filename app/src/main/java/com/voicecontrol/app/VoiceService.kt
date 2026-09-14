@@ -182,6 +182,15 @@ class VoiceService : Service() {
             }
         }
 
+        // 重复家族热词（v0.53.1）：此前整个家族缺席——解码器无偏置时偏爱常见搭配，
+        // 用户实测「重复五次/六次」被听成「重复一次」、「重复一次」本身也时灵时不灵。
+        // 「一次」~「十次」「两次」与「重复 ×」一并覆盖，「再来一次」为口语变体
+        private val REPEAT_HOTWORDS = buildList {
+            val ci = listOf("一次", "两次", "三次", "四次", "五次", "六次", "七次", "八次", "九次", "十次")
+            ci.forEach { add(it); add("重复$it") }
+            add("再来一次")
+        }
+
         // App 名热词（纯汉字）：让 ASR 优先识别成正确 App 名（否则「抖音」易被听成「面嗯」等）
         private val APP_HOTWORDS = listOf(
             "抖音", "微信", "支付宝", "淘宝", "京东", "微博", "小红书", "知乎",
@@ -591,7 +600,7 @@ class VoiceService : Service() {
         // v0.42.0：并入用户自定义常用词（人名/地名）——来源只增不减，指令词 8.0 分照旧；
         // 撞车词已在准入时被 CustomVocab.validateWord 拦截（commandCollision），不会到这里
         val words = (currentMatcher().hotwords() + APP_HOTWORDS + NUMBER_HOTWORDS +
-            CustomVocab.all(applicationContext)).distinct()
+            REPEAT_HOTWORDS + CustomVocab.all(applicationContext)).distinct()
         if (words.isEmpty()) {
             Log.w(TAG, "命令词表为空，跳过热词")
             return ""
@@ -1280,6 +1289,7 @@ class VoiceService : Service() {
         '妻' to '七', '期' to '七', '柒' to '七',
         '久' to '九', '酒' to '九', '玖' to '九',
         '时' to '十', '石' to '十', '拾' to '十',
+        '词' to '次', '此' to '次',   // v0.53.1：「五词/五此」→「五次」（重复家族量词被听岔）
     )
 
     /** 把数字同音字替换回数字汉字（数字命令解析前调用） */

@@ -3,180 +3,345 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>言出法随 · YanChuFaSui — 安卓全离线语音控制</title>
-<meta name="description" content="言出法随（YanChuFaSui）：系统级 · 全离线 · 零数据上传 · 中文原生的安卓语音控制。说出指令，手机执行。">
+<title>言出法随 · 说话，即操控</title>
+<meta name="description" content="言出法随 YanChuFaSui——完全离线的安卓中文语音控制软件。为双手不便的人打造：编号点击、网格缩放、语音听写、自定义指令。你说话，手机照做。">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="%230A84FF"/><circle cx="34" cy="50" r="15" fill="white"/><path d="M55 28 L76 50 L55 72" stroke="white" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'>
 <style>
   :root{
-    --blue:#0A84FF; --bg:#121214; --bg2:#1a1a1e; --card:#1e1e22;
-    --text:#f5f5f7; --muted:#a1a1aa; --border:#2a2a30; --green:#30d158;
+    --blue:#0A84FF; --blue2:#5AC8FA; --ink:#F5F5F7; --dim:#9B9BA3;
+    --bg:#050507; --panel:#0D0D11; --card:rgba(255,255,255,.045);
+    --line:rgba(255,255,255,.09); --good:#34C759;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.7}
-  a{color:var(--blue);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
-  nav .brand{font-size:20px;font-weight:700}
-  nav .links a{margin-left:18px;font-size:14px;color:var(--muted)}
-  nav .links a:hover{color:var(--text);text-decoration:none}
-  .hero{text-align:center;padding:80px 0 60px}
-  .hero h1{font-size:56px;letter-spacing:2px;margin-bottom:8px}
-  .hero .en{font-size:20px;color:var(--muted);margin-bottom:22px}
-  .hero .tags{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;padding:8px 26px;font-size:15px;margin-bottom:26px}
-  .hero p{font-size:18px;color:var(--muted)}
-  .btns{margin-top:34px}
-  .btn{display:inline-block;padding:13px 34px;border-radius:999px;font-size:16px;margin:0 8px;transition:.2s}
-  .btn.primary{background:var(--blue);color:#fff}
-  .btn.primary:hover{filter:brightness(1.15);text-decoration:none}
-  .btn.ghost{border:1px solid var(--border);color:var(--text)}
-  .btn.ghost:hover{border-color:var(--blue);text-decoration:none}
-  section{padding:56px 0;border-top:1px solid var(--border)}
-  section h2{font-size:30px;margin-bottom:26px}
-  section h3{font-size:19px;margin:22px 0 8px;color:var(--blue)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px}
-  .card b{display:block;font-size:17px;margin-bottom:6px;color:var(--text)}
-  .card span{font-size:14px;color:var(--muted)}
-  .shot{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:24px}
-  .shot img{width:100%;border-radius:16px;border:1px solid var(--border)}
-  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden}
-  th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:15px}
-  th{color:var(--muted);font-weight:600}
-  td b{color:var(--blue)}
-  .safety{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .safety .card{text-align:center}
-  .timeline{list-style:none}
-  .timeline li{padding:10px 0;border-bottom:1px dashed var(--border);display:flex;gap:14px}
-  .timeline li b{min-width:110px;color:var(--blue)}
-  .about{background:var(--bg2);border-radius:16px;padding:28px;margin-top:10px}
-  .footer{border-top:1px solid var(--border);padding:30px 0;color:var(--muted);font-size:13px;text-align:center}
-  .footer a{color:var(--muted)}
-  .note{font-size:13px;color:var(--muted);margin-top:10px}
-  @media(max-width:640px){.hero h1{font-size:40px}.hero{padding:56px 0 40px}}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden; line-height:1.6;
+  }
+  ::selection{background:rgba(10,132,255,.35)}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- 导航 ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:99;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px clamp(16px,5vw,56px);
+    background:rgba(5,5,7,.55); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; font-size:17px; letter-spacing:.5px}
+  .brand svg{display:block}
+  .navlinks{display:flex; gap:26px; font-size:14px; color:var(--dim)}
+  .navlinks a{transition:color .25s}
+  .navlinks a:hover{color:var(--ink)}
+  .navlinks a.gh{color:var(--blue2); font-weight:600}
+  @media(max-width:720px){.navlinks a:not(.gh){display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    text-align:center; padding:120px 20px 60px; position:relative;
+  }
+  .hero::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% -5%, rgba(10,132,255,.28), transparent 65%),
+      radial-gradient(ellipse 40% 35% at 85% 20%, rgba(90,200,250,.10), transparent 60%),
+      radial-gradient(ellipse 35% 30% at 12% 30%, rgba(94,92,230,.10), transparent 60%);
+  }
+  .capsule{
+    display:inline-flex; align-items:center; gap:9px;
+    padding:9px 20px; border-radius:999px; font-size:13.5px; color:var(--blue2);
+    background:rgba(10,132,255,.12); border:1px solid rgba(10,132,255,.35);
+    letter-spacing:.5px; position:relative;
+  }
+  .capsule .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good);animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  h1.title{
+    font-size:clamp(56px,11vw,124px); font-weight:800; letter-spacing:.04em; line-height:1.08;
+    margin:30px 0 6px;
+    background:linear-gradient(180deg,#FFFFFF 30%,#8FC3FF 75%,#0A84FF);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .en{font-size:clamp(13px,2vw,16px); letter-spacing:.55em; color:var(--dim); text-transform:uppercase; margin-bottom:26px}
+  .slogan{font-size:clamp(22px,3.6vw,34px); font-weight:700; margin-bottom:18px}
+  .slogan em{font-style:normal; color:var(--blue2)}
+  .hero p.sub{max-width:640px; color:var(--dim); font-size:clamp(15px,2vw,17.5px)}
+  .wave{display:flex; align-items:center; gap:5px; height:52px; margin:38px 0 44px}
+  .wave i{
+    width:5px; border-radius:3px; background:linear-gradient(180deg,var(--blue2),var(--blue));
+    animation:wave 1.15s ease-in-out infinite;
+  }
+  @keyframes wave{0%,100%{height:9px;opacity:.55}50%{height:46px;opacity:1}}
+  .wave i:nth-child(odd){animation-duration:.85s}
+  .wave i:nth-child(3n){animation-duration:1.35s}
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px; width:min(860px,94vw); position:relative;
+  }
+  @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 10px;
+  }
+  .stat b{display:block; font-size:clamp(24px,3.4vw,34px); font-weight:800;
+    background:linear-gradient(90deg,#fff,#9CCBFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .stat span{font-size:12.5px; color:var(--dim); letter-spacing:1px}
+
+  /* ---------- 通用 Section ---------- */
+  section{padding:96px clamp(18px,6vw,72px); max-width:1180px; margin:0 auto}
+  .kicker{font-size:13px; letter-spacing:.4em; color:var(--blue2); text-transform:uppercase; margin-bottom:12px}
+  h2{font-size:clamp(30px,4.6vw,46px); font-weight:800; letter-spacing:.02em; margin-bottom:14px}
+  .lead{color:var(--dim); max-width:680px; font-size:16px; margin-bottom:46px}
+  .reveal{opacity:0; transform:translateY(26px); transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1; transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.wave i{animation:none}}
+
+  /* ---------- 真机演示 ---------- */
+  .shots{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px}
+  .shot{
+    background:var(--panel); border:1px solid var(--line); border-radius:22px; overflow:hidden;
+    transition:transform .35s ease, border-color .35s ease;
+  }
+  .shot:hover{transform:translateY(-6px); border-color:rgba(10,132,255,.5)}
+  .shot img{display:block; width:100%; height:400px; object-fit:cover; object-position:top; background:#000}
+  .shot figcaption{padding:14px 18px; font-size:14px; color:var(--dim)}
+  .shot figcaption b{color:var(--ink); display:block; margin-bottom:2px; font-size:15px}
+
+  /* ---------- 功能卡片 ---------- */
+  .features{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:16px}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:20px; padding:26px 24px;
+    transition:transform .3s ease, border-color .3s ease; position:relative; overflow:hidden;
+  }
+  .card::after{
+    content:""; position:absolute; inset:0; opacity:0; transition:opacity .35s; pointer-events:none;
+    background:radial-gradient(420px 160px at 20% 0%, rgba(10,132,255,.14), transparent 70%);
+  }
+  .card:hover{transform:translateY(-5px); border-color:rgba(10,132,255,.45)}
+  .card:hover::after{opacity:1}
+  .card .ico{
+    width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; margin-bottom:16px; background:rgba(10,132,255,.16); border:1px solid rgba(10,132,255,.3);
+  }
+  .card h3{font-size:17.5px; margin-bottom:8px}
+  .card p{font-size:14px; color:var(--dim)}
+
+  /* ---------- 安全五道闸 ---------- */
+  .safety{
+    background:linear-gradient(180deg,var(--panel),#07070A);
+    border:1px solid var(--line); border-radius:28px; padding:clamp(28px,5vw,56px); position:relative; overflow:hidden;
+  }
+  .safety::before{
+    content:""; position:absolute; top:-120px; right:-120px; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, rgba(52,199,89,.14), transparent 65%);
+  }
+  .gates{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-top:36px}
+  .gate{border:1px solid var(--line); border-radius:16px; padding:20px 18px; background:rgba(255,255,255,.025)}
+  .gate b{display:flex; align-items:center; gap:9px; font-size:15.5px; margin-bottom:8px}
+  .gate b i{font-style:normal; color:var(--good); font-size:13px}
+  .gate span{font-size:13.5px; color:var(--dim)}
+  .safety .fine{
+    margin-top:32px; padding-top:24px; border-top:1px dashed var(--line);
+    font-size:15.5px; color:var(--ink);
+  }
+  .safety .fine strong{color:var(--good)}
+
+  /* ---------- 技术条 ---------- */
+  .stack{display:flex; flex-wrap:wrap; gap:12px}
+  .chip{
+    padding:11px 20px; border-radius:999px; border:1px solid var(--line);
+    background:var(--card); font-size:14px; color:var(--ink);
+  }
+  .chip span{color:var(--blue2); margin-right:7px}
+
+  /* ---------- 里程碑时间轴 ---------- */
+  .timeline{position:relative; margin-top:20px; padding-left:34px}
+  .timeline::before{
+    content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px;
+    background:linear-gradient(180deg,var(--blue),rgba(10,132,255,.06));
+  }
+  .tl{position:relative; padding:0 0 34px 26px}
+  .tl::before{
+    content:""; position:absolute; left:-33px; top:7px; width:16px; height:16px; border-radius:50%;
+    background:var(--bg); border:3px solid var(--blue); box-shadow:0 0 14px rgba(10,132,255,.55);
+  }
+  .tl .v{
+    display:inline-block; font-size:12.5px; font-weight:700; letter-spacing:1px; color:#04121F;
+    background:linear-gradient(90deg,var(--blue2),var(--blue)); padding:3px 12px; border-radius:999px; margin-bottom:9px;
+  }
+  .tl h3{font-size:19px; margin-bottom:6px}
+  .tl p{color:var(--dim); font-size:14.5px; max-width:640px}
+  .tl.major h3{background:linear-gradient(90deg,#fff,#9CCBFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+
+  /* ---------- 作者 ---------- */
+  .author{
+    text-align:center; padding:110px clamp(18px,6vw,72px);
+    background:radial-gradient(ellipse 55% 60% at 50% 110%, rgba(10,132,255,.16), transparent 70%);
+  }
+  .author .quote{font-size:clamp(22px,3.8vw,34px); font-weight:700; max-width:820px; margin:0 auto 18px; line-height:1.5}
+  .author .quote em{font-style:normal; color:var(--blue2)}
+  .author .who{color:var(--dim); font-size:15.5px; max-width:620px; margin:0 auto 36px}
+  .author .btns{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .btn{padding:14px 30px; border-radius:999px; font-size:15px; font-weight:600; transition:transform .25s, box-shadow .25s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.pri{background:linear-gradient(90deg,var(--blue),#3E9BFF); box-shadow:0 8px 28px rgba(10,132,255,.35)}
+  .btn.ghost{border:1px solid var(--line); color:var(--ink)}
+
+  /* ---------- 页脚 ---------- */
+  footer{border-top:1px solid var(--line); padding:34px 20px 44px; text-align:center; color:var(--dim); font-size:13px}
+  footer .fl{display:flex; gap:22px; justify-content:center; margin-bottom:14px; flex-wrap:wrap}
+  footer a:hover{color:var(--blue2)}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <nav>
-    <div class="brand">言出法随 · YanChuFaSui</div>
-    <div class="links">
-      <a href="#features">功能</a><a href="#examples">示例</a><a href="#safety">安全</a><a href="#download">下载</a><a href="#about">关于</a>
+<nav>
+  <a class="brand" href="#top">
+    <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" rx="24" fill="#0A84FF"/>
+      <circle cx="34" cy="50" r="15" fill="#fff"/>
+      <path d="M55 28 L76 50 L55 72" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    言出法随
+  </a>
+  <div class="navlinks">
+    <a href="#demo">真机演示</a>
+    <a href="#features">功能</a>
+    <a href="#safety">安全</a>
+    <a href="#timeline">里程碑</a>
+    <a href="#author">作者</a>
+    <a class="gh" href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="capsule"><span class="dot"></span> v0.50.0 · 全程离线 · 数据零上传</div>
+  <h1 class="title">言出法随</h1>
+  <div class="en">YanChuFaSui · Offline Voice Control for Android</div>
+  <div class="slogan">你说话，<em>手机照做</em>。</div>
+  <p class="sub">完全离线的安卓中文语音控制软件。屏幕上的每个元素都有编号，说出编号即可点击——滑动、听写、改字、打开应用，全程不动手，也全程不联网。为双手不便的人打造，同样适合想解放双手的你。</p>
+  <div class="wave" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>69</b><span>个迭代构建 · v0.1 → v0.50</span></div>
+    <div class="stat"><b>100%</b><span>离线识别 · 无需联网</span></div>
+    <div class="stat"><b>0</b><span>数据上传 · 无账号无埋点</span></div>
+    <div class="stat"><b>188</b><span>条热词 · 数字全量覆盖</span></div>
+  </div>
+</header>
+
+<section id="demo">
+  <div class="kicker reveal">Real Device</div>
+  <h2 class="reveal">真机实录，不是概念片</h2>
+  <p class="lead reveal">以下全部来自真实手机屏幕录制——就是测试者每天在用的样子。</p>
+  <div class="shots">
+    <figure class="shot reveal"><img src="images/demo-numbers.gif" alt="显示编号并点击编号" loading="lazy"><figcaption><b>编号点击</b>说「显示编号」，报数即点，原生控件一样生效</figcaption></figure>
+    <figure class="shot reveal"><img src="images/demo-swipe.gif" alt="语音滑动屏幕" loading="lazy"><figcaption><b>语音滑动</b>上滑下滑左右滑，还能摇移微调到正中</figcaption></figure>
+    <figure class="shot reveal"><img src="images/demo-dictation.gif" alt="语音听写输入" loading="lazy"><figcaption><b>语音听写</b>说「输入」→说话→停顿自动落笔，光标删除清空全用嘴</figcaption></figure>
+    <figure class="shot reveal"><img src="images/demo-replace.gif" alt="语音替换文字" loading="lazy"><figcaption><b>语音替换</b>「把不错替换成很好」，拼音模糊也能找准</figcaption></figure>
+  </div>
+</section>
+
+<section id="features">
+  <div class="kicker reveal">Features</div>
+  <h2 class="reveal">一部手机的全套遥控器</h2>
+  <p class="lead reveal">对标系统级语音助手的能力清单，再加上市面上少有的本土化兼容。</p>
+  <div class="features">
+    <div class="card reveal"><div class="ico">🔢</div><h3>编号点击</h3><p>全屏元素自动编号，说「点击 12」即可点中；网格 3×4 还能 5 级缩放，小图标也点得准。</p></div>
+    <div class="card reveal"><div class="ico">🧭</div><h3>全域导航</h3><p>滑动、返回、主页、最近任务、通知中心、锁屏、音量——系统的每个角落都说得到。</p></div>
+    <div class="card reveal"><div class="ico">🎤</div><h3>语音听写</h3><p>说「输入」开始说话，停顿自动落进输入框。不能打字的用户靠它聊天、记事、搜东西。</p></div>
+    <div class="card reveal"><div class="ico">🔁</div><h3>语音替换</h3><p>「把王信豪替换成黄信豪」——精确匹配加拼音模糊找词，说错的字用嘴改。</p></div>
+    <div class="card reveal"><div class="ico">📚</div><h3>个人词典</h3><p>人名、地名、行业词加进词典，识别优先命中。名单独立管理，绝不干扰操控指令。</p></div>
+    <div class="card reveal"><div class="ico">🎯</div><h3>自定义指令</h3><p>「向上滑动」总被听岔？绑定你自己的说法，语音录入零打字，编号 1~50、网格格子也能绑。</p></div>
+    <div class="card reveal"><div class="ico">💾</div><h3>配置备份</h3><p>指令、词典、设置一键导出成文字，发微信收藏即可；换手机粘贴导入，不用从头再来。</p></div>
+    <div class="card reveal"><div class="ico">💬</div><h3>微信兼容</h3><p>微信 8.0.52+ 里「显示编号 / 点击编号」直接可用，无需电脑授权——重度聊天场景全覆盖。</p></div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="kicker reveal">Safety First</div>
+  <h2 class="reveal">安全，是设计的底线</h2>
+  <p class="lead reveal">麦克风是独占资源——占住它，系统语音助手就唤不醒。言出法随把「随时归还」写进了每一层。</p>
+  <div class="safety reveal">
+    <div class="gates">
+      <div class="gate"><b><i>01</i>会话制占用</b><span>只有会话期间持有麦克风，说「退出」立刻归还，系统语音助手随叫随到。</span></div>
+      <div class="gate"><b><i>02</i>看门狗熔断</b><span>单段最长 5 分钟，最多续 2 次、硬顶 15 分钟，到期前 20 秒预警——程序再卡也夺不走麦克风。</span></div>
+      <div class="gate"><b><i>03</i>静音自动释放</b><span>60 秒没有有效语音自动还麦，靠语音模型判定真人说话，不看音量阈值。</span></div>
+      <div class="gate"><b><i>04</i>锁屏即还麦</b><span>屏幕一灭立即释放麦克风，保证锁屏状态下紧急唤起零障碍。</span></div>
+      <div class="gate"><b><i>05</i>80% 音量硬帽</b><span>误识别最多把音量推到 80%，永远不会有炸耳的一百格。</span></div>
     </div>
-  </nav>
+    <div class="fine">再加一道<strong>误触发熔断</strong>：8 秒内连续执行 6 次即判定失控、自动中止——它出错的代价，永远被设计封在可控范围里。</div>
+  </div>
+</section>
 
-  <header class="hero">
-    <h1>言出法随</h1>
-    <div class="en">YanChuFaSui — voice control for Android</div>
-    <div class="tags">系统级 · 全离线 · 零数据上传 · 中文原生</div>
-    <p>说出指令，手机执行。<br>为无法精细触屏的用户，把操作权交还给声音。</p>
-    <div class="btns">
-      <a class="btn primary" href="https://github.com/qb200310-hash/YanChuFaSui/releases" target="_blank" rel="noopener">下载安装包</a>
-      <a class="btn ghost" href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub 仓库</a>
-    </div>
-  </header>
+<section id="stack">
+  <div class="kicker reveal">Under the Hood</div>
+  <h2 class="reveal">全离线的技术底气</h2>
+  <p class="lead reveal">识别、匹配、执行全部发生在手机本地。没有云，意味着没有延迟依赖、没有隐私焦虑、没有「服务已断开」。</p>
+  <div class="stack">
+    <div class="chip"><span>◆</span>SenseVoice 离线中文识别（sherpa-onnx）</div>
+    <div class="chip"><span>◆</span>VAD 真人语音判定，拒绝噪音误触</div>
+    <div class="chip"><span>◆</span>四层命令匹配：精确 → 包含 → 拼音精确 → 拼音模糊</div>
+    <div class="chip"><span>◆</span>无障碍服务手势执行 + 点击闭环复验</div>
+    <div class="chip"><span>◆</span>iOS 设计语言 1:1 复刻</div>
+    <div class="chip"><span>◆</span>Apache-2.0 开源</div>
+  </div>
+</section>
 
-  <section id="why">
-    <h2>解决什么问题</h2>
-    <p>SMA 等肢体障碍用户无法触屏操作手机，而「打不了字」与「点不了屏幕」之间，隔着一整个数字生活。与此同时，国产安卓阵营几乎没有任何厂商投入系统级的语音控制。</p>
-    <p style="margin-top:14px">言出法随用「无障碍服务 + 离线语音识别」把操作权交还给声音：无需联网、无需专用硬件、无需电脑常伴——一部普通安卓手机，说话即可完成滑动、点击、输入等几乎全部操作。</p>
-  </section>
+<section id="timeline">
+  <div class="kicker reveal">Milestones</div>
+  <h2 class="reveal">从第一行代码，到敢交给别人用</h2>
+  <p class="lead reveal">69 个构建迭代出来的路线图，记住这几个版本号就够了。</p>
+  <div class="timeline">
+    <div class="tl major reveal"><span class="v">v0.8</span><h3>经典编号</h3><p>黑底圆角方块的编号样式在这一版诞生，后来历经改版又原样请回——它被证明是最耐看的。</p></div>
+    <div class="tl reveal"><span class="v">v0.15</span><h3>iOS 换脸</h3><p>灵动岛胶囊、卡片式弹窗、流光反馈，整套界面换装 iOS 设计语言。</p></div>
+    <div class="tl major reveal"><span class="v">v0.26</span><h3>真正能用</h3><p>摇移微调、音量/锁屏设备控制、80% 音量安全帽、无障碍被关后的静默自愈——从「能跑」到「敢日用」。</p></div>
+    <div class="tl reveal"><span class="v">v0.29</span><h3>声波胶囊</h3><p>说话时胶囊里浮现实时起伏的声波，看得见「它听到你了」。</p></div>
+    <div class="tl major reveal"><span class="v">v0.30</span><h3>全新界面</h3><p>对标设计稿重做主页、设置、关于页，品牌 logo 定稿。</p></div>
+    <div class="tl reveal"><span class="v">v0.33</span><h3>深色 + 缩放</h3><p>深色模式三选项；双指放大缩小，小元素也能精准命中。</p></div>
+    <div class="tl reveal"><span class="v">v0.35</span><h3>安全纲领成型</h3><p>看门狗会话制定型（硬顶 15 分钟）、指令说明教程化、使用记录导出。</p></div>
+    <div class="tl major reveal"><span class="v">v0.37</span><h3>微信打通</h3><p>微信里「显示编号 / 点击编号」可用——最重的聊天场景从此不再需要别人帮忙。</p></div>
+    <div class="tl reveal"><span class="v">v0.38</span><h3>灵敏度滑块</h3><p>1~10 格自调识别灵敏度：往高听得见细声细语，往低防误触。</p></div>
+    <div class="tl reveal"><span class="v">v0.39</span><h3>自定义说法</h3><p>「向上滑动」总被听成「乡上花东」？语音绑定自己的说法，零打字，保存即生效。</p></div>
+    <div class="tl reveal"><span class="v">v0.40–0.42</span><h3>文字三连</h3><p>语音听写落笔、语音替换改字、个人词典纠错——聊天和记事全线语音化。</p></div>
+    <div class="tl major reveal"><span class="v">v0.47</span><h3>微信直通</h3><p>服务以可信读屏身份在场，微信编号免电脑授权直接放行，装机门槛大幅下降。</p></div>
+    <div class="tl reveal"><span class="v">v0.49</span><h3>配置备份</h3><p>指令、词典、设置一键导出成一段文字，换机重装粘贴即恢复。</p></div>
+    <div class="tl major reveal"><span class="v">v0.50</span><h3>更从容，更个人</h3><p>看门狗放宽到每段 5 分钟；编号 1~50、网格 1~12 都能绑定专属说法——同一个崩溃顽疾也在这一版根治。</p></div>
+  </div>
+</section>
 
-  <section id="features">
-    <h2>核心能力</h2>
-    <div class="grid">
-      <div class="card"><b>屏幕编号</b><span>说「显示编号」，可点击元素全部标注数字；「点击 18」精准触达</span></div>
-      <div class="card"><b>屏幕网格</b><span>十二宫格覆盖全屏，可逐级细化，任意位置都有编号</span></div>
-      <div class="card"><b>滑动与摇移</b><span>四方向整页滚动；摇移小步微调，对准位置</span></div>
-      <div class="card"><b>双指缩放</b><span>捏合放大 / 缩小，看图片看网页</span></div>
-      <div class="card"><b>语音听写</b><span>说「输入」→ 说话 → 停顿后文字填入输入框（微信等）</span></div>
-      <div class="card"><b>文字编辑</b><span>「删除」「光标左移 / 右移」「把 A 替换成 B」语音纠错</span></div>
-      <div class="card"><b>自定义指令</b><span>用自己的说法绑定动作，语音录入零打字</span></div>
-      <div class="card"><b>个人词典</b><span>人名地名加入词典后优先识别（如「黄信豪」）</span></div>
-      <div class="card"><b>设备控制</b><span>音量（80% 安全上限）、静音、锁屏、通知中心、控制中心</span></div>
-      <div class="card"><b>全离线识别</b><span>SenseVoice 引擎内置，无网络完整可用</span></div>
-      <div class="card"><b>识别灵敏度</b><span>1~10 格滑块，适配轻声与含糊语音</span></div>
-      <div class="card"><b>深色模式</b><span>跟随系统 / 浅色 / 深色三选项</span></div>
-    </div>
-  </section>
+<section class="author" id="author">
+  <div class="kicker reveal" style="margin-bottom:22px">The Author</div>
+  <p class="quote reveal">「我是<em>黄信豪 Hugo</em>，一名22岁的<em>SMA患者开发者</em>。」</p>
+  <p class="who reveal">言出法随的作者，也是它最日常的用户。每一个功能都先在自己身上用通，再交到别人手里——这份使用手册，是用生活写的。</p>
+  <div class="btns reveal">
+    <a class="btn pri" href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub 开源仓库</a>
+    <a class="btn ghost" href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener">爱发电 · 请作者喝杯咖啡</a>
+  </div>
+</section>
 
-  <section id="examples">
-    <h2>你说 → 手机做</h2>
-    <table>
-      <tr><th>你说</th><th>手机做</th></tr>
-      <tr><td>「显示编号」</td><td>可点击元素全部标注数字</td></tr>
-      <tr><td>「点击 18」</td><td>点击编号 18 对应的元素</td></tr>
-      <tr><td>「向上滑动」</td><td>内容向上滚动一页</td></tr>
-      <tr><td>「输入」→「今天天气不错」</td><td>文字填入输入框</td></tr>
-      <tr><td>「把不错替换成很好」</td><td>输入框中的「不错」被替换为「很好」</td></tr>
-      <tr><td>「增加音量」</td><td>音量加一格（80% 封顶，防失控）</td></tr>
-      <tr><td>「退出」</td><td>结束会话，麦克风归还系统</td></tr>
-    </table>
-    <p class="note">完整指令表见仓库 README 与应用内「指令说明」。</p>
-  </section>
+<footer>
+  <div class="fl">
+    <a href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener">爱发电</a>
+    <span>Apache-2.0 License</span>
+  </div>
+  言出法随 YanChuFaSui · 离线运行 · 不上传数据 · 无需账号<br>
+  你说话，手机照做。
+</footer>
 
-  <section id="safety">
-    <h2>安全设计</h2>
-    <p style="margin-bottom:20px">语音控制最怕两件事：麦克风失控、误触发连环执行。言出法随的安全机制是产品设计的一部分，不是补丁：</p>
-    <div class="safety">
-      <div class="card"><b>会话制</b><span>占用即隔离、用完即归还；不长期持有麦克风</span></div>
-      <div class="card"><b>看门狗</b><span>每段 3 分钟，最长 15 分钟，到点自动还麦</span></div>
-      <div class="card"><b>静音释放</b><span>60 秒无语音自动归还麦克风</span></div>
-      <div class="card"><b>熔断保护</b><span>短窗口内连续执行过多即判定误触发，立即停止</span></div>
-      <div class="card"><b>音量安全帽</b><span>媒体音量 80% 封顶，杜绝误识别炸音量</span></div>
-      <div class="card"><b>静默自愈</b><span>无障碍开关被系统撤销后，下次启动自动写回</span></div>
-    </div>
-  </section>
-
-  <section id="shots">
-    <h2>应用截图</h2>
-    <div class="shot">
-      <img src="images/home.png" alt="主页">
-      <img src="images/settings.png" alt="设置">
-    </div>
-  </section>
-
-  <section id="history">
-    <h2>版本历程</h2>
-    <ul class="timeline">
-      <li><b>v0.1 – v0.3</b>项目启动：确立「会话制」核心架构</li>
-      <li><b>v0.4</b>离线识别接入，四级命令纠错，滑动与熔断保护</li>
-      <li><b>v0.5 – v0.7</b>文字点击、网格一步点击、锁屏自动释放</li>
-      <li><b>v0.8 – v0.9</b>短视频回声误识别根治；「识别对了才反馈」原则确立</li>
-      <li><b>v0.13 – v0.14</b>动作闭环校验与页面机制学习</li>
-      <li><b>v0.15 – v0.25</b>界面全面 iOS 化：灵动岛胶囊</li>
-      <li><b>v0.26</b>设备控制、80% 音量安全帽、静默自愈</li>
-      <li><b>v0.27 – v0.29</b>实时声波指示</li>
-      <li><b>v0.30 – v0.31</b>主页 / 设置 / 关于全量重构</li>
-      <li><b>v0.33 – v0.34</b>深色模式、双指缩放</li>
-      <li><b>v0.35 – v0.36</b>看门狗放宽、指令说明教程化、使用记录导出</li>
-      <li><b>v0.37 – v0.38</b>微信编号兼容、识别灵敏度滑块</li>
-      <li><b>v0.39 – v0.40</b>自定义指令、语音听写与文字编辑</li>
-      <li><b>v0.41 – v0.42</b>语音替换、个人词典</li>
-      <li><b>v0.43</b>崩溃诊断与问题反馈升级</li>
-    </ul>
-    <p class="note">完整流水账见仓库 CHANGELOG.md。</p>
-  </section>
-
-  <section id="download">
-    <h2>下载</h2>
-    <p>最新安装包（含离线识别模型，约 285MB）：<a href="https://github.com/qb200310-hash/YanChuFaSui/releases" target="_blank" rel="noopener">GitHub Releases</a></p>
-    <p class="note">要求 Android 7.0 及以上。安装后按应用内引导开启无障碍服务即可。</p>
-  </section>
-
-  <section id="about">
-    <h2>关于作者</h2>
-    <div class="about">
-      <p>黄信豪（Hugo），SMA 患者开发者。言出法随的第一位用户就是他自己——这个项目的每一个功能，都来自真实的使用需求。</p>
-      <p style="margin-top:12px">如果这个项目对你有帮助，欢迎在 <a href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener">爱发电</a> 支持作者。</p>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <p>Apache-2.0 License · © 2026 黄信豪 (Hugo) · <a href="https://github.com/qb200310-hash/YanChuFaSui" target="_blank" rel="noopener">GitHub</a></p>
-    <p style="margin-top:6px">全离线 · 零数据上传 · 语音数据不出手机</p>
-  </footer>
-
-</div>
+<script>
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting){
+        e.target.style.transitionDelay = Math.min(i*70,350)+'ms';
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
 </body>
 </html>

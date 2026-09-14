@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Window
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Switch
@@ -84,6 +85,14 @@ class SettingsActivity : ThemedActivity() {
             startActivity(Intent(this, VocabActivity::class.java))
         }
 
+        // 备份（v0.49.0）：导出/导入个人配置（指令+词典+3 项偏好），换机/重装免重设
+        findViewById<android.view.View>(R.id.row_config_export).setOnClickListener {
+            exportPersonalConfig()
+        }
+        findViewById<android.view.View>(R.id.row_config_import).setOnClickListener {
+            showImportDialog()
+        }
+
         // 无障碍服务：状态展示 + 点击跳系统设置
         val state = findViewById<TextView>(R.id.tv_a11y_state)
         fun refreshA11y() {
@@ -108,6 +117,62 @@ class SettingsActivity : ThemedActivity() {
             }.onFailure {
                 Toast.makeText(this, "打不开浏览器，请稍后再试", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    /** 导出个人配置（v0.49.0）：打包成文字 → 复制到剪贴板 + 系统分享（发微信收藏/文件传输助手即存档） */
+    private fun exportPersonalConfig() {
+        val text = runCatching { PersonalConfig.build(this) }.getOrElse {
+            Toast.makeText(this, "打包失败，请稍后再试", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("言出法随配置", text))
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "言出法随 个人配置")
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        runCatching {
+            startActivity(Intent.createChooser(send, "把配置文字发给微信收藏/文件传输助手保存"))
+        }.onFailure {
+            Toast.makeText(this, "已复制到剪贴板，可手动粘贴保存", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** 导入个人配置（v0.49.0）：粘贴 → 合并（只增改不删）→ 汇报计数；深色模式若被改则整页重载 */
+    private fun showImportDialog() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("导入个人配置")
+            .setView(R.layout.dialog_config_import)
+            .setPositiveButton("导入", null)   // 先校验再关弹窗，监听在 show() 之后替换
+            .setNegativeButton("取消", null)
+            .create()
+        dialog.show()
+        val input = dialog.findViewById<EditText>(R.id.et_config_import)!!
+        val hint = dialog.findViewById<TextView>(R.id.tv_config_hint)!!
+        val darkBefore = getSharedPreferences("app", MODE_PRIVATE)
+            .getInt("dark_mode", ThemedActivity.DARK_FOLLOW_SYSTEM)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
+            val text = input.text.toString().trim()
+            if (text.isEmpty()) {
+                hint.text = "请先粘贴导出的配置文字"
+                return@setOnClickListener
+            }
+            val counts = runCatching { PersonalConfig.apply(this, text) }.getOrElse { e ->
+                hint.text = e.message ?: "导入失败"
+                return@setOnClickListener
+            }
+            dialog.dismiss()
+            val msg = buildString {
+                append("导入完成：指令 ${counts.bindings} 条、词典 ${counts.vocab} 词、设置 ${counts.prefs} 项")
+                if (counts.skipped > 0) append("；跳过无效 ${counts.skipped} 条")
+            }
+            // Toast 用 applicationContext：深色模式被导入改动时 recreate 不至于把提示吞掉
+            Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
+            val darkAfter = getSharedPreferences("app", MODE_PRIVATE)
+                .getInt("dark_mode", ThemedActivity.DARK_FOLLOW_SYSTEM)
+            if (darkAfter != darkBefore) recreate()
         }
     }
 

@@ -689,17 +689,26 @@ class VoiceService : Service() {
             } else Log.w(TAG, "NS 不可用（机型不支持）")
         }
         runCatching {
-            if (AutomaticGainControl.isAvailable()) {
-                AutomaticGainControl.create(sessionId)?.apply {
-                    // v0.54.0 弱声专档（9~10 格）强制开启 AGC：系统层把小声/含糊嗓音拉到正常音量。
-                    // 机型相关行为，实测不佳就降回 8 格（一行回退）；≤8 格维持平台默认
-                    val weak = RecognitionSensitivity.weakVoiceMode(
-                        RecognitionSensitivity.level(applicationContext)
-                    )
-                    if (enabled || (weak && runCatching { this.enabled = true }.isSuccess)) {
-                        agcEffect = this
-                        Log.i(TAG, "AGC 自动增益已启用${if (!enabled) "（弱声专档强制开启）" else ""}")
-                    } else runCatching { release() }
+            // v0.54.0 弱声专档（9~10 格）强制开启 AGC：系统层把小声/含糊嗓音拉到正常音量。
+            // 机型相关行为：有的厂商不提供/不允许第三方开 AGC——失败时明确记日志（导出反馈可见），
+            // 靠弱声档其余参数（低门槛/停顿容忍）兜底；实测不佳就降回 8 格（一行回退）
+            val weak = RecognitionSensitivity.weakVoiceMode(
+                RecognitionSensitivity.level(applicationContext)
+            )
+            if (!AutomaticGainControl.isAvailable()) {
+                if (weak) Log.w(TAG, "AGC 不可用（机型不提供该效果器），弱声专档靠低门槛+停顿容忍兜底")
+                return@runCatching
+            }
+            AutomaticGainControl.create(sessionId)?.apply {
+                if (enabled) {
+                    agcEffect = this
+                    Log.i(TAG, "AGC 自动增益已启用")
+                } else if (weak && runCatching { this.enabled = true }.isSuccess) {
+                    agcEffect = this
+                    Log.i(TAG, "AGC 自动增益已启用（弱声专档强制开启）")
+                } else {
+                    if (weak) Log.w(TAG, "AGC 无法开启（弱声专档）：机型不允许，靠低门槛+停顿容忍兜底")
+                    runCatching { release() }
                 }
             }
         }

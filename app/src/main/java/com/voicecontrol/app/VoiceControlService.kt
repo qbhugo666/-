@@ -1388,12 +1388,12 @@ open class VoiceControlService : AccessibilityService() {
      *  的中心被误判「屏幕外」→ 用户报「点不到最底下编号」。API 30+ 用 maximumWindowMetrics，
      *  更早回退 Display.getRealMetrics（同为物理尺寸），失败才退 displayMetrics */
     private fun realScreenRect(): RectF {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            runCatching {
-                val wm = getSystemService(WindowManager::class.java) as? WindowManager ?: return@runCatching
-                val b = wm.maximumWindowMetrics.bounds
-                RectF(0f, 0f, b.width().toFloat(), b.height().toFloat())
-            }.getOrNull()?.let { return it }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            val b = runCatching {
+                (getSystemService(WindowManager::class.java) as? WindowManager)
+                    ?.maximumWindowMetrics?.bounds
+            }.getOrNull()
+            if (b != null) return RectF(0f, 0f, b.width().toFloat(), b.height().toFloat())
         }
         return runCatching {
             val dm = android.util.DisplayMetrics()

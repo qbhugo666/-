@@ -578,8 +578,9 @@ class VoiceService : Service() {
                     threshold = RecognitionSensitivity.vadThreshold(
                         RecognitionSensitivity.level(applicationContext)
                     ),
-                    // 0.4s：说完到动手延迟的大头，正常换气停顿 (<0.3s) 不会被斩断。
-                    // v0.54.0 弱声专档（9~10 格）放宽到 0.55s：构音障碍者字间停顿长，0.4s 会拦腰斩句
+                    // v0.55.2 起 0.3s（说完到动手延迟的大头）：短换气 (<0.3s) 不被斩断，
+                    // 长换气贴线——出现句子被拦腰斩断就回退 0.35/0.4（历史：0.5→0.4 v0.18→0.3 v0.55.2）。
+                    // v0.54.0 弱声专档（9~10 格）另放宽到 0.55s：构音障碍者字间停顿长，窗口太短会斩句
                     minSilenceDuration = RecognitionSensitivity.minSilence(
                         RecognitionSensitivity.level(applicationContext)
                     ),

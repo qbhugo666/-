@@ -58,11 +58,12 @@ object RecognitionSensitivity {
     fun weakVoiceMode(level: Int): Boolean = level >= 9
 
     /** VAD 句间停顿容忍（秒）：格 9=0.55s（构音障碍者字间停顿长）；v0.54.1 格 10=0.7s（远场混响+远距离停顿更散）；
-     *  其余格 0.4s（说完到动手的延迟不变） */
+     *  其余格 0.3s（v0.55.2 从 0.4 提速：2026-09-16 用户嫌响应慢，压掉说完确认等待 100ms；
+     *  历史 0.5→0.4 v0.18→0.3 v0.55.2；回退条件：真机句中停顿被斩成两句 → 改回 0.35/0.4） */
     fun minSilence(level: Int): Float = when {
         level >= 10 -> 0.7f
         level == 9 -> 0.55f
-        else -> 0.4f
+        else -> 0.3f
     }
 
     /** VAD 超长句强制切句（秒）：格 9=5s（慢语速长句不被腰斩）；v0.54.1 格 10=8s（远场慢语速极限容忍）；其余格 3s */

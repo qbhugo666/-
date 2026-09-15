@@ -226,8 +226,14 @@ class VoiceService : Service() {
     // 横条文字恢复的定时任务：预警期间恢复预警文案（否则预警会被反馈文字顶掉，用户看不到就断），平时恢复「正在聆听」
     private val barResetRunnable = Runnable {
         SessionState.phase = SessionState.Phase.LISTENING   // 主页状态卡回到聆听态
-        VoiceControlService.updateBar(if (sleepWarned) "😴 即将休眠，说「继续」延长" else "🎤 正在聆听…")
+        VoiceControlService.updateBar(
+            if (sleepWarned) warnBarText() else "🎤 正在聆听…"
+        )
     }
+
+    /** 休眠预警横条文案：带剩余「继续」次数——预算看得见（2026-09-15 用户误以为 25 分钟自动给满） */
+    private fun warnBarText() =
+        "😴 即将休眠，说「继续」延长（剩余 ${MAX_EXTENSIONS - extensionCount} 次）"
 
     // 命令匹配层（v0.4：识别结果 → 词表纠错）。v0.39.0 起带用户自定义说法（语音绑定）：
     // 按绑定文件时间戳缓存重建——绑定保存后下一次识别即生效，无需重启会话/进程
@@ -302,14 +308,17 @@ class VoiceService : Service() {
     @Volatile
     private var sleepWarned = false
 
-    // 休眠预警：看门狗到点前提示「即将休眠，说「继续」延长」
+    // 休眠预警：看门狗到点前提示「即将休眠，说「继续」延长（剩余 N 次）」
     private val warnRunnable = Runnable {
         sleepWarned = true
         Log.i(TAG, "WARN_SHOWN 休眠预警已显示")
-        VoiceControlService.updateBar("😴 即将休眠，说「继续」延长")
+        VoiceControlService.updateBar(warnBarText())
     }
     // 已延期次数（0 ~ MAX_EXTENSIONS）
     private var extensionCount = 0
+
+    // 30 秒滚动窗口内的"近似退出被拦"时间戳（守卫升级阶梯用，见 dispatchMatched）
+    private val fuzzyExitRejects = ArrayDeque<Long>()
 
     // 本次会话开始的 elapsedRealtime（0 = 无真实会话上下文，如 SIMULATE 注入）
     private var sessionStartElapsed = 0L
@@ -1228,8 +1237,29 @@ class VoiceService : Service() {
         if (matched.method == "pinyin_fuzzy" &&
             (matched.action == "exit_session" || matched.action == "lock_screen")
         ) {
+            // 2026-09-15 用户日志实锤反面：真「退出」被 ASR 连听成「走出」四次、守卫全拦
+            // = 用户被反锁（麦克风占着退不掉，最恶性场景）。升级阶梯：30 秒内近似退出
+            // 被拦 3 次判定为真实退出请求、第 3 次放行——闲话不会连说三遍，被困者一定会
+            val now = SystemClock.elapsedRealtime()
+            fuzzyExitRejects.addLast(now)
+            while (fuzzyExitRejects.isNotEmpty() && now - fuzzyExitRejects.first() > 30_000L) {
+                fuzzyExitRejects.removeFirst()
+            }
+            if (matched.action == "exit_session" && fuzzyExitRejects.size >= 3) {
+                fuzzyExitRejects.clear()
+                Log.w(TAG, "FUZZY_GUARD 升级：30 秒内第 3 次近似退出，按真实退出放行")
+                DiagnosticsHelper.log("近似退出连说 3 次，守卫升级放行")
+                VoiceControlService.updateBar("🔓 听到连续三次近似退出，已为您退出")
+                SessionState.lastMatch = "→ 退出（近似说法连说三次） ✅"
+                releaseAndStop("近似退出第 3 次（守卫升级）")
+                return
+            }
             Log.i(TAG, "FUZZY_GUARD 拒绝模糊命中危险命令：[${SessionState.lastText}] -> ${matched.matchedWord}")
             DiagnosticsHelper.log("模糊命中危险命令已忽略：${SessionState.lastText} ≈ ${matched.matchedWord}")
+            if (fuzzyExitRejects.size == 2) {
+                // 第二次给出明确指引：被识别困住的用户需要知道出口
+                VoiceControlService.updateBar("想退出请说「退出」，或把刚才的说法连说三遍")
+            }
             return
         }
         if (matched.action == "exit_session") {

@@ -89,7 +89,6 @@ class MainActivity : ThemedActivity() {
 
         // 未启动态：点击开始会话
         heroIdle.setOnClickListener { tryStartSession() }
-
         // 会话中：结束按钮
         findViewById<View>(R.id.btn_end_session).setOnClickListener {
             val i = Intent(this, VoiceService::class.java)
@@ -140,7 +139,7 @@ class MainActivity : ThemedActivity() {
             showAccessibilityGuide()
         } else {
             // 全部就绪 → 自动开始（纯语音用户零点击依赖，必须保留）
-            startSession()
+            startSession("冷启动自动（应用启动）")
         }
     }
 
@@ -213,7 +212,7 @@ class MainActivity : ThemedActivity() {
             showAccessibilityGuide()
             return
         }
-        startSession()
+        startSession("手动点击/授权链续接")
     }
 
     // ===== 长期存活保障（商用核心诉求：无障碍几天不掉线）=====
@@ -379,7 +378,10 @@ class MainActivity : ThemedActivity() {
         }
     }
 
-    private fun startSession() {
+    private fun startSession(source: String = "手动/未知") {
+        // 会话启动来源留痕（2026-09-15 反锁案取证结论）：冷启动自动开始 vs 手动点击 vs 授权续接
+        // 分不清时（如家人切回软件触发冷启动自动开会话）事后可从导出的诊断事件段回查
+        com.voicecontrol.app.DiagnosticsHelper.log("SESSION_START 来源=$source")
         val i = Intent(this, VoiceService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(i)

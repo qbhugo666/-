@@ -83,6 +83,9 @@ class UsageActivity : ThemedActivity() {
             all.asReversed().forEach { sb.appendLine("${f.format(Date(it.time))}  ${it.text}") }
         }
         sb.appendLine()
+        sb.appendLine("---- 诊断事件（关键事件环形缓冲，logcat 被冲掉后的真相来源）----")
+        sb.appendLine(DiagnosticsHelper.dumpEvents())
+        sb.appendLine()
         sb.appendLine("---- 应用日志（最近 400 行）----")
         runCatching {
             val p = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", "400", "-s", "VoiceControl"))

@@ -520,6 +520,7 @@ class VoiceService : Service() {
         repeatRunnable = null
         VoiceControlService.hideBar()
         releaseMicrophone()   // 兜底（正常释放路径在 releaseAndStop 里已先执行）
+        micReleaseReceipt(100L)
         teardownNativeAsync() // recognizer/vad 等识别线程退出后再释放，防 use-after-free
         super.onDestroy()
     }
@@ -1522,6 +1523,7 @@ class VoiceService : Service() {
         stopRequested = true
         recording = false
         releaseMicrophone()
+        micReleaseReceipt()   // 释放回执：系统级确认无残留（用户恐惧点闭环，见函数注释）
         handler.removeCallbacks(watchdogRunnable)
         handler.removeCallbacks(warnRunnable)
         repeatRunnable?.let { handler.removeCallbacks(it) }
@@ -1554,6 +1556,38 @@ class VoiceService : Service() {
         try { audioRecord?.release() } catch (_: Exception) {}
         audioRecord = null
         detachAudioEffects()   // 前处理效果器随麦克风一起释放
+    }
+
+    /**
+     * 麦克风释放回执（v0.55.1，用户恐惧点闭环）：释放后向系统查询「本应用名下是否仍有活跃录音」
+     * （AudioManager.getActiveRecordingConfigurations，系统级视角、非自证）。
+     * 结果写入诊断事件（随导出反馈带走）——"是否百分百释放干净"从口头承诺变成带时间戳的凭据；
+     * 万一查到残留，立刻强制再清扫一遍并复查。触发点：每次会话结束（看门狗/退出/锁屏/用户停止）。
+     */
+    private fun micReleaseReceipt(delayMs: Long = 300L) {
+        handler.postDelayed({
+            val am = runCatching { getSystemService(android.media.AudioManager::class.java) }.getOrNull()
+            val active = runCatching { am?.activeRecordingConfigurations?.size ?: -1 }.getOrDefault(-1)
+            when {
+                active == 0 -> {
+                    Log.i(TAG, "MIC_RELEASE_RECEIPT 本应用已无任何活跃录音（系统级确认）")
+                    DiagnosticsHelper.log("麦克风释放回执：系统确认本应用已无活跃录音")
+                }
+                active > 0 -> {
+                    Log.w(TAG, "MIC_RELEASE_RECEIPT 仍有 $active 个活跃录音！强制再清扫")
+                    DiagnosticsHelper.log("麦克风释放回执异常：仍有 $active 个活跃录音，强制再清扫")
+                    releaseMicrophone()
+                    handler.postDelayed({
+                        val again = runCatching {
+                            am?.activeRecordingConfigurations?.size ?: -1
+                        }.getOrDefault(-1)
+                        DiagnosticsHelper.log("麦克风二次清扫回执：剩余 $again 个活跃录音")
+                        if (again != 0) Log.e(TAG, "MIC_RELEASE_RECEIPT 二次清扫后仍剩 $again")
+                    }, 300L)
+                }
+                else -> DiagnosticsHelper.log("麦克风释放回执：系统查询不可用，已执行 stop+release+效果器分离")
+            }
+        }, delayMs)
     }
 
     /** 释放音频前处理效果器（AEC/NS/AGC） */

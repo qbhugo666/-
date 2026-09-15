@@ -1552,10 +1552,13 @@ class VoiceService : Service() {
     }
 
     private fun releaseMicrophone() {
+        // 2026-09-15 顺序修正（用户对照实验实锤"释放后小爱仍唤不醒直到清后台"）：
+        // 先卸效果器、再停麦克风——部分底层实现中"挂着 AEC 效果的输入通道"会保持打开，
+        // 原顺序（先 release 录音再卸效果器）可能让输入通道在效果器层面残留
+        detachAudioEffects()   // 前处理效果器先卸载
         try { audioRecord?.stop() } catch (_: Exception) {}
         try { audioRecord?.release() } catch (_: Exception) {}
         audioRecord = null
-        detachAudioEffects()   // 前处理效果器随麦克风一起释放
     }
 
     /**
@@ -1595,6 +1598,14 @@ class VoiceService : Service() {
         runCatching { aecEffect?.release() }; aecEffect = null
         runCatching { nsEffect?.release() }; nsEffect = null
         runCatching { agcEffect?.release() }; agcEffect = null
+    }
+
+    /** 兜底清扫（v0.55.1 用户对照实验后加固）：把可能存在的全部音频引用一并释放，幂等可重复调 */
+    private fun forceAudioCleanup() {
+        detachAudioEffects()
+        try { audioRecord?.stop() } catch (_: Exception) {}
+        try { audioRecord?.release() } catch (_: Exception) {}
+        audioRecord = null
     }
 
     // ===== 回声测试台（开发期专用，商用前移除）=====

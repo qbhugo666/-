@@ -338,6 +338,13 @@ class VoiceService : Service() {
     @Volatile
     private var sessionGeneration = 0
 
+    // 启动加载在途标记（v0.55.7）：true = 有初始化线程正在加载模型且尚未落地/夭折。
+    // 在途期间的重复启动请求一律忽略——此前每次点击都会代际+1 把加载中的线程顶替弃货，
+    // 连点比加载快时永远加载不完，主页涟漪转不停、会话起不来（2026-09-17 用户实测复现）。
+    // 与代际机制分工：代际管「被顶替后正确退货」，本标记管「根本不许顶替」
+    @Volatile
+    private var initInFlight = false
+
     // 初始化互斥锁：串行化模型创建（每个 SenseVoice 约 200MB，并发创建会 OOM）
     private val initLock = Any()
 
@@ -439,6 +446,12 @@ class VoiceService : Service() {
         // 已在会话中 → 不重复启动（防止重复占麦、重复开识别线程）
         if (recording) return START_NOT_STICKY
 
+        // v0.55.7：启动加载中重复点击 → 直接忽略，绝不重启模型加载（分工见 initInFlight 注释）
+        if (initInFlight) {
+            Log.i(TAG, "启动请求忽略：模型加载已在进行中（重复点击防抖）")
+            return START_NOT_STICKY
+        }
+
         createChannelIfNeeded()
         startForeground(NOTIFICATION_ID, buildNotification("🔴 会话中 · 正在听"))
 
@@ -447,66 +460,73 @@ class VoiceService : Service() {
         //   代际——加载期间退出再立刻重开，旧线程发现被顶替就地释放资源，绝不双占麦 / 泄漏；
         //   互斥锁——同一时刻只允许一个线程创建重模型（每个 SenseVoice 约 200MB，并发创建会 OOM）。
         stopRequested = false
+        initInFlight = true
         val myGen = ++sessionGeneration
         thread(name = "voice-init") {
-            var commit = false
-            synchronized(initLock) {
-                // 锁内重新核对待办：前面已有线程在创建时，本次可能已作废
-                if (isSessionStale(myGen)) return@thread
-                val rec = createRecognizer()
-                if (rec == null) {
-                    Log.e(TAG, "模型初始化失败，不占用麦克风")
-                    if (isSessionCurrent(myGen)) stopSelf()
-                    return@thread
+            try {
+                var commit = false
+                synchronized(initLock) {
+                    // 锁内重新核对待办：前面已有线程在创建时，本次可能已作废
+                    if (isSessionStale(myGen)) return@thread
+                    val rec = createRecognizer()
+                    if (rec == null) {
+                        Log.e(TAG, "模型初始化失败，不占用麦克风")
+                        if (isSessionCurrent(myGen)) stopSelf()
+                        return@thread
+                    }
+                    if (isSessionStale(myGen)) { runCatching { rec.release() }; return@thread }
+                    val v = createVad()
+                    if (v == null) {
+                        Log.e(TAG, "VAD 初始化失败，不占用麦克风")
+                        runCatching { rec.release() }
+                        if (isSessionCurrent(myGen)) stopSelf()
+                        return@thread
+                    }
+                    if (isSessionStale(myGen)) {
+                        runCatching { rec.release() }; runCatching { v.release() }
+                        return@thread
+                    }
+                    if (!startMicrophone()) {
+                        Log.e(TAG, "麦克风初始化失败")
+                        runCatching { rec.release() }; runCatching { v.release() }
+                        if (isSessionCurrent(myGen)) stopSelf()
+                        return@thread
+                    }
+                    if (isSessionStale(myGen)) {
+                        // 麦克风已启动却被新会话顶替：还麦 + 清理本地资源
+                        releaseMicrophone()
+                        runCatching { rec.release() }; runCatching { v.release() }
+                        return@thread
+                    }
+                    // 全部成功且仍是当前会话 → 锁内提交字段（防锁外提交被插队），置 commit 到锁外启动识别线程
+                    recognizer = rec
+                    vad = v
+                    recording = true
+                    commit = true
                 }
-                if (isSessionStale(myGen)) { runCatching { rec.release() }; return@thread }
-                val v = createVad()
-                if (v == null) {
-                    Log.e(TAG, "VAD 初始化失败，不占用麦克风")
-                    runCatching { rec.release() }
-                    if (isSessionCurrent(myGen)) stopSelf()
-                    return@thread
+                if (commit) {
+                    recordThread = thread(name = "voice-recognition") { recognitionLoop() }
+                    // 显示顶部识别状态横条
+                    VoiceControlService.showBar()
+                    VoiceControlService.updateBar("🎤 正在聆听…")
+                    // 启动看门狗（时间制独挑大梁）与休眠预警
+                    extensionCount = 0
+                    // 飞行记录仪（v0.51.0）：会话出生留档（异常终检在 onStartCommand 顶部，任何启动形式都先过一遍）
+                    sessionStartElapsed = SystemClock.elapsedRealtime()
+                    getSharedPreferences("app", MODE_PRIVATE)
+                        .edit().putLong(KEY_SESSION_ACTIVE_SINCE, System.currentTimeMillis()).apply()
+                    sleepWarned = false
+                    segmentStartElapsed = SystemClock.elapsedRealtime()   // 本段起点（「继续」早说检测用）
+                    handler.postDelayed(watchdogRunnable, WATCHDOG_MILLIS)
+                    handler.postDelayed(warnRunnable, WATCHDOG_MILLIS - WARN_BEFORE_MILLIS)
+                    // 锁屏自动释放：注册黑屏广播，锁屏即把麦克风还给系统
+                    registerScreenOffReceiver()
+                    SessionState.phase = SessionState.Phase.LISTENING
+                    Log.i(TAG, "SESSION_COMMIT 模型加载完成，会话落地开始聆听（gen=$myGen）")
                 }
-                if (isSessionStale(myGen)) {
-                    runCatching { rec.release() }; runCatching { v.release() }
-                    return@thread
-                }
-                if (!startMicrophone()) {
-                    Log.e(TAG, "麦克风初始化失败")
-                    runCatching { rec.release() }; runCatching { v.release() }
-                    if (isSessionCurrent(myGen)) stopSelf()
-                    return@thread
-                }
-                if (isSessionStale(myGen)) {
-                    // 麦克风已启动却被新会话顶替：还麦 + 清理本地资源
-                    releaseMicrophone()
-                    runCatching { rec.release() }; runCatching { v.release() }
-                    return@thread
-                }
-                // 全部成功且仍是当前会话 → 锁内提交字段（防锁外提交被插队），置 commit 到锁外启动识别线程
-                recognizer = rec
-                vad = v
-                recording = true
-                commit = true
-            }
-            if (commit) {
-                recordThread = thread(name = "voice-recognition") { recognitionLoop() }
-                // 显示顶部识别状态横条
-                VoiceControlService.showBar()
-                VoiceControlService.updateBar("🎤 正在聆听…")
-                // 启动看门狗（时间制独挑大梁）与休眠预警
-                extensionCount = 0
-                // 飞行记录仪（v0.51.0）：会话出生留档（异常终检在 onStartCommand 顶部，任何启动形式都先过一遍）
-                sessionStartElapsed = SystemClock.elapsedRealtime()
-                getSharedPreferences("app", MODE_PRIVATE)
-                    .edit().putLong(KEY_SESSION_ACTIVE_SINCE, System.currentTimeMillis()).apply()
-                sleepWarned = false
-                segmentStartElapsed = SystemClock.elapsedRealtime()   // 本段起点（「继续」早说检测用）
-                handler.postDelayed(watchdogRunnable, WATCHDOG_MILLIS)
-                handler.postDelayed(warnRunnable, WATCHDOG_MILLIS - WARN_BEFORE_MILLIS)
-                // 锁屏自动释放：注册黑屏广播，锁屏即把麦克风还给系统
-                registerScreenOffReceiver()
-                SessionState.phase = SessionState.Phase.LISTENING
+            } finally {
+                // 无论落地/夭折/失败，线程结束即清在途标记，放行下一次启动（v0.55.7）
+                initInFlight = false
             }
         }
         return START_NOT_STICKY

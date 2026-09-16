@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -89,6 +90,7 @@ class MainActivity : ThemedActivity() {
 
         // 未启动态：点击开始会话
         heroIdle.setOnClickListener { tryStartSession() }
+        attachPressAnimation(heroIdle)
         // 会话中：结束按钮
         findViewById<View>(R.id.btn_end_session).setOnClickListener {
             val i = Intent(this, VoiceService::class.java)
@@ -189,6 +191,23 @@ class MainActivity : ThemedActivity() {
                 statusHint.text = SessionState.lastMatch.removePrefix("→ ").trim()
             }
             SessionState.Phase.IDLE -> {}
+        }
+    }
+
+    /**
+     * 按压缩放反馈（v0.55.5）：按下微缩、松手回弹——点击到会话真正建立有 1~2 秒延迟，
+     * 测试反馈「连点以为没反应」；iOS 风格按压动效给「已收到」的即时确认。
+     * 不消费触摸事件（返回 false），点击仍走 setOnClickListener；零布局改动。
+     */
+    private fun attachPressAnimation(view: View) {
+        view.setOnTouchListener { v, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN ->
+                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80L).start()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(150L).start()
+            }
+            false
         }
     }
 

@@ -13,7 +13,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
-import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -69,6 +68,7 @@ class MainActivity : ThemedActivity() {
     private lateinit var statusFail: ImageView
     private lateinit var statusTitle: TextView
     private lateinit var statusHint: TextView
+    private lateinit var heroLogo: LogoCircleView   // 未启动卡的圆形（v0.55.6 水波涟漪载体）
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +82,7 @@ class MainActivity : ThemedActivity() {
         heroIdle = findViewById(R.id.hero_idle)
         heroStatus = findViewById(R.id.hero_status)
         statusLogo = findViewById(R.id.iv_status_logo)
+        statusLogo = findViewById(R.id.iv_status_logo)
         pbExec = findViewById(R.id.pb_exec)
         statusDone = findViewById(R.id.iv_status_done)
         statusFail = findViewById(R.id.iv_status_fail)
@@ -90,7 +91,7 @@ class MainActivity : ThemedActivity() {
 
         // 未启动态：点击开始会话
         heroIdle.setOnClickListener { tryStartSession() }
-        attachPressAnimation(heroIdle)
+        heroLogo = findViewById(R.id.logo_idle)
         // 会话中：结束按钮
         findViewById<View>(R.id.btn_end_session).setOnClickListener {
             val i = Intent(this, VoiceService::class.java)
@@ -169,6 +170,8 @@ class MainActivity : ThemedActivity() {
         heroIdle.visibility = if (idle) View.VISIBLE else View.GONE
         heroStatus.visibility = if (idle) View.GONE else View.VISIBLE
         if (idle) return
+        // 非 IDLE = 会话已建立：涟漪使命完成（水波表示「等待启动」，IDLE 态的启停在 tryStartSession 管）
+        heroLogo.stopWaitingRipple()
         statusLogo.visibility = if (p == SessionState.Phase.LISTENING) View.VISIBLE else View.GONE
         pbExec.visibility = if (p == SessionState.Phase.EXECUTING) View.VISIBLE else View.GONE
         statusDone.visibility = if (p == SessionState.Phase.DONE) View.VISIBLE else View.GONE
@@ -194,41 +197,29 @@ class MainActivity : ThemedActivity() {
         }
     }
 
-    /**
-     * 按压缩放反馈（v0.55.5）：按下微缩、松手回弹——点击到会话真正建立有 1~2 秒延迟，
-     * 测试反馈「连点以为没反应」；iOS 风格按压动效给「已收到」的即时确认。
-     * 不消费触摸事件（返回 false），点击仍走 setOnClickListener；零布局改动。
-     */
-    private fun attachPressAnimation(view: View) {
-        view.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN ->
-                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80L).start()
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
-                    v.animate().scaleX(1f).scaleY(1f).setDuration(150L).start()
-            }
-            false
-        }
-    }
-
     /** 点「开始会话」入口：录音权限 → 无障碍自检 → 静默自愈/弹引导 → 开会话 */
     private fun tryStartSession() {
+        heroLogo.startWaitingRipple()   // v0.55.6：水波涟漪=启动等待中，会话建立（renderPhase 切卡）即停
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), PERMISSION_REQUEST)
+            heroLogo.stopWaitingRipple()
             return
         }
         if (!isBatteryOptimizationIgnored()) {
             requestBatteryExemption()
+            heroLogo.stopWaitingRipple()
             return
         }
         if (!isAutostartGuided()) {
             showAutostartGuide()
+            heroLogo.stopWaitingRipple()
             return
         }
         if (!AccessibilityHelper.isServiceEnabled(this) &&
             !AccessibilityHelper.trySelfHeal(this)
         ) {
             showAccessibilityGuide()
+            heroLogo.stopWaitingRipple()
             return
         }
         startSession("手动点击/授权链续接")

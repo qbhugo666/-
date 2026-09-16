@@ -48,12 +48,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp">
 
-        <!-- 态①：未启动（点击开始会话） -->
+        <!-- 态①：未启动（点击开始会话）；clipChildren=false 放行圆形的水波涟漪画出视图方框 -->
         <LinearLayout
             android:id="@+id/hero_idle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_hero_card"
+            android:clipChildren="false"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingTop="36dp"
@@ -62,6 +63,7 @@
             android:focusable="true">
 
             <com.voicecontrol.app.LogoCircleView
+                android:id="@+id/logo_idle"
                 android:layout_width="88dp"
                 android:layout_height="88dp"
                 android:contentDescription="@null" />

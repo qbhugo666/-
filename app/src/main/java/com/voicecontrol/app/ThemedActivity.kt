@@ -16,8 +16,20 @@ import android.content.res.Configuration
  */
 abstract class ThemedActivity : Activity() {
 
+    // 本页创建时生效的主题模式（attachBaseContext 阶段读取，onResume 用于比对）
+    private var appliedDarkMode = Int.MIN_VALUE
+
     override fun attachBaseContext(newBase: Context) {
+        appliedDarkMode = currentDarkMode(newBase)
         super.attachBaseContext(applyDarkPref(newBase))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // v0.55.8：设置页改主题只 recreate 设置页自己，返回时主页停在旧主题——必须清后台
+        // 重开才变（2026-09-17 用户实测）。这里发现偏好与本页生效主题不一致就整页重载，
+        // 所有继承页（主页/关于/使用记录/词典/绑定）统一修好；一致则零开销不闪屏
+        if (appliedDarkMode != currentDarkMode(this)) recreate()
     }
 
     companion object {
@@ -25,9 +37,12 @@ abstract class ThemedActivity : Activity() {
         const val DARK_LIGHT = 1
         const val DARK_DARK = 2
 
-        fun applyDarkPref(ctx: Context): Context {
-            val mode = ctx.getSharedPreferences("app", Context.MODE_PRIVATE)
+        fun currentDarkMode(ctx: Context): Int =
+            ctx.getSharedPreferences("app", Context.MODE_PRIVATE)
                 .getInt("dark_mode", DARK_FOLLOW_SYSTEM)
+
+        fun applyDarkPref(ctx: Context): Context {
+            val mode = currentDarkMode(ctx)
             if (mode == DARK_FOLLOW_SYSTEM) return ctx
             val nightBit = if (mode == DARK_DARK) {
                 Configuration.UI_MODE_NIGHT_YES

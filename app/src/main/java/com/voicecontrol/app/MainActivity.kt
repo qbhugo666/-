@@ -90,7 +90,10 @@ class MainActivity : ThemedActivity() {
         statusHint = findViewById(R.id.tv_status_hint)
 
         // 未启动态：点击开始会话
-        heroIdle.setOnClickListener { tryStartSession() }
+        heroIdle.setOnClickListener {
+            vibrateFeedback()   // v0.55.10：点下即触感确认（跟随设置页「震动反馈」开关，与执行指令震感同源）
+            tryStartSession()
+        }
         heroLogo = findViewById(R.id.logo_idle)
         // 会话中：结束按钮
         findViewById<View>(R.id.btn_end_session).setOnClickListener {
@@ -197,9 +200,20 @@ class MainActivity : ThemedActivity() {
         }
     }
 
+    /** 触感反馈（v0.55.10）：点「开始控制」时短震一下，跟随设置页「震动反馈」开关（与 VoiceService 执行指令震感同参数） */
+    private fun vibrateFeedback() {
+        if (!getSharedPreferences("app", MODE_PRIVATE).getBoolean("vibrate_feedback", false)) return
+        val vib = getSystemService(VIBRATOR_SERVICE) as? android.os.Vibrator ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(android.os.VibrationEffect.createOneShot(30, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vib.vibrate(30)
+        }
+    }
+
     /** 点「开始会话」入口：录音权限 → 无障碍自检 → 静默自愈/弹引导 → 开会话 */
-    private fun tryStartSession() {
-        heroLogo.startWaitingRipple()   // v0.55.6：水波涟漪=启动等待中，会话建立（renderPhase 切卡）即停
+    private fun tryStartSession() {        heroLogo.startWaitingRipple()   // v0.55.6：水波涟漪=启动等待中，会话建立（renderPhase 切卡）即停
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), PERMISSION_REQUEST)
             heroLogo.stopWaitingRipple()

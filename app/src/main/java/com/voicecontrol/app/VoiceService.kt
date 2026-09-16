@@ -995,6 +995,7 @@ class VoiceService : Service() {
                                     } else {
                                         // 长按文字没找到：同样静默忽略（商用原则同上）
                                         Log.i(TAG, "长按未命中，忽略: [$text]")
+                                        DiagnosticsHelper.log("长按未命中: $text")
                                     }
                                 }
                             }
@@ -1026,6 +1027,7 @@ class VoiceService : Service() {
                                             // 屏幕文字没找到：不操作也不提示，安静继续聆听（只记日志供诊断）。
                                             // 商用原则：误识别不展示给用户，否则用户会怀疑自己普通话不标准
                                             Log.i(TAG, "未命中，忽略: [$text]")
+                                            DiagnosticsHelper.log("文字未命中: $text")
                                         }
                                     }
                                 } else {
@@ -1034,8 +1036,11 @@ class VoiceService : Service() {
                                         Log.i(TAG, "匹配: [$text] -> ${fuzzy.matchedWord} (${fuzzy.method})")
                                         dispatchMatched(fuzzy)
                                     } else {
-                                        // 未命中任何命令：静默继续聆听，不回显 ASR 原文（商用原则同上）
+                                        // 未命中任何命令：静默继续聆听，不回显 ASR 原文（商用原则同上）。
+                                        // 原文进诊断缓冲（v0.55.3）：胶囊不吭声不挫败，导出反馈可见
+                                        // 「这句话被听成了什么」，用真实听岔样本精填相似词表
                                         Log.i(TAG, "未匹配，忽略: [$text]")
+                                        DiagnosticsHelper.log("命令未匹配: $text")
                                     }
                                 }
                             }
@@ -1342,15 +1347,16 @@ class VoiceService : Service() {
     private val digitHomophones = mapOf(
         '吧' to '八', '扒' to '八', '疤' to '八',
         '衣' to '一', '依' to '一', '伊' to '一',
-        '尔' to '二', '而' to '二',
+        '尔' to '二', '而' to '二', '耳' to '二',
         '似' to '四', '寺' to '四', '肆' to '四',
+        '斯' to '四', '思' to '四', '撕' to '四',
         '午' to '五', '舞' to '五', '武' to '五', '伍' to '五',
-        '陆' to '六',
+        '陆' to '六', '留' to '六',
         '妻' to '七', '期' to '七', '柒' to '七',
         '久' to '九', '酒' to '九', '玖' to '九',
         '时' to '十', '石' to '十', '拾' to '十',
         '词' to '次', '此' to '次',   // v0.53.1：「五词/五此」→「五次」（重复家族量词被听岔）
-    )
+    )                                 // v0.55.3 补缺：耳→二、斯/思/撕→四、留→六（半夜小声听岔高发）
 
     /** 把数字同音字替换回数字汉字（数字命令解析前调用） */
     private fun normalizeDigitHomophones(s: String): String =

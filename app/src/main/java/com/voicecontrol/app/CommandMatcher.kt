@@ -155,8 +155,12 @@ class CommandMatcher private constructor(
     companion object {
         // 拼音模糊匹配：音节级编辑距离，最多容忍相差几个音节
         private const val PINYIN_FUZZY_MAX_DIST = 3
-        // 拼音模糊匹配：归一化距离阈值（音节数越多越宽松）
-        private const val PINYIN_FUZZY_THRESHOLD = 0.5
+        // 拼音模糊匹配：归一化距离阈值（音节数越多越宽松）。
+        // v0.55.3 从 0.5 放宽到 0.65：2026-09-16 用户拍板「牺牲一点误触率换触发率」——
+        // 半夜小声说话识别残缺（如「显示编号」只听清「死边号」，dist 2/3≈0.67 被 0.5 拒）触发不了；
+        // 误触有三道既有保险兜底（同命令冷却/连续误触熔断/「退出」最高优先）。
+        // 回退条件：误触增多改回 0.5
+        private const val PINYIN_FUZZY_THRESHOLD = 0.65
 
         /**
          * 在 text 中寻找与 target 拼音最接近的字符窗口（v0.41.0 替换功能用）：

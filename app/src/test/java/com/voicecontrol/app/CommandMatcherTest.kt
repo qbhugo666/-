@@ -35,8 +35,9 @@ class CommandMatcherTest {
         assertEquals("go_back", matcher.matchStrict("返回")?.action)
     }
 
-    @Test fun `精确匹配 主页`() {
-        assertEquals("go_home", matcher.matchStrict("主页")?.action)
+    @Test fun `主页别名已下架 不再匹配`() {
+        // v0.55.13 用户拍板：主页/回主页/最近应用/关闭 属高频误触别名，下架
+        assertNull(matcher.matchStrict("主页"))
     }
 
     // ===== 包含匹配（多字/漏字） =====
@@ -162,7 +163,7 @@ class CommandMatcherTest {
                     { "id": "swipe_left",  "command": "向左轻扫",  "aliases": ["向左滑动", "左滑", "往左滑"], "action": "swipe_left" },
                     { "id": "swipe_right", "command": "向右轻扫",  "aliases": ["向右滑动", "右滑", "往右滑"], "action": "swipe_right" },
                     { "id": "go_back",     "command": "返回",      "aliases": ["后退", "上一页"],           "action": "go_back" },
-                    { "id": "go_home",     "command": "前往主屏幕","aliases": ["回主屏幕", "回桌面", "主页"], "action": "go_home" },
+                    { "id": "go_home",     "command": "前往主屏幕","aliases": ["回主屏幕", "回桌面", "回首页"], "action": "go_home" },
                     { "id": "open_recents","command": "打开 App 切换器", "aliases": ["最近任务", "后台"],   "action": "open_recents" }
                   ]
                 }

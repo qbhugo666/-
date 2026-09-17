@@ -1,9 +1,9 @@
 {
   "meta": {
     "name": "言出法随 · 命令词表",
-    "version": 7,
+    "version": 8,
     "language": "zh-CN",
-    "note": "只保留已实现的命令，保证「能说的 = 能做的」。v7 新增文字输入组（听写触发为特殊拦截不入词表：输入/听写）。"
+    "note": "只保留已实现的命令，保证「能说的 = 能做的」。v7 新增文字输入组（听写触发为特殊拦截不入词表：输入/听写）。v8 删除高频误触别名：主页/回主页/最近应用/关闭（2026-09-18 用户拍板）。"
   },
   "groups": [
     {
@@ -15,8 +15,8 @@
         { "id": "swipe_left",  "command": "向左轻扫",     "aliases": ["向左滑动", "左滑", "往左滑", "向左滚动", "往左滚"], "action": "swipe_left" },
         { "id": "swipe_right", "command": "向右轻扫",     "aliases": ["向右滑动", "右滑", "往右滑", "向右滚动", "往右滚"], "action": "swipe_right" },
         { "id": "go_back",     "command": "返回",         "aliases": ["后退", "上一页", "返回上一页"], "action": "go_back" },
-        { "id": "go_home",     "command": "前往主屏幕",   "aliases": ["回主屏幕", "回桌面", "回主页", "主页", "回首页", "桌面"], "action": "go_home" },
-        { "id": "open_recents","command": "打开 App 切换器", "aliases": ["最近任务", "后台任务", "后台", "最近应用"], "action": "open_recents" },
+        { "id": "go_home",     "command": "前往主屏幕",   "aliases": ["回主屏幕", "回桌面", "回首页", "桌面"], "action": "go_home" },
+        { "id": "open_recents","command": "打开 App 切换器", "aliases": ["最近任务", "后台任务", "后台"], "action": "open_recents" },
         { "id": "tap",         "command": "轻点",         "aliases": ["点一下"], "action": "tap" },
         { "id": "double_tap",  "command": "双击",         "aliases": ["轻点两下", "点两下"], "action": "double_tap" },
         { "id": "long_press",  "command": "长按",         "aliases": ["按住", "按住不动"], "action": "long_press" }
@@ -26,7 +26,7 @@
       "id": "accessibility",
       "name": "辅助功能",
       "commands": [
-        { "id": "exit_session", "command": "退出",         "aliases": ["退出会话", "停止", "结束会话", "关闭", "结束"], "action": "exit_session" },
+        { "id": "exit_session", "command": "退出",         "aliases": ["退出会话", "停止", "结束会话", "结束"], "action": "exit_session" },
         { "id": "show_labels",  "command": "显示编号",     "aliases": ["显示数字", "编号", "显示标签"], "action": "show_labels" },
         { "id": "show_grid",    "command": "显示网格",     "aliases": ["网格", "显示格子", "格子"], "action": "show_grid" },
         { "id": "hide_grid",    "command": "退出网格",     "aliases": ["取消网格", "关闭网格"], "action": "hide_grid" },

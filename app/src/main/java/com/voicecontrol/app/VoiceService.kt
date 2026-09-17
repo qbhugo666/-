@@ -1166,10 +1166,18 @@ class VoiceService : Service() {
      * 只在编号显示时兜底使用——此时用户几乎必然在报数字，误判成本远低于掉进文字点击通道。
      */
     private val LOOSE_DIGIT_SYLLABLES = setOf(
-        '零', '一', '衣', '依', '二', '两', '尔', '而', '三', '伞', '散',
-        '四', '是', '似', '寺', '事', '五', '午', '舞', '无', '六', '陆', '路',
-        '七', '期', '妻', '气', '八', '吧', '把', '爸', '九', '久', '酒', '就',
-        '十', '是', '时', '石', '事', '百', '白', '点', '栋', '动'
+        '零', '一', '衣', '依', '医', '已', '以', '椅', '意', '易', '移', '疑',
+        '二', '两', '尔', '而', '耳', '儿', '饵',
+        '三', '伞', '散', '山', '叁',
+        '四', '是', '似', '寺', '事', '斯', '思', '撕', '死', '司', '丝', '私', '饲',
+        '五', '午', '舞', '无', '伍', '吴', '乌', '误', '悟', '雾', '物', '勿',
+        '六', '陆', '路', '留', '流', '刘', '榴', '溜',
+        '七', '期', '妻', '气', '柒', '齐', '其', '奇', '骑', '棋', '旗', '起', '汽', '器',
+        '八', '吧', '把', '爸', '扒', '疤', '拔', '靶', '坝', '罢', '捌',
+        '九', '久', '酒', '就', '玖', '旧', '救', '揪', '究', '舅', '韭',
+        '十', '时', '石', '拾', '实', '识', '食', '师', '狮', '失', '施', '什',
+        '式', '试', '势', '市', '世', '室', '视', '适', '饰', '释',
+        '百', '白', '摆', '拜', '点', '栋', '动'
     )
     private fun extractBareNumberLoose(text: String): Int? {
         val t = text.trim()
@@ -1366,50 +1374,9 @@ class VoiceService : Service() {
         }
     }
 
-    /** 数字同音字：ASR 常把数字听成同音汉字（8→「吧」、1→「衣」、4→「似」），数字命令解析时纠正回数字 */
-    private val digitHomophones = mapOf(
-        '吧' to '八', '扒' to '八', '疤' to '八',
-        '衣' to '一', '依' to '一', '伊' to '一',
-        '尔' to '二', '而' to '二', '耳' to '二',
-        '似' to '四', '寺' to '四', '肆' to '四',
-        '斯' to '四', '思' to '四', '撕' to '四',
-        '午' to '五', '舞' to '五', '武' to '五', '伍' to '五',
-        '陆' to '六', '留' to '六',
-        '妻' to '七', '期' to '七', '柒' to '七',
-        '久' to '九', '酒' to '九', '玖' to '九',
-        '时' to '十', '石' to '十', '拾' to '十',
-        '词' to '次', '此' to '次',   // v0.53.1：「五词/五此」→「五次」（重复家族量词被听岔）
-    )                                 // v0.55.3 补缺：耳→二、斯/思/撕→四、留→六（半夜小声听岔高发）
-
-    /** 把数字同音字替换回数字汉字（数字命令解析前调用） */
-    private fun normalizeDigitHomophones(s: String): String =
-        s.map { digitHomophones[it] ?: it }.joinToString("")
-
-    /** 中文/阿拉伯数字 → Int（支持 0~99） */
-    private fun parseChineseNumber(s: String): Int? {
-        val t = s.trim()
-        t.toIntOrNull()?.let { return it }
-        if (t.isEmpty()) return null
-        val digits = mapOf(
-            '零' to 0, '一' to 1, '二' to 2, '两' to 2, '三' to 3, '四' to 4,
-            '五' to 5, '六' to 6, '七' to 7, '八' to 8, '九' to 9
-        )
-        if (t == "十") return 10
-        if (t.length == 1) return digits[t[0]]
-        if (t.contains('十')) {
-            val parts = t.split('十')
-            val tens = if (parts[0].isEmpty()) 1 else (digits[parts[0][0]] ?: return null)
-            val ones = if (parts.size > 1 && parts[1].isNotEmpty()) (digits[parts[1][0]] ?: return null) else 0
-            return tens * 10 + ones
-        }
-        // 逐位读法兑底：「一四」=14、「一三」=13（ASR 常输出「一四」而非「十四」）
-        var result = 0
-        for (c in t) {
-            val d = digits[c] ?: return null
-            result = result * 10 + d
-        }
-        return result
-    }
+    /** 数字同音纠正与解析：v0.55.11 表大扩容并抽到 DigitParser（纯 Kotlin，JVM 单测固化），此处仅委托 */
+    private fun normalizeDigitHomophones(s: String): String = DigitParser.normalizeDigitHomophones(s)
+    private fun parseChineseNumber(s: String): Int? = DigitParser.parseChineseNumber(s)
 
     /** 重复命令匹配：重复 / 重复 N 次 / 再来一次 */
     private val REPEAT_REGEX = Regex("""(?:重复|再来)\s*([0-9零一二两三四五六七八九十百]+)?\s*(?:次|遍)?""")

@@ -1,147 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 支持作者弹窗 v0.55.15：网上打赏页标准排版——两张码各躺白色圆角卡，
-     卡下彩色小圆标（微信=绿/支付宝=蓝），爱发电独立成行。无滚动无废话。 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 支持作者弹窗（v0.55.15 标准打赏页排版 + v0.55.18 点背景关闭修复）：
+     两张码各躺白色圆角卡，卡下彩色小圆标（微信支付=绿/支付宝=蓝），
+     爱发电独立成行；root 铺满窗口且点击即 dismiss——卡片外的任何区域
+     （含完成下方的窗口空白区）均可关闭，无障碍备选退出通道。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/support_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/bg_dialog"
-    android:paddingBottom="8dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="18dp"
-        android:paddingBottom="14dp"
-        android:text="支持作者"
-        android:textColor="@color/text_primary"
-        android:textSize="17sp"
-        android:textStyle="bold" />
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <!-- 微信卡 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="5dp"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card"
-            android:gravity="center_horizontal"
-            android:paddingTop="12dp"
-            android:paddingBottom="10dp">
-
-            <ImageView
-                android:id="@+id/qr_wechat"
-                android:layout_width="match_parent"
-                android:layout_height="112dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:scaleType="fitCenter"
-                android:contentDescription="@null"
-                android:src="@drawable/support_qr_wechat" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/pill_wechat"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="3dp"
-                android:text="微信支付"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <!-- 支付宝卡 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="5dp"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card"
-            android:gravity="center_horizontal"
-            android:paddingTop="12dp"
-            android:paddingBottom="10dp">
-
-            <ImageView
-                android:id="@+id/qr_alipay"
-                android:layout_width="match_parent"
-                android:layout_height="112dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:scaleType="fitCenter"
-                android:contentDescription="@null"
-                android:src="@drawable/support_qr_alipay" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/pill_alipay"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="3dp"
-                android:text="支付宝"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- 爱发电行 -->
-    <LinearLayout
-        android:id="@+id/btn_afdian"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        android:background="@drawable/bg_card"
-        android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_dialog"
+        android:paddingBottom="8dp"
         android:clickable="true"
         android:focusable="true">
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="爱发电 · 持续支持"
+            android:gravity="center"
+            android:paddingTop="18dp"
+            android:paddingBottom="14dp"
+            android:text="支持作者"
             android:textColor="@color/text_primary"
-            android:textSize="15sp" />
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
-        <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_chevron" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <!-- 微信卡 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="5dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:gravity="center_horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="10dp">
+
+                <ImageView
+                    android:id="@+id/qr_wechat"
+                    android:layout_width="match_parent"
+                    android:layout_height="112dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="@null"
+                    android:src="@drawable/support_qr_wechat" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/pill_wechat"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="3dp"
+                    android:text="微信支付"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 支付宝卡 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:gravity="center_horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="10dp">
+
+                <ImageView
+                    android:id="@+id/qr_alipay"
+                    android:layout_width="match_parent"
+                    android:layout_height="112dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="@null"
+                    android:src="@drawable/support_qr_alipay" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/pill_alipay"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="3dp"
+                    android:text="支付宝"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 爱发电行 -->
+        <LinearLayout
+            android:id="@+id/btn_afdian"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_card"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="爱发电 · 持续支持"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btn_support_done"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="完成"
+            android:textColor="#0A84FF"
+            android:textSize="17sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/btn_support_done"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:gravity="center"
-        android:text="完成"
-        android:textColor="#0A84FF"
-        android:textSize="17sp"
-        android:fontFamily="sans-serif-medium"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true" />
-</LinearLayout>
+</FrameLayout>

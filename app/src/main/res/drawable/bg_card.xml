@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 列表卡片：18dp 圆角，浅色白 / 深色 @color/card_bg -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/card_bg" />
-    <corners android:radius="18dp" />
-</shape>
+<!-- 列表卡片 v0.56.0 新拟物混合风：左上高光渐变 + 右下暗影渐变 + 同色表面
+     （表面色=背景色是新拟物核心；深浅两版由 values-night 的 neu_hi/neu_lo 配色区分） -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 左上高光：白色向表面色渐隐 -->
+    <item android:bottom="5dp" android:right="5dp">
+        <shape>
+            <gradient android:angle="315" android:startColor="@color/neu_hi" android:endColor="@color/neu_bg" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+    <!-- 右下暗影：表面色向暗影渐显 -->
+    <item android:top="5dp" android:left="5dp">
+        <shape>
+            <gradient android:angle="315" android:startColor="@color/neu_bg" android:endColor="@color/neu_lo" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+    <!-- 表面（同背景色，新拟物核心） -->
+    <item android:left="5dp" android:top="5dp" android:right="5dp" android:bottom="5dp">
+        <shape>
+            <solid android:color="@color/neu_bg" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+</layer-list>

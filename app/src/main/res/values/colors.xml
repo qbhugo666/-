@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 语义色（浅色为默认值；深色版见 values-night/colors.xml） -->
-    <color name="page_bg">#FAFAFA</color>
-    <color name="card_bg">#FFFFFF</color>
-    <color name="hero_bg">#E8F0FE</color>
+    <!-- 语义色（浅色为默认值；深色版见 values-night/colors.xml）
+         v0.56.0 新拟物混合风：表面色=背景色（新拟物核心），双阴影配方见 neu_hi/neu_lo -->
+    <color name="page_bg">#E8ECF3</color>
+    <color name="card_bg">#E8ECF3</color>
+    <color name="hero_bg">#E8ECF3</color>
     <color name="btn_gray">#E8E8E8</color>
     <color name="btn_gray_pressed">#D0D0D0</color>
     <color name="btn_gray_text">#333333</color>
-    <color name="text_primary">#1A1A1A</color>
-    <color name="text_secondary">#999999</color>
+    <color name="text_primary">#16181D</color>
+    <color name="text_secondary">#5A6472</color>
     <color name="text_hint">#CCCCCC</color>
     <color name="text_body">#333333</color>
     <color name="text_footer">#CCCCCC</color>
-    <color name="divider">#E8E8E8</color>
+    <color name="divider">#D8DEE9</color>
+
+    <!-- 新拟物双阴影（混合风）：高光/暗影只出现在卡片边缘渐变里，文字保持高对比 -->
+    <color name="neu_bg">#E8ECF3</color>
+    <color name="neu_hi">#FFFFFF</color>
+    <color name="neu_lo">#B9C3D2</color>
 
     <!-- 品牌色（昼夜共用） -->
     <color name="accent_blue">#0A84FF</color>

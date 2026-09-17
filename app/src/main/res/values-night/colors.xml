@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 深色模式（黑夜模式）：AMOLED 纯黑底 + 深灰卡 + 蓝调英雄卡
-     图形/文字对比度对齐浅色版层级；品牌蓝与状态色昼夜共用 -->
+<!-- 深色模式（黑夜模式）：v0.56.0 起新拟物混合风——深色独立配方（非浅色反转）：
+     暗底 + 亮灰高光 + 纯黑暗影的双阴影；文字近白保持高对比；品牌蓝与状态色昼夜共用 -->
 <resources>
-    <color name="page_bg">#0B0B0B</color>
-    <color name="card_bg">#161618</color>
-    <color name="hero_bg">#12203A</color>
+    <color name="page_bg">#1C1F24</color>
+    <color name="card_bg">#23262C</color>
+    <color name="hero_bg">#23262C</color>
     <color name="btn_gray">#2C2C2E</color>
     <color name="btn_gray_pressed">#3A3A3C</color>
     <color name="btn_gray_text">#E5E5E5</color>
-    <color name="text_primary">#F2F2F2</color>
-    <color name="text_secondary">#98989E</color>
+    <color name="text_primary">#F2F4F8</color>
+    <color name="text_secondary">#9AA3B0</color>
     <color name="text_hint">#5A5A5E</color>
     <color name="text_body">#D1D1D3</color>
     <color name="text_footer">#5A5A5E</color>
-    <color name="divider">#2C2C2E</color>
+    <color name="divider">#2E333A</color>
+
+    <!-- 新拟物双阴影（深色独立配方）：高光=亮灰、暗影=纯黑 -->
+    <color name="neu_bg">#23262C</color>
+    <color name="neu_hi">#2E333B</color>
+    <color name="neu_lo">#0F1114</color>
 </resources>

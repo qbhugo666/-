@@ -112,14 +112,7 @@ class MainActivity : ThemedActivity() {
             startActivity(Intent(this, AboutActivity::class.java))
         }
 
-        findViewById<View>(R.id.tv_support).setOnClickListener {
-            runCatching {
-                startActivity(android.content.Intent(
-                    android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(AFDIAN_URL)
-                ))
-            }
-        }
+        findViewById<View>(R.id.tv_support).setOnClickListener { showSupportDialog() }
 
         // 设置齿轮 → 设置页
         findViewById<ImageView>(R.id.btn_settings).setOnClickListener {
@@ -517,6 +510,24 @@ class MainActivity : ThemedActivity() {
         val dm = resources.displayMetrics
         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         dialog.window?.setLayout((dm.widthPixels * 0.88).toInt(), (dm.heightPixels * 0.72).toInt())
+    }
+
+    // ===== 支持作者（v0.55.14：爱发电 + 微信 + 支付宝 三通道卡片，主界面零新增元素） =====
+
+    private fun showSupportDialog() {
+        val dialog = android.app.Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_support)
+        dialog.setCancelable(true)
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.findViewById<View>(R.id.btn_afdian).setOnClickListener {
+            runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AFDIAN_URL))) }
+        }
+        dialog.findViewById<View>(R.id.btn_support_done).setOnClickListener { dialog.dismiss() }
+        dialog.show()
+        val dm = resources.displayMetrics
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.setLayout((dm.widthPixels * 0.88).toInt(), (dm.heightPixels * 0.82).toInt())
     }
 
     override fun onDestroy() {

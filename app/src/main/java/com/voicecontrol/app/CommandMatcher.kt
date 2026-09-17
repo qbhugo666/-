@@ -7,8 +7,8 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType
 import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType
 import org.json.JSONObject
 
-/** 汉字转拼音（无声调、小写、空格分隔音节；非汉字原样保留）。文件级私有，实例与 companion 共用。 */
-private fun pinyinOf(s: String): String {
+/** 汉字转拼音（无声调、小写、空格分隔音节；非汉字原样保留）。v0.55.12 起公开，供听写触发判定共用；实例与 companion 共用。 */
+fun pinyinOf(s: String): String {
     val format = HanyuPinyinOutputFormat().apply {
         caseType = HanyuPinyinCaseType.LOWERCASE
         toneType = HanyuPinyinToneType.WITHOUT_TONE

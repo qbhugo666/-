@@ -915,8 +915,9 @@ class VoiceService : Service() {
             return
         }
 
-        // 听写触发（v0.40.0）：说「输入/听写」→ 下一句识别原文直接写入输入框（小米式短听写）
-        if (text == "输入" || text == "听写") {
+        // 听写触发（v0.40.0「输入/听写」；v0.55.12 扩容触发词+短句拼音容错，见 DictationTriggers）：
+        // 下一句识别原文直接写入输入框（小米式短听写）
+        if (isDictationTrigger(text)) {
             dictationMode = true
             handler.removeCallbacks(dictationTimeoutRunnable)
             handler.postDelayed(dictationTimeoutRunnable, 12_000L)

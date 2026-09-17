@@ -18,6 +18,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Toast
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -524,10 +525,39 @@ class MainActivity : ThemedActivity() {
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AFDIAN_URL))) }
         }
         dialog.findViewById<View>(R.id.btn_support_done).setOnClickListener { dialog.dismiss() }
+        // 长按收款码 → 保存到相册（Pictures/言出法随），供转发给朋友
+        dialog.findViewById<ImageView>(R.id.qr_wechat).setOnLongClickListener {
+            saveQrToGallery(R.drawable.support_qr_wechat, "言出法随_微信收款码.png"); true
+        }
+        dialog.findViewById<ImageView>(R.id.qr_alipay).setOnLongClickListener {
+            saveQrToGallery(R.drawable.support_qr_alipay, "言出法随_支付宝收款码.png"); true
+        }
         dialog.show()
         val dm = resources.displayMetrics
         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         dialog.window?.setLayout((dm.widthPixels * 0.88).toInt(), (dm.heightPixels * 0.82).toInt())
+    }
+
+    /** 长按收款码保存到相册（Pictures/言出法随；Android 10+ MediaStore 免存储权限，失败弹提示不静默） */
+    private fun saveQrToGallery(resId: Int, name: String) {
+        runCatching {
+            val bitmap = android.graphics.BitmapFactory.decodeResource(resources, resId)
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, name)
+                put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/言出法随")
+                }
+            }
+            val uri = contentResolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: throw IllegalStateException("MediaStore insert failed")
+            contentResolver.openOutputStream(uri)?.use { out ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+            }
+            android.widget.Toast.makeText(this, "已保存到相册（Pictures/言出法随）", Toast.LENGTH_LONG).show()
+        }.onFailure {
+            android.widget.Toast.makeText(this, "保存失败：${it.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onDestroy() {

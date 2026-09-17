@@ -39,6 +39,7 @@
             android:paddingBottom="10dp">
 
             <ImageView
+                android:id="@+id/qr_wechat"
                 android:layout_width="match_parent"
                 android:layout_height="112dp"
                 android:layout_marginStart="10dp"
@@ -74,6 +75,7 @@
             android:paddingBottom="10dp">
 
             <ImageView
+                android:id="@+id/qr_alipay"
                 android:layout_width="match_parent"
                 android:layout_height="112dp"
                 android:layout_marginStart="10dp"

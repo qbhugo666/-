@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.Gravity
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -525,12 +526,12 @@ class MainActivity : ThemedActivity() {
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AFDIAN_URL))) }
         }
         dialog.findViewById<View>(R.id.btn_support_done).setOnClickListener { dialog.dismiss() }
-        // 长按收款码 → 保存到相册（Pictures/言出法随），供转发给朋友
-        dialog.findViewById<ImageView>(R.id.qr_wechat).setOnLongClickListener {
-            saveQrToGallery(R.drawable.support_qr_wechat, "言出法随_微信收款码.png"); true
+        // 点码 → 全屏查看器（微信看图式：全屏内长按 → 底部弹「保存到相册」）
+        dialog.findViewById<ImageView>(R.id.qr_wechat).setOnClickListener {
+            showQrFullscreen(R.drawable.support_qr_wechat)
         }
-        dialog.findViewById<ImageView>(R.id.qr_alipay).setOnLongClickListener {
-            saveQrToGallery(R.drawable.support_qr_alipay, "言出法随_支付宝收款码.png"); true
+        dialog.findViewById<ImageView>(R.id.qr_alipay).setOnClickListener {
+            showQrFullscreen(R.drawable.support_qr_alipay)
         }
         dialog.show()
         val dm = resources.displayMetrics
@@ -538,8 +539,51 @@ class MainActivity : ThemedActivity() {
         dialog.window?.setLayout((dm.widthPixels * 0.88).toInt(), (dm.heightPixels * 0.82).toInt())
     }
 
+    /** 点码 → 全屏查看器：黑底大图，点任意处退出，长按弹底部保存菜单（微信看图式交互） */
+    private fun showQrFullscreen(resId: Int) {
+        val dialog = android.app.Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(0xFF000000.toInt())
+            gravity = Gravity.CENTER
+            setOnClickListener { dialog.dismiss() }
+        }
+        val iv = ImageView(this).apply {
+            setImageResource(resId)
+            adjustViewBounds = true
+            setOnLongClickListener { showQrSaveSheet(resId); true }
+        }
+        root.addView(iv, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        dialog.setContentView(root)
+        dialog.setCancelable(true)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+        dialog.show()
+    }
+
+    /** 全屏查看器长按 → 底部操作菜单：保存到相册 / 取消 */
+    private fun showQrSaveSheet(resId: Int) {
+        val dialog = android.app.Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.sheet_qr_save)
+        dialog.setCancelable(true)
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setGravity(Gravity.BOTTOM)
+        dialog.findViewById<View>(R.id.btn_save_gallery).setOnClickListener {
+            saveQrToGallery(resId); dialog.dismiss()
+        }
+        dialog.findViewById<View>(R.id.btn_sheet_cancel).setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
     /** 长按收款码保存到相册（Pictures/言出法随；Android 10+ MediaStore 免存储权限，失败弹提示不静默） */
-    private fun saveQrToGallery(resId: Int, name: String) {
+    private fun saveQrToGallery(resId: Int) {
+        val name = if (resId == R.drawable.support_qr_alipay) "言出法随_支付宝收款码.png"
+        else "言出法随_微信收款码.png"
         runCatching {
             val bitmap = android.graphics.BitmapFactory.decodeResource(resources, resId)
             val values = android.content.ContentValues().apply {
@@ -554,9 +598,9 @@ class MainActivity : ThemedActivity() {
             contentResolver.openOutputStream(uri)?.use { out ->
                 bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
             }
-            android.widget.Toast.makeText(this, "已保存到相册（Pictures/言出法随）", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "已保存到相册（Pictures/言出法随）", Toast.LENGTH_LONG).show()
         }.onFailure {
-            android.widget.Toast.makeText(this, "保存失败：${it.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "保存失败：${it.message}", Toast.LENGTH_LONG).show()
         }
     }
 

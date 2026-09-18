@@ -91,6 +91,23 @@ class MainActivity : ThemedActivity() {
         statusTitle = findViewById(R.id.tv_status_title)
         statusHint = findViewById(R.id.tv_status_hint)
 
+        // v0.56.4：双态英雄卡高度对齐。状态卡多一颗「结束」按钮，天然比未启动卡高一截，
+        // 切换瞬间卡片会跳一下。首次布局后按较高一态给两卡定高（按像素定，随系统字号自适应，
+        // 以后改文案也不影响）
+        heroIdle.post {
+            val w = heroIdle.width
+            if (w <= 0) return@post
+            heroStatus.measure(
+                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            val h = maxOf(heroIdle.height, heroStatus.measuredHeight)
+            heroIdle.layoutParams.height = h
+            heroStatus.layoutParams.height = h
+            heroIdle.requestLayout()
+            heroStatus.requestLayout()
+        }
+
         // 未启动态：点击开始会话
         heroIdle.setOnClickListener {
             vibrateFeedback()   // v0.55.10：点下即触感确认（跟随设置页「震动反馈」开关，与执行指令震感同源）

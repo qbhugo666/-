@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 震动反馈开关圆钮 v0.56.11：新拟物凸面细边版（边缘环 1.5dp + 表面色内芯）；
-     开关状态由轨道区分（凹槽+蓝灯=开），圆钮无状态 -->
+<!-- 震动反馈开关圆钮 v0.56.12：白芯凸面钮（边缘环 1.5dp + 纯白内芯）；
+     开态白钮压蓝槽、关态白钮压灰槽，状态一目了然 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:width="20dp"
@@ -17,7 +17,7 @@
         android:height="17dp"
         android:gravity="center">
         <shape android:shape="oval">
-            <solid android:color="@color/neu_bg" />
+            <solid android:color="#FFFFFF" />
         </shape>
     </item>
 </layer-list>

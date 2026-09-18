@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 滑块圆钮 v0.56.11：新拟物凸面——细边版（边缘环 1.5dp：左上受光、右下背光），
-     内芯为表面色，安静不抢戏 -->
+<!-- 滑块圆钮 v0.56.12：凸面白芯——纯白内芯压在蓝线/灰槽上保证可视性，
+     边缘环 1.5dp 提供立体感 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:width="22dp"
@@ -17,7 +17,7 @@
         android:height="19dp"
         android:gravity="center">
         <shape android:shape="oval">
-            <solid android:color="@color/neu_bg" />
+            <solid android:color="#FFFFFF" />
         </shape>
     </item>
 </layer-list>

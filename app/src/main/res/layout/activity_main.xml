@@ -40,6 +40,9 @@
             android:id="@+id/btn_settings"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:contentDescription="设置"
             android:src="@drawable/ic_settings" />
     </LinearLayout>

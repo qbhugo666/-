@@ -133,9 +133,16 @@ class MainActivity : ThemedActivity() {
 
         findViewById<View>(R.id.tv_support).setOnClickListener { showSupportDialog() }
 
-        // 设置齿轮 → 设置页
-        findViewById<ImageView>(R.id.btn_settings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        // 设置齿轮 → 设置页（v0.56.20：点下有反应——水波纹（XML 背景）+ 齿轮转 30° + 震动确认，
+        // 140ms 后再跳转，让转动能被看见；与深色模式行的延迟生效同款手法）
+        val gear = findViewById<ImageView>(R.id.btn_settings)
+        gear.setOnClickListener {
+            vibrateFeedback()
+            gear.animate().rotation(gear.rotation + 30f).setDuration(220L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                startActivity(Intent(this, SettingsActivity::class.java))
+            }, 140L)
         }
 
         // 测试期间保持亮屏，方便观察识别结果

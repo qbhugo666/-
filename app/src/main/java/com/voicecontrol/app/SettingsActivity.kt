@@ -77,11 +77,17 @@ class SettingsActivity : ThemedActivity() {
         seek.progress = savedLevel - RecognitionSensitivity.MIN_LEVEL
         refreshSensText(savedLevel)
         refreshSensColor(savedLevel)
+        // 拖动档位轻震（v0.56.21）：每跨一格"哒"一下，连续拖动=连续短震；跟随震动反馈开关
+        var lastTickLevel = savedLevel
         seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 val level = progress + RecognitionSensitivity.MIN_LEVEL
                 refreshSensText(level)
                 refreshSensColor(level)
+                if (fromUser && level != lastTickLevel) {
+                    lastTickLevel = level
+                    tickVibrate()
+                }
             }
 
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -211,8 +217,19 @@ class SettingsActivity : ThemedActivity() {
         state.setTextColor(if (on) 0xFF34C759.toInt() else 0xFFFF3B30.toInt())
     }
 
-    /** 卡片式深色模式选择弹窗：居中标题 + 三行单选（右侧蓝点指示）+ 完成胶囊；选中即生效 */
-    private fun showDarkModeDialog() {
+    /** 灵敏度拖动档位轻震（v0.56.21）：跟随「震动反馈」开关，12ms 短震=哒的一声 */
+    private fun tickVibrate() {
+        if (!getSharedPreferences("app", MODE_PRIVATE).getBoolean("vibrate_feedback", false)) return
+        val vib = getSystemService(VIBRATOR_SERVICE) as? android.os.Vibrator ?: return
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            vib.vibrate(android.os.VibrationEffect.createOneShot(12, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vib.vibrate(12)
+        }
+    }
+
+    /** 卡片式深色模式选择弹窗：居中标题 + 三行单选（右侧蓝点指示）+ 完成胶囊；选中即生效 */    private fun showDarkModeDialog() {
         val modes = arrayOf("跟随系统", "浅色", "深色")
         val dialog = android.app.Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)

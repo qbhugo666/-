@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- iOS 弹窗背景：20dp 圆角，浅色白 / 深色 card_bg -->
+<!-- 弹窗背景：24dp 圆角，浅色白 / 深色 card_bg（配合根布局 elevation 出柔和投影） -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="@color/card_bg" />
-    <corners android:radius="20dp" />
+    <corners android:radius="24dp" />
 </shape>

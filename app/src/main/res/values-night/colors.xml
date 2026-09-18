@@ -24,4 +24,5 @@
     <color name="neu_rim">#14171C</color>
     <color name="neu_rim_hi">#39404C</color>
     <color name="accent_brand">#4D8BFF</color>
+    <color name="accent_brand_pressed">#2E6BE8</color>
 </resources>

@@ -211,7 +211,7 @@ class SettingsActivity : ThemedActivity() {
         state.setTextColor(if (on) 0xFF34C759.toInt() else 0xFFFF3B30.toInt())
     }
 
-    /** iOS 卡片式深色模式选择弹窗：居中标题 + 三行单选（右侧蓝圆勾）+ 完成胶囊；选中即生效 */
+    /** 卡片式深色模式选择弹窗：居中标题 + 三行单选（右侧蓝点指示）+ 完成胶囊；选中即生效 */
     private fun showDarkModeDialog() {
         val modes = arrayOf("跟随系统", "浅色", "深色")
         val dialog = android.app.Dialog(this)

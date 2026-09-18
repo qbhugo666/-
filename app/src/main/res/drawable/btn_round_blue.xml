@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 蓝色胶囊按钮（开始会话）：按压加深 -->
+<!-- 品牌蓝胶囊按钮：按压加深（v0.56.14 起统一用 accent_brand，与 Logo/开关/滑轨同源） -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="#0066CC" />
+            <solid android:color="@color/accent_brand_pressed" />
             <corners android:radius="29dp" />
         </shape>
     </item>
     <item>
         <shape>
-            <solid android:color="#0A84FF" />
+            <solid android:color="@color/accent_brand" />
             <corners android:radius="29dp" />
         </shape>
     </item>

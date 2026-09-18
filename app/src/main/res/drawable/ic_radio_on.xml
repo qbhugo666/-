@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 单选选中：品牌蓝圆 + 白色对勾 -->
+<!-- 单选选中 v0.56.14：品牌蓝圆环 + 正圆实心点（纯几何圆，无手绘折线，杜绝歪斜） -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="22dp"
     android:height="22dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="#0A84FF"
-        android:pathData="M12,2 a10,10 0 1 0 0.002,0 z" />
-    <path
-        android:pathData="M7,12.5 L10.5,16 L17,8.5"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
+        android:pathData="M12,3.5 a8.5,8.5 0 1 0 0.002,0 z"
+        android:strokeColor="@color/accent_brand"
+        android:strokeWidth="2"
         android:fillColor="@null" />
+    <path
+        android:fillColor="@color/accent_brand"
+        android:pathData="M12,8.5 a3.5,3.5 0 1 0 0.002,0 z" />
 </vector>

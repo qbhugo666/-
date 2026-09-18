@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1080px;
+    background: linear-gradient(160deg, #0B0E13 0%, #10151D 60%, #0D1220 100%);
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: #E8ECF2;
+    position: relative;
+    overflow: hidden;
+  }
+  /* 品牌蓝氛围光 */
+  .glow {
+    position: absolute; width: 720px; height: 720px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(36,107,254,0.16) 0%, rgba(36,107,254,0) 70%);
+    top: -280px; right: -200px;
+  }
+  .wrap { position: relative; padding: 64px 72px; height: 100%; display: flex; flex-direction: column; }
+
+  /* 头部：图标 + 产品名 */
+  .head { display: flex; align-items: center; gap: 24px; }
+  .head img { width: 84px; height: 84px; border-radius: 20px; }
+  .head .name { font-size: 40px; font-weight: 700; letter-spacing: 1px; }
+  .head .sub { font-size: 20px; color: #8A94A6; margin-top: 6px; letter-spacing: 2px; }
+
+  /* 日期横条 */
+  .datebar {
+    margin-top: 44px; display: flex; align-items: baseline; gap: 20px;
+  }
+  .date { font-size: 58px; font-weight: 800; letter-spacing: 2px; }
+  .count {
+    font-size: 22px; color: #246BFE; background: rgba(36,107,254,0.14);
+    border: 1px solid rgba(36,107,254,0.45); border-radius: 999px; padding: 8px 22px;
+    font-weight: 600;
+  }
+
+  /* 时间线 */
+  .timeline { margin-top: 40px; position: relative; padding-left: 34px; flex: 1; }
+  .timeline::before {
+    content: ""; position: absolute; left: 8px; top: 14px; bottom: 14px;
+    width: 2px; background: linear-gradient(#246BFE, rgba(36,107,254,0.08));
+  }
+  .item { position: relative; margin-bottom: 34px; }
+  .item::before {
+    content: ""; position: absolute; left: -34px; top: 10px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #246BFE; border: 3px solid #0B0E13;
+    box-shadow: 0 0 0 2px rgba(36,107,254,0.4);
+  }
+  .ver { font-size: 24px; font-weight: 700; color: #6EA0FF; letter-spacing: 1px; }
+  .title { font-size: 32px; font-weight: 700; margin: 6px 0 8px; }
+  .desc { font-size: 22px; color: #9AA4B5; line-height: 1.5; }
+
+  /* 底部条 */
+  .foot {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08); padding-top: 28px;
+  }
+  .tags { display: flex; gap: 14px; }
+  .tag {
+    font-size: 19px; color: #AAB4C6; background: rgba(255,255,255,0.05);
+    border-radius: 8px; padding: 8px 18px;
+  }
+  .sig { font-size: 19px; color: #5F8BFF; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="wrap">
+  <div class="head">
+    <img src="file:///E:/VoiceControl/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png">
+    <div>
+      <div class="name">言出法随</div>
+      <div class="sub">YANCHUFASUI · 离线语音控制</div>
+    </div>
+  </div>
+
+  <div class="datebar">
+    <div class="date">2026.09.16</div>
+    <div class="count">今日发布 4 个版本</div>
+  </div>
+
+  <div class="timeline">
+    <div class="item">
+      <div class="ver">v0.55.2</div>
+      <div class="title">响应提速 · 说完即动</div>
+      <div class="desc">语句结束确认静音 0.4s → 0.3s，说完到执行快 100ms，弱声档参数保持不变</div>
+    </div>
+    <div class="item">
+      <div class="ver">v0.55.3</div>
+      <div class="title">触发灵敏度加强</div>
+      <div class="desc">模糊匹配阈值 0.5 → 0.65，小声/残缺指令召回提升；数字同音字纠错表补缺；未匹配原文接入诊断导出</div>
+    </div>
+    <div class="item">
+      <div class="ver">v0.55.4</div>
+      <div class="title">连发指令提速</div>
+      <div class="desc">同命令冷却 1.5s → 0.8s，连续翻页不再被拦；熔断保护（8s/6次）继续兜底</div>
+    </div>
+    <div class="item">
+      <div class="ver">v0.55.6</div>
+      <div class="title">启动等待水波动效</div>
+      <div class="desc">「开始控制」圆形水波涟漪：等待状态可见、就绪即停；启动反馈零盲区</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="tags">
+      <div class="tag">语义化版本</div>
+      <div class="tag">每版可回退</div>
+      <div class="tag">真机验证</div>
+    </div>
+    <div class="sig">当前版本 v0.55.6 · 签名包已验签</div>
+  </div>
+</div>
+</body>
+</html>

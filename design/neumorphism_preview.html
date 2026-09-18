@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>言出法随 · 新拟物风格效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#171a1f; color:#e8ebf0; font-family:"PingFang SC","Microsoft YaHei",sans-serif; padding:36px 24px 60px; }
+  header { text-align:center; margin-bottom:8px; }
+  h1 { font-size:26px; letter-spacing:1px; }
+  .sub { color:#9aa3b0; font-size:14px; margin-top:8px; }
+  h2 { font-size:20px; margin:42px 0 6px; }
+  .legend { color:#9aa3b0; font-size:13px; margin-bottom:14px; }
+  .grid { display:flex; flex-wrap:wrap; gap:26px; }
+
+  .phone { width:330px; border-radius:38px; padding:16px 16px 26px; position:relative; }
+  .statusbar { display:flex; justify-content:space-between; font-size:11px; opacity:.75; margin-bottom:14px; }
+  .topbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .title { font-size:19px; font-weight:700; }
+  .gear { margin-left:auto; font-size:16px; opacity:.8; }
+  .row { display:flex; align-items:center; gap:10px; padding:13px 14px; border-radius:18px; margin-bottom:12px; font-size:14px; }
+  .chev { margin-left:auto; opacity:.5; font-size:16px; }
+  .group { font-size:11px; margin:14px 2px 8px; }
+  .divider { height:1px; margin:14px 4px; }
+  .hero { border-radius:26px; padding:26px 16px 22px; text-align:center; margin-bottom:14px; }
+  .circle { width:96px; height:96px; border-radius:50%; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; }
+  .herotitle { font-size:19px; font-weight:700; margin-bottom:6px; }
+  .herosub { font-size:12px; }
+  .slider { height:10px; border-radius:6px; margin:10px 0 6px; position:relative; }
+  .thumb { width:22px; height:22px; border-radius:50%; position:absolute; top:-6px; left:78%; }
+  .switch { width:40px; height:22px; border-radius:12px; position:relative; margin-left:auto; }
+  .knob { width:18px; height:18px; border-radius:50%; background:#fff; position:absolute; top:2px; }
+  .cap { text-align:center; margin:0 auto 16px; width:330px; }
+  .cap .name { font-size:15px; font-weight:700; }
+  .cap .desc { font-size:12px; color:#9aa3b0; margin-top:4px; line-height:1.6; }
+  .notes { max-width:860px; margin:40px auto 0; font-size:14px; line-height:2; color:#c8cfd8; }
+  .notes b { color:#fff; }
+
+  /* 纯新拟物 · 浅色 */
+  .pure-light { background:#E0E5EC; color:#5B6472; }
+  .pure-light .neu { background:#E0E5EC; box-shadow:-7px -7px 14px #FFFFFF, 7px 7px 14px #A3B1C6; }
+  .pure-light .circle { box-shadow:-7px -7px 14px #FFFFFF, 7px 7px 14px #A3B1C6; color:#8CA6C9; }
+  .pure-light .slider { box-shadow: inset 3px 3px 6px #C9D2DE, inset -3px -3px 6px #F7FAFF; }
+  .pure-light .thumb { box-shadow:-3px -3px 8px #FFFFFF, 3px 3px 8px #A3B1C6; background:#E0E5EC; }
+  .pure-light .switch { box-shadow: inset 3px 3px 6px #C9D2DE, inset -3px -3px 6px #F7FAFF; }
+  .pure-light .knob { box-shadow:-2px -2px 6px #FFFFFF, 2px 2px 6px #A3B1C6; background:#E0E5EC; left:20px; }
+  .pure-light .pill { box-shadow:-4px -4px 8px #FFFFFF, 4px 4px 8px #A3B1C6; color:#7E8BA0; background:#E0E5EC; }
+
+  /* 纯新拟物 · 深色 */
+  .pure-dark { background:#23262B; color:#6A707A; }
+  .pure-dark .neu { background:#23262B; box-shadow:-6px -6px 12px #2C3038, 6px 6px 12px #14161A; }
+  .pure-dark .circle { box-shadow:-6px -6px 12px #2C3038, 6px 6px 12px #14161A; color:#566072; }
+  .pure-dark .slider { box-shadow: inset 3px 3px 6px #1A1C20, inset -3px -3px 6px #2E333A; }
+  .pure-dark .thumb { box-shadow:-2px -2px 6px #2C3038, 2px 2px 6px #14161A; background:#23262B; }
+  .pure-dark .switch { box-shadow: inset 3px 3px 6px #1A1C20, inset -3px -3px 6px #2E333A; }
+  .pure-dark .knob { box-shadow:-2px -2px 6px #2C3038, 2px 2px 6px #14161A; background:#23262B; left:20px; }
+  .pure-dark .pill { box-shadow:-4px -4px 8px #2C3038, 4px 4px 8px #14161A; color:#6A707A; background:#23262B; }
+
+  /* 混合风 · 浅色 */
+  .hyb-light { background:#E8ECF3; color:#16181D; }
+  .hyb-light .neu { background:#E8ECF3; box-shadow:-6px -6px 12px #FFFFFF, 6px 6px 12px #B9C3D2; }
+  .hyb-light .circle { background:#0A84FF; box-shadow:-5px -5px 10px #FFFFFF, 5px 5px 10px #B9C3D2; color:#fff; }
+  .hyb-light .slider { background:#C9D3E0; box-shadow: inset 2px 2px 5px #AEBACB; position:relative; }
+  .hyb-light .slider::after { content:""; position:absolute; left:0; top:0; height:100%; width:80%; border-radius:6px; background:#0A84FF; }
+  .hyb-light .thumb { box-shadow:0 1px 4px rgba(0,0,0,.35); background:#fff; border:1px solid #d5dce6; }
+  .hyb-light .switch { background:#0A84FF; }
+  .hyb-light .knob { box-shadow:0 1px 3px rgba(0,0,0,.3); }
+  .hyb-light .pill { background:#0A84FF; color:#fff; }
+  .hyb-light .row .ic { color:#0A84FF; font-weight:700; }
+
+  /* 混合风 · 深色 */
+  .hyb-dark { background:#1C1F24; color:#F2F4F8; }
+  .hyb-dark .neu { background:#23262C; box-shadow:-5px -5px 12px #2A2F37, 5px 5px 12px #0C0E11; }
+  .hyb-dark .circle { background:#0A84FF; box-shadow:-4px -4px 10px #2A2F37, 4px 4px 10px #0C0E11; color:#fff; }
+  .hyb-dark .slider { background:#33383F; position:relative; }
+  .hyb-dark .slider::after { content:""; position:absolute; left:0; top:0; height:100%; width:80%; border-radius:6px; background:#0A84FF; }
+  .hyb-dark .thumb { box-shadow:0 1px 4px rgba(0,0,0,.5); background:#fff; }
+  .hyb-dark .switch { background:#0A84FF; }
+  .hyb-dark .knob { box-shadow:0 1px 3px rgba(0,0,0,.4); }
+  .hyb-dark .pill { background:#0A84FF; color:#fff; }
+  .hyb-dark .row { color:#F2F4F8; }
+  .hyb-dark .row .ic { color:#0A84FF; font-weight:700; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>言出法随 · 新拟物风格效果图</h1>
+  <p class="sub">主页 + 设置页 ｜ 浅色 / 深色 ｜ 纯新拟物 vs 混合风（柔阴影 + 高对比文字）</p>
+  <p class="sub">⚠ 纯新拟物里文字故意偏灰——那是它风格的本质，也是可用性隐患所在；混合风保留同款柔阴影但文字保持清晰</p>
+</header>
+
+<section>
+  <h2>主页</h2>
+  <div class="legend">上排：纯新拟物（浅色 → 深色）｜ 下排：混合风（浅色 → 深色）</div>
+  <div class="grid">
+
+    <div>
+      <div class="cap"><div class="name">纯新拟物 · 浅色</div><div class="desc">氛围统一，但文字全是灰色系<br>低视力用户辨认按钮吃力</div></div>
+      <div class="phone pure-light">
+        <div class="statusbar"><span>3:07</span><span>5G ▮▮▮ ⚡100</span></div>
+        <div class="topbar"><div class="circle neu" style="width:34px;height:34px;font-size:14px;">»</div><div class="title">言出法随</div><div class="gear">⚙</div></div>
+        <div class="hero neu"><div class="circle">»</div><div class="herotitle">开始控制</div><div class="herosub">说出指令，控制手机</div></div>
+        <div class="row neu"><span class="ic">📖</span><span>指令</span><span class="chev">›</span></div>
+        <div class="row neu"><span class="ic">🕐</span><span>使用记录</span><span class="chev">›</span></div>
+        <div style="text-align:center;margin-top:30px;font-size:11px;">关于 · 支持作者</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">纯新拟物 · 深色</div><div class="desc">深色配方单独绘制（亮灰高光+纯黑暗影）<br>同样存在文字对比度问题</div></div>
+      <div class="phone pure-dark">
+        <div class="statusbar"><span>3:07</span><span>5G ▮▮▮ ⚡100</span></div>
+        <div class="topbar"><div class="circle neu" style="width:34px;height:34px;font-size:14px;">»</div><div class="title">言出法随</div><div class="gear">⚙</div></div>
+        <div class="hero neu"><div class="circle">»</div><div class="herotitle">开始控制</div><div class="herosub">说出指令，控制手机</div></div>
+        <div class="row neu"><span class="ic">📖</span><span>指令</span><span class="chev">›</span></div>
+        <div class="row neu"><span class="ic">🕐</span><span>使用记录</span><span class="chev">›</span></div>
+        <div style="text-align:center;margin-top:30px;font-size:11px;">关于 · 支持作者</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">混合风 · 浅色（推荐）</div><div class="desc">同样的柔阴影，但文字纯黑、主色蓝<br>高级感和可用性兼顾</div></div>
+      <div class="phone hyb-light">
+        <div class="statusbar"><span>3:07</span><span>5G ▮▮▮ ⚡100</span></div>
+        <div class="topbar"><div class="circle" style="width:34px;height:34px;font-size:14px;">»</div><div class="title">言出法随</div><div class="gear">⚙</div></div>
+        <div class="hero neu"><div class="circle">»</div><div class="herotitle">开始控制</div><div class="herosub">说出指令，控制手机</div></div>
+        <div class="row neu"><span class="ic">📖</span><span>指令</span><span class="chev">›</span></div>
+        <div class="row neu"><span class="ic">🕐</span><span>使用记录</span><span class="chev">›</span></div>
+        <div style="text-align:center;margin-top:30px;font-size:11px;">关于 · 支持作者</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">混合风 · 深色</div><div class="desc">深色独立配色：亮灰高光+纯黑暗影<br>文字近白，对比清晰</div></div>
+      <div class="phone hyb-dark">
+        <div class="statusbar"><span>3:07</span><span>5G ▮▮▮ ⚡100</span></div>
+        <div class="topbar"><div class="circle" style="width:34px;height:34px;font-size:14px;">»</div><div class="title">言出法随</div><div class="gear">⚙</div></div>
+        <div class="hero neu"><div class="circle">»</div><div class="herotitle">开始控制</div><div class="herosub">说出指令，控制手机</div></div>
+        <div class="row neu"><span class="ic">📖</span><span>指令</span><span class="chev">›</span></div>
+        <div class="row neu"><span class="ic">🕐</span><span>使用记录</span><span class="chev">›</span></div>
+        <div style="text-align:center;margin-top:30px;font-size:11px;">关于 · 支持作者</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>设置页</h2>
+  <div class="legend">同样四格对比（内容一致，风格不同）</div>
+  <div class="grid">
+
+    <div>
+      <div class="cap"><div class="name">纯新拟物 · 浅色</div></div>
+      <div class="phone pure-light">
+        <div class="statusbar"><span>3:07</span><span>▮▮▮</span></div>
+        <div class="topbar"><span style="opacity:.7;">‹</span><div class="title">设置</div></div>
+        <div class="group">语音</div>
+        <div class="row neu" style="justify-content:space-between;">识别语言 <b style="opacity:.6;">普通话</b></div>
+        <div class="neu" style="border-radius:18px;padding:12px 14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;">识别灵敏度 <b style="opacity:.6;">8</b></div>
+          <div class="slider"><div class="thumb"></div></div>
+        </div>
+        <div class="row neu" style="justify-content:space-between;">自定义指令 <span class="chev">›</span></div>
+        <div class="row neu" style="justify-content:space-between;">个人词典 <span class="chev">›</span></div>
+        <div class="group">外观</div>
+        <div class="row neu" style="justify-content:space-between;">深色模式 <b style="opacity:.6;">浅色</b></div>
+        <div class="group">反馈</div>
+        <div class="row neu">震动反馈 <span class="switch"><span class="knob"></span></span></div>
+        <div class="group">服务</div>
+        <div class="row neu" style="justify-content:space-between;">无障碍服务 <b style="opacity:.6;">已开启</b></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">纯新拟物 · 深色</div></div>
+      <div class="phone pure-dark">
+        <div class="statusbar"><span>3:07</span><span>▮▮▮ ⚡</span></div>
+        <div class="topbar"><span style="opacity:.7;">‹</span><div class="title">设置</div></div>
+        <div class="group">语音</div>
+        <div class="row neu" style="justify-content:space-between;">识别语言 <b style="opacity:.6;">普通话</b></div>
+        <div class="neu" style="border-radius:18px;padding:12px 14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;">识别灵敏度 <b style="opacity:.6;">8</b></div>
+          <div class="slider"><div class="thumb"></div></div>
+        </div>
+        <div class="row neu" style="justify-content:space-between;">自定义指令 <span class="chev">›</span></div>
+        <div class="row neu" style="justify-content:space-between;">个人词典 <span class="chev">›</span></div>
+        <div class="group">外观</div>
+        <div class="row neu" style="justify-content:space-between;">深色模式 <b style="opacity:.6;">浅色</b></div>
+        <div class="group">反馈</div>
+        <div class="row neu">震动反馈 <span class="switch"><span class="knob"></span></span></div>
+        <div class="group">服务</div>
+        <div class="row neu" style="justify-content:space-between;">无障碍服务 <b style="opacity:.6;">已开启</b></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">混合风 · 浅色（推荐）</div></div>
+      <div class="phone hyb-light">
+        <div class="statusbar"><span>3:07</span><span>▮▮▮</span></div>
+        <div class="topbar"><span style="opacity:.7;">‹</span><div class="title">设置</div></div>
+        <div class="group">语音</div>
+        <div class="row neu" style="justify-content:space-between;">识别语言 <b>普通话</b></div>
+        <div class="neu" style="border-radius:18px;padding:12px 14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;">识别灵敏度 <b style="color:#0A84FF;">8</b></div>
+          <div class="slider"><div class="thumb"></div></div>
+        </div>
+        <div class="row neu" style="justify-content:space-between;">自定义指令 <span class="chev">›</span></div>
+        <div class="row neu" style="justify-content:space-between;">个人词典 <span class="chev">›</span></div>
+        <div class="group">外观</div>
+        <div class="row neu" style="justify-content:space-between;">深色模式 <b style="color:#0A84FF;">浅色</b></div>
+        <div class="group">反馈</div>
+        <div class="row neu">震动反馈 <span class="switch"><span class="knob"></span></span></div>
+        <div class="group">服务</div>
+        <div class="row neu" style="justify-content:space-between;">无障碍服务 <b>已开启</b></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cap"><div class="name">混合风 · 深色</div></div>
+      <div class="phone hyb-dark">
+        <div class="statusbar"><span>3:07</span><span>▮▮▮</span></div>
+        <div class="topbar"><span style="opacity:.7;">‹</span><div class="title">设置</div></div>
+        <div class="group">语音</div>
+        <div class="row neu" style="justify-content:space-between;">识别语言 <b>普通话</b></div>
+        <div class="neu" style="border-radius:18px;padding:12px 14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;">识别灵敏度 <b style="color:#0A84FF;">8</b></div>
+          <div class="slider"><div class="thumb"></div></div>
+        </div>
+        <div class="row neu" style="justify-content:space-between;">自定义指令 <span class="chev">›</span></div>
+        <div class="row neu" style="justify-content:space-between;">个人词典 <span class="chev">›</span></div>
+        <div class="group">外观</div>
+        <div class="row neu" style="justify-content:space-between;">深色模式 <b style="color:#0A84FF;">深色</b></div>
+        <div class="group">反馈</div>
+        <div class="row neu">震动反馈 <span class="switch"><span class="knob"></span></span></div>
+        <div class="group">服务</div>
+        <div class="row neu" style="justify-content:space-between;">无障碍服务 <b>已开启</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="notes">
+  <h2>怎么选（我的建议）</h2>
+  <ul>
+    <li><b>纯新拟物</b>：氛围最统一，但文字全部灰化——对低视力、老年用户不友好，也和「语音控制」工具的高可靠性定位冲突。</li>
+    <li><b>混合风（我的推荐）</b>：同样的柔和双阴影，但文字、图标、主色保持高对比——高级感和可用性兼顾，深浅两版独立配色。</li>
+    <li>看完在聊天里告诉我：<b>纯新拟物 / 混合风 / 维持现状</b>；也可以指定某个局部（比如只要主页英雄卡用新拟物）。</li>
+    <li>确认方向后我再动 App 代码，预计 1~2 个专注时段完成主页+设置页，版本升 0.56.0。</li>
+  </ul>
+</div>
+
+</body>
+</html>

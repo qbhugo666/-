@@ -522,6 +522,8 @@ class MainActivity : ThemedActivity() {
         dialog.setContentView(R.layout.dialog_support)
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
+        // 点遮罩（半透明背景区域）→ 关闭弹窗
+        dialog.findViewById<View>(R.id.scrim).setOnClickListener { dialog.dismiss() }
         dialog.findViewById<View>(R.id.btn_afdian).setOnClickListener {
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AFDIAN_URL))) }
         }

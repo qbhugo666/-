@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.56.3：在原 Material.Light.NoActionBar 基础上补系统栏融入——
+     状态栏/导航栏/窗口底色与页面同色，消除白条割裂感与启动白闪 -->
+<resources>
+    <style name="VoiceTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/page_bg</item>
+        <item name="android:navigationBarColor">@color/page_bg</item>
+        <item name="android:windowBackground">@color/page_bg</item>
+    </style>
+</resources>

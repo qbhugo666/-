@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 关于页 v0.35.2：全文采用用户亲自撰写的官方文案（黄信豪 Hugo）
+<!-- 关于页 v0.56.3：全文采用用户亲自撰写的官方文案（黄信豪 Hugo），新拟物精修版
      结构：顶栏 + 品牌头 + 项目背景/关于命名/核心特性/安全设计/项目愿景 + 支持 + 署名版本 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -40,12 +41,14 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        android:clipChildren="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:clipChildren="false">
 
             <!-- 品牌头 -->
             <LinearLayout
@@ -79,12 +82,17 @@
             </LinearLayout>
 
             <!-- 01 项目背景 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -152,15 +160,20 @@
                     android:text="无障碍在多数厂商的优先级清单上，是一项可以无限延后的功能；但对肢体障碍用户而言，它是使用手机的唯一入口。\n\n作为一名 22 岁的 SMA（脊髓性肌萎缩症）患者，系统级语音控制是我独立生活的地基。我通过 Vibe Coding——一个人与 AI 深度协作——完成了这款软件。"
                     android:textColor="@color/text_body"
                     android:textSize="14.5sp" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 02 关于命名 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -184,15 +197,20 @@
                     android:text="「言出法随」——说出口的话，随即成为法则。在这里，这是字面事实：你说的每一句话，都是设备立即执行的指令。\n\n障碍源于工具与环境的缺位，而非身体本身。让指令说完即被执行，就是把操作权平等地交还给每一位使用者。"
                     android:textColor="@color/text_body"
                     android:textSize="14.5sp" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 03 核心特性 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -216,15 +234,20 @@
                     android:text="全离线语音引擎 — 基于 SenseVoice 离线中文识别引擎，识别与解析全部在本地完成；配合热词增强与同音字纠错，隐私数据从不出设备。\n\n语义节点点击 — 说出屏幕上的文字（如「点击微信」），直接点按对应元素。\n\n元素编号索引 — 屏幕可交互元素自动编号，呼叫数字即可精准触发。\n\n全屏网格化点选 — 全屏 3×4 网格，最多 5 级缩放，对无文字界面实现像素级点选。\n\n系统级深度控制 — 滑动、摇移、长按、重复回放，以及锁屏、通知中心、控制中心；媒体音量锁定 80% 上限，杜绝误识别导致的音量失控。\n\n实时反馈 — 灵动岛式胶囊、实时声波与手势流光，指令状态全程可见。"
                     android:textColor="@color/text_body"
                     android:textSize="14.5sp" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 04 安全设计 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -259,15 +282,20 @@
                     android:text="会话制 — 麦克风是独占资源，会话期间系统语音助手无法响应。因此软件不常驻麦克风：说「退出」、锁屏或到时未续期，立即归还麦克风。\n\n看门狗 — 每 5 分钟需说「继续」续期（最多 4 次），单次会话最长 25 分钟，到期前 20 秒预警。这不是限制，而是保险：防止意外长期占用麦克风，保证紧急时刻语音助手随叫随到。\n\n熔断 — 短时间异常密集的指令执行会被自动中止，防止误识别引发连锁操作。\n\n静默自愈 — 系统强停服务并撤销无障碍开关后，下次启动自动写回，无需手动重设。"
                     android:textColor="@color/text_body"
                     android:textSize="14.5sp" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 05 项目愿景 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -291,25 +319,32 @@
                     android:text="《言出法随》源于我个人的需求，但面向所有被「按钮」排除在外的人。\n\n无障碍设计的终极目标，是让「无障碍」失去存在的必要。\n\n言出，法随。愿每一次开口，都有回应。"
                     android:textColor="@color/text_body"
                     android:textSize="14.5sp" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 支持 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="20dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="支持"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:id="@+id/row_coffee"
@@ -336,7 +371,7 @@
                         android:contentDescription="@null"
                         android:src="@drawable/ic_chevron" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 署名 + 版本 -->
             <TextView

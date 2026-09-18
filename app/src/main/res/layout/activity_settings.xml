@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 设置页 v0.45.1：外观(深色模式) / 语音(识别语言/灵敏度/自定义指令/个人词典/微信支持) / 反馈(震动) / 服务(无障碍) / 关于；根布局套 ScrollView（内容超出屏幕可滚动） -->
+<!-- 设置页 v0.56.3：新拟物精修版。外观(深色模式) / 语音(识别语言/灵敏度/自定义指令/个人词典/微信支持) / 反馈(震动) / 服务(无障碍) / 关于；
+     根布局套 ScrollView（内容超出屏幕可滚动）。卡片=NeuCardView 真模糊双阴影，
+     ScrollView 与内容容器 clipChildren=false 放行越边软阴影 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -41,31 +44,40 @@
         android:layout_weight="1"
         android:layout_marginTop="12dp"
         android:scrollbars="none"
-        android:overScrollMode="never">
+        android:overScrollMode="never"
+        android:clipChildren="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:clipChildren="false"
             android:paddingBottom="20dp">
 
             <!-- 语音 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="20dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="语音"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -227,25 +239,32 @@
                     android:layout_height="0.5dp"
                     android:layout_marginStart="18dp"
                     android:background="@color/divider" />
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 外观 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="外观"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:id="@+id/row_dark_mode"
@@ -281,25 +300,32 @@
                         android:contentDescription="@null"
                         android:src="@drawable/ic_chevron" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 反馈 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="反馈"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -322,25 +348,32 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 服务 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="服务"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:id="@+id/row_accessibility"
@@ -376,25 +409,32 @@
                         android:contentDescription="@null"
                         android:src="@drawable/ic_chevron" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 备份（v0.49.0）：导出/导入个人配置，换机/重装免重设 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="备份"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:id="@+id/row_config_export"
@@ -469,26 +509,33 @@
                         android:contentDescription="@null"
                         android:src="@drawable/ic_chevron" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
 
             <!-- 关于 -->
-            <LinearLayout
+            <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                app:neuCornerRadius="22dp"
+                app:neuBlur="8dp"
+                app:neuOffset="4dp"
+                app:neuLightColor="@color/neu_hi"
+                app:neuDarkColor="@color/neu_lo"
+                app:neuSurfaceColor="@color/neu_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="14dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="16dp"
                     android:text="关于"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15" />
 
                 <LinearLayout
                     android:id="@+id/row_about"
@@ -547,7 +594,7 @@
                         android:contentDescription="@null"
                         android:src="@drawable/ic_chevron" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.voicecontrol.app.NeuCardView>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

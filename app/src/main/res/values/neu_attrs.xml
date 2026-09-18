@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NeuCardView 自定义属性：新拟物双阴影配方（v0.56.3） -->
+<resources>
+    <declare-styleable name="NeuCardView">
+        <attr name="neuCornerRadius" format="dimension" />
+        <attr name="neuBlur" format="dimension" />
+        <attr name="neuOffset" format="dimension" />
+        <attr name="neuLightColor" format="color|reference" />
+        <attr name="neuDarkColor" format="color|reference" />
+        <attr name="neuSurfaceColor" format="color|reference" />
+    </declare-styleable>
+</resources>

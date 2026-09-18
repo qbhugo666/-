@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 支持作者弹窗 v0.56.15：新拟物卡（NeuCardView，与主页英雄卡同配方）
-     根布局点击即关（含半透明区域），卡片可点不穿透；窗口须全屏（见 showSupportDialog），
-     否则窗口外系统压暗 + 窗口内遮罩会叠出"中间一块更黑" -->
+<!-- 支持作者弹窗 v0.56.16：浮起式干净卡片（白卡+真实投影）。
+     注：弹窗底下有暗遮罩，背景≠卡片同色，新拟物"同色浮雕"在此失效
+     （会退化成白光晕）——弹窗走 iOS 浮卡路线，新拟物保留给页面内卡片。
+     根布局点击即关，卡片可点不穿透。 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/support_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -15,32 +15,26 @@
         android:layout_height="match_parent"
         android:background="#59000000" />
 
-    <!-- 新拟物凸起卡：居中，可点不穿透 -->
-    <com.voicecontrol.app.NeuCardView
+    <!-- 浮起卡片：居中，可点不穿透 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:orientation="vertical"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
-        android:paddingBottom="4dp"
+        android:background="@drawable/bg_dialog"
+        android:elevation="16dp"
+        android:paddingBottom="6dp"
         android:clickable="true"
-        android:focusable="true"
-        app:neuCornerRadius="28dp"
-        app:neuBlur="12dp"
-        app:neuOffset="6dp"
-        app:neuLightColor="@color/neu_hi"
-        app:neuDarkColor="@color/neu_lo"
-        app:neuSurfaceColor="@color/neu_bg">
+        android:focusable="true">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="12dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="20dp"
             android:text="支持作者"
             android:textColor="@color/text_primary"
             android:textSize="17sp"
@@ -51,22 +45,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginEnd="5dp"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
                 <ImageView
                     android:id="@+id/qr_wechat"
                     android:layout_width="match_parent"
-                    android:layout_height="104dp"
+                    android:layout_height="106dp"
                     android:background="@drawable/qr_plate"
-                    android:padding="6dp"
+                    android:padding="10dp"
                     android:scaleType="fitCenter"
                     android:contentDescription="@null"
                     android:src="@drawable/support_qr_wechat" />
@@ -74,7 +69,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:text="微信"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
@@ -84,15 +79,17 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
                 <ImageView
                     android:id="@+id/qr_alipay"
                     android:layout_width="match_parent"
-                    android:layout_height="104dp"
+                    android:layout_height="106dp"
                     android:background="@drawable/qr_plate"
-                    android:padding="6dp"
+                    android:padding="10dp"
                     android:scaleType="fitCenter"
                     android:contentDescription="@null"
                     android:src="@drawable/support_qr_alipay" />
@@ -100,7 +97,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:text="支付宝"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
@@ -110,15 +107,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="5dp"
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
                 <TextView
                     android:id="@+id/btn_afdian"
                     android:layout_width="match_parent"
-                    android:layout_height="104dp"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_height="106dp"
                     android:gravity="center"
                     android:background="@drawable/btn_round_blue"
                     android:text="爱发电"
@@ -130,18 +126,23 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:text="爱发电"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginTop="18dp"
+            android:background="@color/divider" />
+
         <TextView
             android:id="@+id/btn_support_done"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="50dp"
             android:gravity="center"
             android:text="完成"
             android:textColor="@color/accent_brand"
@@ -150,5 +151,5 @@
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true" />
-    </com.voicecontrol.app.NeuCardView>
+    </LinearLayout>
 </FrameLayout>

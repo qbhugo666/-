@@ -20,4 +20,8 @@
     <color name="neu_bg">#23262C</color>
     <color name="neu_hi">#2B303A</color>
     <color name="neu_lo">#0D0F12</color>
+    <color name="neu_groove">#17191E</color>
+    <color name="neu_rim">#14171C</color>
+    <color name="neu_rim_hi">#39404C</color>
+    <color name="accent_brand">#4D8BFF</color>
 </resources>

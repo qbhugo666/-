@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 滑块圆钮 v0.56.10：新拟物凸面——外圈左上受光（白）右下背光（灰），
+     内芯为表面色，形成浮起的圆钮 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 受光边缘：左上白→右下灰 -->
+    <item
+        android:width="24dp"
+        android:height="24dp">
+        <shape android:shape="oval">
+            <gradient
+                android:angle="315"
+                android:startColor="@color/neu_rim_hi"
+                android:endColor="@color/neu_rim" />
+        </shape>
+    </item>
+    <!-- 内芯：表面色（内缩 2.5dp 露出边缘环） -->
+    <item
+        android:width="19dp"
+        android:height="19dp"
+        android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="@color/neu_bg" />
+        </shape>
+    </item>
+</layer-list>

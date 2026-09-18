@@ -21,9 +21,14 @@
     <color name="neu_bg">#E0E5EC</color>
     <color name="neu_hi">#FFFFFF</color>
     <color name="neu_lo">#A3B1C6</color>
+    <!-- 新拟物凹槽（滑轨/开关关态的沉槽底色，比表面深半档）+ 凸面钮的边缘明暗 -->
+    <color name="neu_groove">#CBD3DE</color>
+    <color name="neu_rim">#C6CEDA</color>
+    <color name="neu_rim_hi">#FFFFFF</color>
 
     <!-- 品牌色（昼夜共用） -->
     <color name="accent_blue">#0A84FF</color>
+    <color name="accent_brand">#246BFE</color>
     <color name="text_alert">#FF3B30</color>
     <color name="text_success">#34C759</color>
     <color name="ic_launcher_bg">#0B0B0B</color>

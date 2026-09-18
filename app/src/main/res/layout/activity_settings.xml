@@ -8,8 +8,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/page_bg"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp">
+    android:paddingStart="26dp"
+    android:paddingEnd="26dp">
 
     <!-- 顶栏 -->
     <LinearLayout

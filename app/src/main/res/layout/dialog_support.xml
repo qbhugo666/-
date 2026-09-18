@@ -1,48 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 支持作者弹窗（微信看图式交互）：根布局点击即关（含半透明区域），
-     白色卡片可点不穿透，内部按钮/码各管各的。 -->
+<!-- 支持作者弹窗 v0.56.15：新拟物卡（NeuCardView，与主页英雄卡同配方）
+     根布局点击即关（含半透明区域），卡片可点不穿透；窗口须全屏（见 showSupportDialog），
+     否则窗口外系统压暗 + 窗口内遮罩会叠出"中间一块更黑" -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/support_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 半透明暗色遮罩：点击即关（根布局自身的 click 也走这里） -->
+    <!-- 半透明暗色遮罩：整屏均匀一层（窗口自身压暗已在代码里关掉） -->
     <View
         android:id="@+id/scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#40000000" />
+        android:background="#59000000" />
 
-    <!-- 白色圆角卡片：居中，可点不穿透 -->
-    <LinearLayout
+    <!-- 新拟物凸起卡：居中，可点不穿透 -->
+    <com.voicecontrol.app.NeuCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:orientation="vertical"
-        android:background="@drawable/bg_dialog"
-        android:paddingBottom="8dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="4dp"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        app:neuCornerRadius="28dp"
+        app:neuBlur="12dp"
+        app:neuOffset="6dp"
+        app:neuLightColor="@color/neu_hi"
+        app:neuDarkColor="@color/neu_lo"
+        app:neuSurfaceColor="@color/neu_bg">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingTop="18dp"
-            android:paddingBottom="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="12dp"
             android:text="支持作者"
             android:textColor="@color/text_primary"
             android:textSize="17sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:letterSpacing="0.02" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -55,6 +65,8 @@
                     android:id="@+id/qr_wechat"
                     android:layout_width="match_parent"
                     android:layout_height="104dp"
+                    android:background="@drawable/qr_plate"
+                    android:padding="6dp"
                     android:scaleType="fitCenter"
                     android:contentDescription="@null"
                     android:src="@drawable/support_qr_wechat" />
@@ -79,6 +91,8 @@
                     android:id="@+id/qr_alipay"
                     android:layout_width="match_parent"
                     android:layout_height="104dp"
+                    android:background="@drawable/qr_plate"
+                    android:padding="6dp"
                     android:scaleType="fitCenter"
                     android:contentDescription="@null"
                     android:src="@drawable/support_qr_alipay" />
@@ -103,8 +117,8 @@
                     android:id="@+id/btn_afdian"
                     android:layout_width="match_parent"
                     android:layout_height="104dp"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:gravity="center"
                     android:background="@drawable/btn_round_blue"
                     android:text="爱发电"
@@ -127,13 +141,14 @@
             android:id="@+id/btn_support_done"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:layout_marginTop="10dp"
             android:gravity="center"
             android:text="完成"
-            android:textColor="#0A84FF"
-            android:textSize="17sp"
+            android:textColor="@color/accent_brand"
+            android:textSize="16sp"
             android:fontFamily="sans-serif-medium"
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true" />
-    </LinearLayout>
+    </com.voicecontrol.app.NeuCardView>
 </FrameLayout>

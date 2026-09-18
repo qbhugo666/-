@@ -553,9 +553,14 @@ class MainActivity : ThemedActivity() {
             showQrFullscreen(R.drawable.support_qr_alipay)
         }
         dialog.show()
-        val dm = resources.displayMetrics
         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-        dialog.window?.setLayout((dm.widthPixels * 0.88).toInt(), (dm.heightPixels * 0.82).toInt())
+        // v0.56.15：窗口必须全屏 + 关掉系统压暗——此前窗口 88%x82%，窗口内自绘遮罩与
+        // 窗口外系统压暗叠加，屏幕中央会叠出一块更黑的矩形（用户实机反馈）
+        dialog.window?.setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        dialog.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
     }
 
     /** 点码 → 全屏查看器：黑底大图，点任意处退出，长按弹底部保存菜单（微信看图式交互） */

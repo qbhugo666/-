@@ -21,8 +21,8 @@
     <color name="neu_bg">#E0E5EC</color>
     <color name="neu_hi">#FFFFFF</color>
     <color name="neu_lo">#A3B1C6</color>
-    <!-- 新拟物凹槽（滑轨/开关关态的沉槽底色，比表面深半档）+ 凸面钮的边缘明暗 -->
-    <color name="neu_groove">#CBD3DE</color>
+    <!-- 新拟物凹槽（滑轨/开关关态的沉槽底色，比表面浅半档偏蓝）+ 凸面钮的边缘明暗 -->
+    <color name="neu_groove">#D7DDE6</color>
     <color name="neu_rim">#C6CEDA</color>
     <color name="neu_rim_hi">#FFFFFF</color>
 

@@ -351,8 +351,8 @@
 
                     <Switch
                         android:id="@+id/sw_vibrate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="46dp"
+                        android:layout_height="26dp"
                         android:track="@drawable/neu_switch_track"
                         android:thumb="@drawable/neu_switch_thumb"
                         android:thumbOffset="2dp"

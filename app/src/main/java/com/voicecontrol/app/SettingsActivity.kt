@@ -50,6 +50,10 @@ class SettingsActivity : ThemedActivity() {
         // 识别灵敏度滑块（v0.38.0，1~10 格，默认 5=作者日常基准；VAD 每会话新建→下次会话生效）
         val sensValue = findViewById<TextView>(R.id.tv_sens_value)
         val seek = findViewById<SeekBar>(R.id.seek_sensitivity)
+        // v0.56.11：MIUI 换肤引擎会在加载时盖掉 XML 里声明的滑轨/滑块（真机实锤变绿皮），
+        // 代码里再钉一次，运行时赋值优先级最高
+        seek.progressDrawable = resources.getDrawable(R.drawable.neu_slider_track, theme)
+        seek.thumb = resources.getDrawable(R.drawable.neu_slider_thumb, theme)
         fun refreshSensText(level: Int) {
             sensValue.text = when {
                 level == RecognitionSensitivity.DEFAULT_LEVEL -> "$level（默认推荐）"
@@ -58,16 +62,15 @@ class SettingsActivity : ThemedActivity() {
                 else -> "$level"
             }
         }
-        // 档位色（v0.55 UI）：1~8 绿=日常 · 9 橙=弱声 · 10 红=远场，整条进度与滑块同色，拖到哪变到哪
+        // 档位色（v0.56.11）：1~8 品牌蓝（与开关指示灯同源）· 9 橙=弱声 · 10 红=远场，
+        // 只染进度细线——滑块保持中性凸面，不再整条同色（v0.55 的绿在雾蓝底上像贴纸）
         fun refreshSensColor(level: Int) {
             val color = when {
                 level >= RecognitionSensitivity.MAX_LEVEL -> 0xFFFF3B30
                 level == 9 -> 0xFFFF9500
-                else -> 0xFF34C759
+                else -> 0xFF246BFE
             }.toInt()
-            val tint = android.content.res.ColorStateList.valueOf(color)
-            seek.progressTintList = tint
-            seek.thumbTintList = tint
+            seek.progressTintList = android.content.res.ColorStateList.valueOf(color)
         }
         val savedLevel = RecognitionSensitivity.level(this)
         seek.max = RecognitionSensitivity.MAX_LEVEL - RecognitionSensitivity.MIN_LEVEL

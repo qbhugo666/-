@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 震动反馈开关圆钮 v0.56.10：新拟物凸面圆钮（与滑块同配方：
-     左上受光边缘环 + 表面色内芯）；开关状态由轨道区分，圆钮无状态 -->
+<!-- 震动反馈开关圆钮 v0.56.11：新拟物凸面细边版（边缘环 1.5dp + 表面色内芯）；
+     开关状态由轨道区分（凹槽+蓝灯=开），圆钮无状态 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:width="26dp"
-        android:height="26dp">
+        android:width="20dp"
+        android:height="20dp">
         <shape android:shape="oval">
             <gradient
                 android:angle="315"
@@ -13,8 +13,8 @@
         </shape>
     </item>
     <item
-        android:width="21dp"
-        android:height="21dp"
+        android:width="17dp"
+        android:height="17dp"
         android:gravity="center">
         <shape android:shape="oval">
             <solid android:color="@color/neu_bg" />

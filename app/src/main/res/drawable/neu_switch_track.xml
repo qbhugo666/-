@@ -1,24 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 震动反馈开关轨道 v0.56.10：新拟物双态——
-     关=凹槽（沉槽：上缘内阴影、下缘内光）；开=凸起品牌蓝胶囊（左上受光边缘） -->
+<!-- 震动反馈开关轨道 v0.56.11：新拟物双态统一凹槽——
+     关=纯凹槽；开=同一凹槽 + 左侧亮一盏品牌蓝指示灯（小面积点缀，不整条染色） -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_checked="true">
         <layer-list>
-            <!-- 受光边缘环 -->
+            <!-- 槽底（与关态同配方） -->
             <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="14dp" />
-                    <gradient
-                        android:angle="315"
-                        android:startColor="@color/neu_rim_hi"
-                        android:endColor="@color/neu_rim" />
+                    <corners android:radius="13dp" />
+                    <solid android:color="@color/neu_groove" />
                 </shape>
             </item>
-            <!-- 内芯：品牌蓝（内缩 2.5dp） -->
-            <item android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="2dp">
+            <!-- 上缘内阴影（顶→底渐隐） -->
+            <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="12dp" />
+                    <corners android:radius="13dp" />
+                    <gradient
+                        android:angle="270"
+                        android:startColor="#73A3B1C6"
+                        android:endColor="#00000000" />
+                </shape>
+            </item>
+            <!-- 下缘内高光（底→顶渐隐） -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="13dp" />
+                    <gradient
+                        android:angle="90"
+                        android:startColor="#40FFFFFF"
+                        android:endColor="#00000000" />
+                </shape>
+            </item>
+            <!-- 指示灯：品牌蓝小灯（左空位侧） -->
+            <item
+                android:width="8dp"
+                android:height="8dp"
+                android:gravity="left|center_vertical"
+                android:left="9dp">
+                <shape android:shape="oval">
                     <solid android:color="@color/accent_brand" />
                 </shape>
             </item>
@@ -30,27 +50,27 @@
             <!-- 槽底 -->
             <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="14dp" />
+                    <corners android:radius="13dp" />
                     <solid android:color="@color/neu_groove" />
                 </shape>
             </item>
             <!-- 上缘内阴影（顶→底渐隐） -->
             <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="14dp" />
+                    <corners android:radius="13dp" />
                     <gradient
                         android:angle="270"
-                        android:startColor="@color/neu_lo"
+                        android:startColor="#73A3B1C6"
                         android:endColor="#00000000" />
                 </shape>
             </item>
             <!-- 下缘内高光（底→顶渐隐） -->
             <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="14dp" />
+                    <corners android:radius="13dp" />
                     <gradient
                         android:angle="90"
-                        android:startColor="#66FFFFFF"
+                        android:startColor="#40FFFFFF"
                         android:endColor="#00000000" />
                 </shape>
             </item>

@@ -35,16 +35,20 @@ class SettingsActivity : ThemedActivity() {
             darkValue.text = modes[mode.coerceIn(0, 2)]
         }
         refreshDarkLabel()
-        findViewById<android.view.View>(R.id.row_dark_mode).setOnClickListener {
+        // v0.56.22：单一动作的卡（外观/反馈/服务）整卡可按——按下整块下沉（NeuCardView 按压反转阴影）
+        findViewById<android.view.View>(R.id.card_appearance).setOnClickListener {
             showDarkModeDialog()
         }
 
-        // 震动反馈开关（默认关）
+        // 震动反馈开关（默认关）；点卡片任意处=切换开关，开关自身点击照常
         val sw = findViewById<Switch>(R.id.sw_vibrate)
         sw.isChecked = getSharedPreferences("app", MODE_PRIVATE).getBoolean("vibrate_feedback", false)
         sw.setOnCheckedChangeListener { _, checked ->
             getSharedPreferences("app", MODE_PRIVATE).edit()
                 .putBoolean("vibrate_feedback", checked).apply()
+        }
+        findViewById<android.view.View>(R.id.card_feedback).setOnClickListener {
+            sw.isChecked = !sw.isChecked
         }
 
         // 识别灵敏度滑块（v0.38.0，1~10 格，默认 5=作者日常基准；VAD 每会话新建→下次会话生效）
@@ -125,7 +129,7 @@ class SettingsActivity : ThemedActivity() {
             state.setTextColor(if (on) 0xFF34C759.toInt() else 0xFFFF3B30.toInt())
         }
         refreshA11y()
-        findViewById<android.view.View>(R.id.row_accessibility).setOnClickListener {
+        findViewById<android.view.View>(R.id.card_service).setOnClickListener {
             runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         }
 

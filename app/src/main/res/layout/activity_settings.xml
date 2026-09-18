@@ -245,7 +245,7 @@
             <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical"
                 app:neuCornerRadius="22dp"
                 app:neuBlur="8dp"
@@ -306,7 +306,7 @@
             <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical"
                 app:neuCornerRadius="22dp"
                 app:neuBlur="8dp"
@@ -354,7 +354,7 @@
             <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical"
                 app:neuCornerRadius="22dp"
                 app:neuBlur="8dp"
@@ -415,7 +415,7 @@
             <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical"
                 app:neuCornerRadius="22dp"
                 app:neuBlur="8dp"
@@ -515,7 +515,7 @@
             <com.voicecontrol.app.NeuCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="6dp"
                 android:layout_marginBottom="8dp"
                 android:orientation="vertical"
                 app:neuCornerRadius="22dp"

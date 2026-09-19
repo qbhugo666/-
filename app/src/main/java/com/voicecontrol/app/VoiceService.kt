@@ -384,7 +384,8 @@ class VoiceService : Service() {
         }
         // v0.56.26 商用门禁：开发期测试入口（SIMULATE 注入/文本探针/崩溃触发/回声台/ASR 台）
         // 仅 Debug 构建生效，Release 构建一律忽略——公开发行包不含任何远程调试后门
-        if (!BuildConfig.DEBUG && intent?.action in setOf(
+        val debugBuild = (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (!debugBuild && intent?.action in setOf(
                 ACTION_SIMULATE, ACTION_TEXT_PROBE, ACTION_CRASH_TEST,
                 ACTION_ASR_TEST, ACTION_ECHO_TEST, ACTION_ECHO_STOP
             )

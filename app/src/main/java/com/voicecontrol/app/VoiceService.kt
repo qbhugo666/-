@@ -289,6 +289,20 @@ class VoiceService : Service() {
     // 最近一次听写落笔时刻（v0.56.25）：「删除」→「输入」近音纠偏的时间窗基准
     private var lastInsertAt = 0L
 
+    /** 未命中识别原文持久落盘（v0.56.26）：files/asr_misses.json 环形 200 条——
+     *  积累真实听岔样本，按用户口音做数据驱动的定向纠错表 */
+    private fun persistMiss(text: String) {
+        try {
+            val f = java.io.File(applicationContext.filesDir, "asr_misses.json")
+            val arr = if (f.exists()) org.json.JSONArray(f.readText()) else org.json.JSONArray()
+            arr.put(org.json.JSONObject().put("t", System.currentTimeMillis()).put("text", text))
+            while (arr.length() > 200) arr.remove(0)
+            f.writeText(arr.toString())
+        } catch (_: Exception) {
+            // 样本落盘失败不影响主流程
+        }
+    }
+
     // 「重复」回放（v0.39.1 治本）：不再维护白名单——任何派发成功的动作都记入 lastAction，
     // 「重复一次/N 次」回放的就是上一个动作本身，新增功能天然可重复、无需登记。
     // 历史教训：v0.4 白名单早于 v0.17 设备控制组，音量动作从未登记 →「增加音量后重复一次」失效。
@@ -1090,6 +1104,9 @@ class VoiceService : Service() {
                                         // 「这句话被听成了什么」，用真实听岔样本精填相似词表
                                         Log.i(TAG, "未匹配，忽略: [$text]")
                                         DiagnosticsHelper.log("命令未匹配: $text")
+                                        // v0.56.26：听岔样本持久落盘（内存缓冲重启即失）——
+                                        // 积累真实误识别原文，供按用户口音建定向纠错表
+                                        persistMiss(text)
                                     }
                                 }
                             }

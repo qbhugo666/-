@@ -1290,6 +1290,16 @@ class VoiceService : Service() {
             SessionState.lastMatch = "→ 退出长按模式"
             return
         }
+        // v0.56.27：待命中说文字编辑命令（删除/清空/光标移动等）→ 退出待命并直接执行。
+        // 治「删除被听成长按误入待命后，再说删除没反应」的连环坑
+        val edit = text.trim().trim('，', '。', '！', '？', '…', ',', '.', '!', '?').trim()
+        if (edit in TEXT_EDIT_WORDS) {
+            exitLongPressMode()
+            VoiceControlService.updateBar("✂️ 取消长按，执行：$edit")
+            SessionState.lastMatch = "→ 取消长按，执行编辑：$edit"
+            currentMatcher().matchStrict(edit)?.let { dispatchMatched(it) }
+            return
+        }
         // 「中间/屏幕」→ 长按屏幕正中间
         if (text.contains("中间") || text.contains("屏幕")) {
             val ok = VoiceControlService.longPressCenter()

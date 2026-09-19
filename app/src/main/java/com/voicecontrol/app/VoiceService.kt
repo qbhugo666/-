@@ -796,6 +796,15 @@ class VoiceService : Service() {
         // 胶囊声波 RMS 随之放大——小声说话的用户能直接看到"波浪起来了"的正反馈。
         val gain = RecognitionSensitivity.gain(RecognitionSensitivity.level(applicationContext))
         Log.i(TAG, "识别灵敏度增益：${gain}×")
+        // v0.56.29 起音保护（预滚缓冲）：VAD 反应天生慢半拍，快速连说「删除」时开头
+        // 的「删」会被整段吃掉（真机听岔样本实锤：「出走出出出…」——尾音与「退出」
+        // 同音，模糊匹配撞上退出阶梯，会话被误退出）。做法：滚动保留最近 ~0.4s 已处理
+        // 音频，VAD 开闸瞬间把这段垫到分段开头，起音不再缺斤少两。
+        val preRollChunks = ArrayDeque<FloatArray>()
+        var preRollSamples = 0
+        val preRollTarget = (SAMPLE_RATE * 0.4).toInt()
+        var speechWasOn = false
+        var pendingPreRoll: FloatArray? = null
         try {
             while (recording) {
                 val n = audioRecord?.read(buffer, 0, buffer.size) ?: break
@@ -813,13 +822,39 @@ class VoiceService : Service() {
                 // 实时振幅（RMS 归一化）→ 顶部胶囊声波（每 100ms 一帧，视觉上即实时）
                 VoiceService.liveAmplitude =
                     kotlin.math.sqrt(sumSq / n).toFloat().times(7f).coerceIn(0f, 1f)
+                // 预滚缓冲：滚动保留最近 ~0.4s 已处理音频
+                preRollChunks.addLast(samples)
+                preRollSamples += n
+                while (preRollSamples > preRollTarget) {
+                    preRollSamples -= preRollChunks.removeFirst().size
+                }
+                val speechOn = v.isSpeechDetected()
+                if (speechOn && !speechWasOn) {
+                    // VAD 开闸瞬间：快照预滚（里面正是被吃掉的起音）
+                    val merged = FloatArray(preRollSamples)
+                    var idx = 0
+                    for (c in preRollChunks) {
+                        c.copyInto(merged, idx)
+                        idx += c.size
+                    }
+                    pendingPreRoll = merged
+                }
+                speechWasOn = speechOn
                 // VAD 检测语音段（一句话）；检测到完整一段就交给 SenseVoice 整句识别。
                 // 每句都新建 stream、用完即释放，没有状态累积，不会越跑越慢。
                 v.acceptWaveform(samples)
                 while (!v.empty()) {
                     val segment = v.front()
                     v.pop()
-                    val seg = segment.samples
+                    var seg = segment.samples
+                    pendingPreRoll?.let {
+                        // 起音补回：预滚垫在分段开头
+                        val merged = FloatArray(it.size + seg.size)
+                        it.copyInto(merged, 0)
+                        seg.copyInto(merged, it.size)
+                        seg = merged
+                        pendingPreRoll = null
+                    }
                     if (seg.isEmpty()) continue
                     val stream = rec.createStream()
                     stream.acceptWaveform(seg, SAMPLE_RATE)
@@ -907,6 +942,16 @@ class VoiceService : Service() {
             // 不作为文字落笔。治连环坑：说「删除」被听成「输入」进了听写，再说「删除」
             // 又被打成本字。
             val trimmed = text.trim().trim('，', '。', '！', '？', '…', ',', '.', '!', '?').trim()
+            if (trimmed == "输入") {
+                // v0.56.30：内容句说了「输入」→ 几乎总是想继续听写（而非打字面词）——
+                // 重新武装听写，不打字面
+                dictationMode = true
+                handler.removeCallbacks(dictationTimeoutRunnable)
+                handler.postDelayed(dictationTimeoutRunnable, 12_000L)
+                VoiceControlService.updateBar("✍️ 继续听写（说完停顿即填入）")
+                SessionState.lastMatch = "→ 继续听写"
+                return
+            }
             if (trimmed in TEXT_EDIT_WORDS) {
                 VoiceControlService.updateBar("✂️ 编辑（听写中）：$trimmed")
                 SessionState.lastMatch = "→ 听写中执行编辑：$trimmed"
@@ -1340,6 +1385,18 @@ class VoiceService : Service() {
                 fuzzyExitRejects.removeFirst()
             }
             if (matched.action == "exit_session" && fuzzyExitRejects.size >= 3) {
+                // v0.56.29 放行前判别：「删除」(shan chu) 与「退出」(tui chu) 尾音同音，
+                // 连续快速说删除时起音被 VAD 吃掉、只剩"出"串——拼音不含 tui，
+                // 是删除截断而非退出，不放行（真说「退出」走精确匹配红线，永远直通）
+                val strike = SessionState.lastText ?: ""
+                val strikePinyin = pinyinOf(strike)
+                if (!strikePinyin.contains("tui")) {
+                    fuzzyExitRejects.clear()
+                    DiagnosticsHelper.log("阶梯放行否决：[$strike] 拼音无 tui，判定为删除截断")
+                    VoiceControlService.updateBar("🎤 听到的是「删除」的尾音，已忽略（要说退出请说清楚）")
+                    SessionState.lastMatch = "→ 连续近似退出被否决（更像删除的尾音）"
+                    return
+                }
                 fuzzyExitRejects.clear()
                 Log.w(TAG, "FUZZY_GUARD 升级：30 秒内第 3 次近似退出，按真实退出放行")
                 DiagnosticsHelper.log("近似退出连说 3 次，守卫升级放行")

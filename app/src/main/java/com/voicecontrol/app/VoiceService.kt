@@ -289,6 +289,7 @@ class VoiceService : Service() {
     }
     // 最近一次听写落笔时刻（v0.56.25）：「删除」→「输入」近音纠偏的时间窗基准
     private var lastInsertAt = 0L
+    // v0.56.27：5 秒纠偏已移除（重复输入场景误伤，用户拍板）——字段保留待后续数据方案复用
 
     /** 未命中识别原文持久落盘（v0.56.26）：files/asr_misses.json 环形 200 条——
      *  积累真实听岔样本，按用户口音做数据驱动的定向纠错表 */
@@ -836,18 +837,7 @@ class VoiceService : Service() {
         }
     }
 
-    private fun onRecognized(raw: String) {
-        // v0.56.25：「删除」→「输入」近音纠偏。刚落笔 5 秒内说的「输入」，大概率是想说
-        // 「删除」被听岔（SMA 用户高频误触实测）。按「删除」执行；连续听写不受影响
-        // （停顿超 5 秒，或改说「听写/打字」触发）。
-        var text = if (raw == "输入" && lastInsertAt > 0L &&
-            SystemClock.elapsedRealtime() - lastInsertAt < 5_000L
-        ) {
-            VoiceControlService.updateBar("✂️ 「输入」按删除处理（刚落笔 5 秒内）")
-            "删除"
-        } else {
-            raw
-        }
+    private fun onRecognized(text: String) {
         // 会话已结束（看门狗/静音/退出已释放）→ 忽略识别线程队列里残留的结果，避免退出后还触发动作
         if (!recording) return
         SessionState.lastText = text

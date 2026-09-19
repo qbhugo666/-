@@ -77,7 +77,8 @@ class VoiceService : Service() {
 
         // 回声测试台（开发期专用）：用 USAGE_MEDIA 外放 assets/echo_cmd.wav
         // ——与抖音/视频 App 完全同一条音频通道，1:1 复刻「外放声音被麦克风拾取」场景。
-        // 用途：修复前复现 bug（基线）、修复后验证回声是否真被消除。商用前与 SIMULATE 一并移除。
+        // 用途：修复前复现 bug（基线）、修复后验证回声是否真被消除。
+        // v0.56.26：Release 构建由 DEBUG 门禁自动禁用，无需删码。
         //
         // 安全约束（2026-09-08 深夜噪音事故后强制）：绝不循环播放，播完自动停；
         // 并设硬性超时上限，即使 STOP 命令丢失也必定自动停，不可能无限念。
@@ -87,7 +88,7 @@ class VoiceService : Service() {
         // 外放硬性超时上限（毫秒）：到点强制停，绝不依赖外部 STOP 命令
         private const val ECHO_TEST_MAX_MS = 12_000L
 
-        // 离线 ASR 测试台（开发期专用，商用前移除）：把 assets 里的 wav 直接喂给识别器，
+        // 离线 ASR 测试台（开发期专用，Release 由 DEBUG 门禁自动禁用）：把 assets 里的 wav 直接喂给识别器，
         // 不经过麦克风、不发出任何声音——用于静音诊断「点击十八→点击八」这类丢字问题。
         // 自建临时 recognizer/vad 实例（不复用会话中的），避开与识别线程的 native 并发。
         // 可传 EXTRA_SCORE 对比不同热词权重的准确率，一个 build 内完成 A/B。
@@ -95,10 +96,10 @@ class VoiceService : Service() {
         const val EXTRA_WAV = "com.voicecontrol.app.extra.WAV"
         const val EXTRA_SCORE = "com.voicecontrol.app.extra.SCORE"
 
-        // 输入框文本操作探针（开发期诊断，商用前移除）
+        // 输入框文本操作探针（开发期诊断，Release 由 DEBUG 门禁自动禁用）
         const val ACTION_TEXT_PROBE = "com.voicecontrol.app.action.TEXT_PROBE"
 
-        // 崩溃触发后门（开发期诊断，商用前移除）
+        // 崩溃触发后门（开发期诊断，Release 由 DEBUG 门禁自动禁用）
         const val ACTION_CRASH_TEST = "com.voicecontrol.app.action.CRASH_TEST"
 
         // 热词权重（contextual biasing）。保持 8.0：2026-09-08 曾用离线 ASR 测试台做 8.0 vs 2.0 A/B，
@@ -381,12 +382,23 @@ class VoiceService : Service() {
             Log.w(TAG, "BLACKBOX 上次会话无结束记录（开始于 $orphan），已补记异常终止")
             bb.edit().remove(KEY_SESSION_ACTIVE_SINCE).apply()
         }
+        // v0.56.26 商用门禁：开发期测试入口（SIMULATE 注入/文本探针/崩溃触发/回声台/ASR 台）
+        // 仅 Debug 构建生效，Release 构建一律忽略——公开发行包不含任何远程调试后门
+        if (!BuildConfig.DEBUG && intent?.action in setOf(
+                ACTION_SIMULATE, ACTION_TEXT_PROBE, ACTION_CRASH_TEST,
+                ACTION_ASR_TEST, ACTION_ECHO_TEST, ACTION_ECHO_STOP
+            )
+        ) {
+            Log.w(TAG, "Release 构建忽略调试动作: ${intent?.action}")
+            return START_NOT_STICKY
+        }
+
         if (intent?.action == ACTION_STOP) {
             releaseAndStop("用户退出")
             return START_NOT_STICKY
         }
 
-        // 输入框文本操作探针（开发期诊断，商用前移除）：验证微信等输入框的改文本/光标/粘贴可行性。
+        // 输入框文本操作探针（开发期诊断，Release 由 DEBUG 门禁自动禁用）：验证微信等输入框的改文本/光标/粘贴可行性。
         // 不占麦不进会话；前置条件=目标聊天页已打开且输入框可见
         if (intent?.action == ACTION_TEXT_PROBE) {
             createChannelIfNeeded()
@@ -401,7 +413,7 @@ class VoiceService : Service() {
             return START_NOT_STICKY
         }
 
-        // 崩溃触发后门（开发期诊断，商用前移除）：主动抛空指针验证 CrashCatcher 记录→导出链路。
+        // 崩溃触发后门（开发期诊断，Release 由 DEBUG 门禁自动禁用）：主动抛空指针验证 CrashCatcher 记录→导出链路。
         // 必须不在录音线程：崩溃由未捕获异常处理器记录后原样交还系统（行为=真实闪退）
         if (intent?.action == ACTION_CRASH_TEST) {
             createChannelIfNeeded()
@@ -431,7 +443,7 @@ class VoiceService : Service() {
             return START_NOT_STICKY
         }
 
-        // 测试注入（仅开发期；服务未导出，第三方 App 无法调用，商用前移除）：
+        // 测试注入（仅开发期；Release 由 DEBUG 门禁自动禁用）：
         // 修复验证闭环的关键——bug 必须先在真机重放通过，才允许宣称「修好」
         if (intent?.action == ACTION_SIMULATE) {
             val text = intent.getStringExtra(EXTRA_TEXT)?.replace(" ", "")

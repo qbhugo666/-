@@ -42,3 +42,4 @@ reports/
 .idea/
 *.iml
 captures/
+internal-docs/ 

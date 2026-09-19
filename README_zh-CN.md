@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 言出法随 · YanChuFaSui
 
@@ -164,7 +164,7 @@ gradlew assembleDebug
 
 ## Contributing
 
-欢迎 Issue 与 PR。提交前请先阅读 [FEATURES.md](FEATURES.md)（完整功能清单）与 [GUARDRAILS.md](GUARDRAILS.md)（工程约束）——「能说的 = 能做的」是本项目对指令表的铁律。
+欢迎 Issue 与 PR。提交前请先阅读 [MILESTONES.md](MILESTONES.md)（版本里程碑）与 [CHANGELOG.md](CHANGELOG.md)（更新日志）——「能说的 = 能做的」是本项目对指令表的铁律。
 
 ## License
 

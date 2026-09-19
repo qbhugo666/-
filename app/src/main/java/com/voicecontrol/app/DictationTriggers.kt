@@ -51,3 +51,12 @@ fun isDictationTrigger(text: String): Boolean {
     if (syllablesOf(t).size != 2) return false   // 容错只针对核心短词的 2 音节整句
     return CORE_TRIGGERS.any { nearSyllables(t, syllablesOf(it)) }
 }
+
+/** 听写内容句中可直接生效的文字编辑命令词（v0.56.25）：按编辑执行，不作为文字落笔。
+ *  治连环坑：说「删除」被听成「输入」进了听写，再说「删除」又被打成本字。 */
+val TEXT_EDIT_WORDS = setOf(
+    "删除", "删掉", "删一个字", "退格", "回删", "删字", "往回删",
+    "清空输入", "清空输入框", "清空",
+    "光标左移", "光标向左", "左移光标",
+    "光标右移", "光标向右", "右移光标",
+)

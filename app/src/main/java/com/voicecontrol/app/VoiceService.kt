@@ -286,6 +286,8 @@ class VoiceService : Service() {
             SessionState.lastMatch = "→ 听写超时已退出"
         }
     }
+    // 最近一次听写落笔时刻（v0.56.25）：「删除」→「输入」近音纠偏的时间窗基准
+    private var lastInsertAt = 0L
 
     // 「重复」回放（v0.39.1 治本）：不再维护白名单——任何派发成功的动作都记入 lastAction，
     // 「重复一次/N 次」回放的就是上一个动作本身，新增功能天然可重复、无需登记。
@@ -807,7 +809,18 @@ class VoiceService : Service() {
         }
     }
 
-    private fun onRecognized(text: String) {
+    private fun onRecognized(raw: String) {
+        // v0.56.25：「删除」→「输入」近音纠偏。刚落笔 5 秒内说的「输入」，大概率是想说
+        // 「删除」被听岔（SMA 用户高频误触实测）。按「删除」执行；连续听写不受影响
+        // （停顿超 5 秒，或改说「听写/打字」触发）。
+        var text = if (raw == "输入" && lastInsertAt > 0L &&
+            SystemClock.elapsedRealtime() - lastInsertAt < 5_000L
+        ) {
+            VoiceControlService.updateBar("✂️ 「输入」按删除处理（刚落笔 5 秒内）")
+            "删除"
+        } else {
+            raw
+        }
         // 会话已结束（看门狗/静音/退出已释放）→ 忽略识别线程队列里残留的结果，避免退出后还触发动作
         if (!recording) return
         SessionState.lastText = text
@@ -871,6 +884,15 @@ class VoiceService : Service() {
             if (text.contains("取消")) {
                 VoiceControlService.updateBar("🎤 已取消输入")
                 SessionState.lastMatch = "→ 已取消输入"
+                return
+            }
+            // v0.56.25：内容句恰好是文字编辑命令（删除/清空/光标移动等）→ 按编辑执行，
+            // 不作为文字落笔。治连环坑：说「删除」被听成「输入」进了听写，再说「删除」
+            // 又被打成本字。
+            val trimmed = text.trim().trim('，', '。', '！', '？', '…', ',', '.', '!', '?').trim()
+            if (trimmed in TEXT_EDIT_WORDS) {
+                VoiceControlService.updateBar("✂️ 编辑（听写中）：$trimmed")
+                SessionState.lastMatch = "→ 听写中执行编辑：$trimmed"
             } else {
                 // 常用词纠错（v0.42.0）：识别原文里与常用词拼音相近的片段改写为常用词（只作用听写内容）
                 val corrected = CustomVocab.correctText(text, CustomVocab.all(applicationContext))
@@ -878,9 +900,12 @@ class VoiceService : Service() {
                 val ok = VoiceControlService.textInsert(corrected)
                 VoiceControlService.updateBar(if (ok) "✍️ 已输入：${corrected.take(12)}" else "⚠️ 未找到输入框")
                 SessionState.lastMatch = if (ok) "→ 输入「$corrected」✅" else "→ 未找到输入框"
-                if (ok) vibrateFeedback()
+                if (ok) {
+                    lastInsertAt = SystemClock.elapsedRealtime()
+                    vibrateFeedback()
+                }
+                return
             }
-            return
         }
 
         // 纯语气词：静默忽略，横条保持当前状态继续聆听（商用原则：不把误识别展示给用户）

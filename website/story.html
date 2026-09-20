@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>言出法随 · 一个为了开口的故事</title>
+<meta name="description" content="言出法随（YanChuFaSui）：安卓系统级中文语音控制。全离线、零上传、中文原生。从上往下滑，听完这个故事。">
+<style>
+/* ============ 意图流 · 深色沉浸故事页 ============ */
+:root{
+  --bg:#0C0E12; --bg1:#14171C;
+  --ink:#F2F4F8; --ink2:#9AA3B0; --ink3:#5E6670;
+  --blue:#246BFE; --blue2:#4D8BFF;
+  --line:rgba(255,255,255,.08);
+  --well:rgba(255,255,255,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:var(--blue2);text-decoration:none}
+
+/* ---- 意图流侧轨（固定左侧）：章节导航 + 进度线 ---- */
+#rail{
+  position:fixed;left:38px;top:50%;transform:translateY(-50%);z-index:90;
+  display:flex;flex-direction:column;gap:0;
+}
+#rail .rail-line{
+  position:absolute;left:11px;top:20px;bottom:20px;width:2px;
+  background:rgba(255,255,255,.1);
+}
+#rail .rail-fill{
+  position:absolute;left:11px;top:20px;width:2px;height:0;
+  background:var(--blue2);transition:height .3s ease;
+}
+#rail a{
+  position:relative;z-index:2;display:flex;align-items:center;gap:16px;
+  padding:11px 0;color:var(--ink3);font-size:12.5px;letter-spacing:2px;
+  text-decoration:none;transition:color .3s ease;
+}
+#rail a .dot{
+  width:12px;height:12px;border-radius:50%;flex:none;
+  border:2px solid var(--ink3);background:var(--bg);
+  transition:all .3s ease;
+}
+#rail a .lb{opacity:0;transform:translateX(-6px);transition:all .3s ease}
+#rail a:hover .lb{opacity:1;transform:none}
+#rail a.on{color:var(--ink)}
+#rail a.on .dot{border-color:var(--blue2);background:var(--blue2);box-shadow:0 0 14px rgba(77,139,255,.8)}
+#rail a.on .lb{opacity:1;transform:none}
+@media(max-width:900px){#rail{display:none}}
+
+/* ---- 场景 ---- */
+.scene{
+  min-height:100vh;display:flex;align-items:center;position:relative;
+  padding:14vh 0;
+}
+.scene .inner{width:100%;max-width:1100px;margin:0 auto;padding:0 12vw}
+@media(max-width:900px){.scene .inner{padding:0 9vw}}
+.kicker{font-size:clamp(12px,1.1vw,15px);font-weight:800;letter-spacing:7px;
+  color:var(--blue2);text-transform:uppercase;margin-bottom:30px}
+.h1{font-size:clamp(52px,9vw,120px);font-weight:900;line-height:1.15;letter-spacing:2px}
+.h2{font-size:clamp(38px,5.6vw,76px);font-weight:900;line-height:1.22;letter-spacing:1px}
+.h3{font-size:clamp(28px,3.8vw,46px);font-weight:900;line-height:1.35}
+.sub{font-size:clamp(16px,1.6vw,20px);color:var(--ink2);line-height:2;margin-top:34px;max-width:720px}
+.sub b{color:var(--ink)}
+.src{font-size:12.5px;color:var(--ink3);margin-top:30px}
+.src a{color:var(--ink3);text-decoration:underline;text-underline-offset:4px}
+
+/* 滚动浮现：默认可见（无 JS 降级），JS 后按滚动触发渐显 */
+.fx{opacity:1;transform:none}
+.js .fx{opacity:0;transform:translateY(46px);
+  transition:opacity 1s cubic-bezier(.2,.7,.2,1) var(--d,0s),transform 1s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+.js .fx.on{opacity:1;transform:none}
+
+/* 场景专属氛围光 */
+#s1{background:radial-gradient(900px 600px at 50% 30%, #141a26, var(--bg))}
+#s2{background:linear-gradient(var(--bg), #101218)}
+#s7{background:radial-gradient(1000px 700px at 50% 45%, #131b2e, var(--bg))}
+#s16{background:radial-gradient(900px 700px at 50% 60%, #131b2e, var(--bg))}
+
+/* 封面 logo 圆 */
+.orb{width:clamp(120px,14vw,180px);height:clamp(120px,14vw,180px);border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #3E7BFF, var(--blue) 72%);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 54px;
+  box-shadow:0 34px 90px rgba(36,107,254,.4)}
+.orb img{width:55%}
+.orbwrap{text-align:center;width:100%}
+.center{text-align:center;width:100%}
+.center .sub{margin-left:auto;margin-right:auto}
+.center .kicker{margin-left:auto;margin-right:auto}
+
+/* 卡片组 */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:70px}
+@media(max-width:960px){.cards3{grid-template-columns:1fr}}
+.card{background:var(--well);border:1px solid var(--line);border-radius:24px;padding:36px 32px}
+.card .no{font-size:13px;font-weight:800;color:var(--blue2);letter-spacing:3px}
+.card h3{font-size:clamp(18px,1.7vw,22px);font-weight:800;margin:14px 0 12px}
+.card p{font-size:15px;color:var(--ink2);line-height:1.9}
+.card .slot{
+  margin-top:20px;border:2px dashed rgba(154,163,176,.45);border-radius:16px;
+  padding:20px 14px;text-align:center;font-size:12.5px;color:var(--ink3);line-height:1.8;
+}
+.card .slot b{display:block;color:var(--ink2);font-size:13.5px;margin-bottom:6px}
+
+/* 大数字带 */
+.bignums{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:76px}
+@media(max-width:860px){.bignums{grid-template-columns:1fr}}
+.bn{border-left:3px solid var(--blue2);padding:8px 0 8px 28px}
+.bn .v{font-size:clamp(38px,5vw,64px);font-weight:900;letter-spacing:1px}
+.bn .l{font-size:15px;color:var(--ink2);margin-top:8px}
+
+/* 四步流程 */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:70px}
+@media(max-width:960px){.flow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.flow{grid-template-columns:1fr}}
+.fstep{background:var(--well);border:1px solid var(--line);border-radius:22px;padding:30px 26px}
+.fstep .n{width:42px;height:42px;border-radius:50%;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;margin-bottom:18px}
+.fstep h4{font-size:17.5px;font-weight:800;margin-bottom:8px}
+.fstep p{font-size:13.5px;color:var(--ink2);line-height:1.85}
+
+/* 下载 CTA */
+.cta{margin-top:56px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:12px;padding:20px 48px;border-radius:999px;
+  background:var(--blue);color:#fff;font-size:17.5px;font-weight:800;
+  box-shadow:0 24px 70px rgba(36,107,254,.4);transition:transform .2s ease}
+.btn:hover{transform:translateY(-3px)}
+.ghost{display:inline-flex;align-items:center;padding:20px 44px;border-radius:999px;
+  border:1px solid var(--line);color:var(--ink);font-size:16.5px;font-weight:700}
+.ghost:hover{border-color:var(--blue2);color:var(--blue2)}
+
+/* 结尾引言 */
+.quote{font-size:clamp(30px,4.8vw,60px);font-weight:900;line-height:1.55}
+.quote .blue{color:var(--blue2)}
+.sign{margin-top:46px;font-size:16px;color:var(--ink2)}
+.sign b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- 意图流侧轨 -->
+<nav id="rail" aria-label="章节导航">
+  <div class="rail-line"></div><div class="rail-fill" id="railFill"></div>
+  <a href="#s1" data-s="s1"><span class="dot"></span><span class="lb">开口 · 封面</span></a>
+  <a href="#s2" data-s="s2"><span class="dot"></span><span class="lb">问题 · 双手不方便</span></a>
+  <a href="#s3" data-s="s3"><span class="dot"></span><span class="lb">苹果 · 做到了</span></a>
+  <a href="#s4" data-s="s4"><span class="dot"></span><span class="lb">谷歌 · 没有中文</span></a>
+  <a href="#s5" data-s="s5"><span class="dot"></span><span class="lb">小米 · 停更</span></a>
+  <a href="#s6" data-s="s6"><span class="dot"></span><span class="lb">十年的空白</span></a>
+  <a href="#s7" data-s="s7"><span class="dot"></span><span class="lb">答案 · 言出法随</span></a>
+  <a href="#s8" data-s="s8"><span class="dot"></span><span class="lb">它是怎么工作的</span></a>
+  <a href="#s9" data-s="s9"><span class="dot"></span><span class="lb">能力 · 指哪打哪</span></a>
+  <a href="#s10" data-s="s10"><span class="dot"></span><span class="lb">能力 · 听写替换</span></a>
+  <a href="#s11" data-s="s11"><span class="dot"></span><span class="lb">能力 · 深度控制</span></a>
+  <a href="#s12" data-s="s12"><span class="dot"></span><span class="lb">能力 · 自定义</span></a>
+  <a href="#s13" data-s="s13"><span class="dot"></span><span class="lb">安全 · 麦克风</span></a>
+  <a href="#s14" data-s="s14"><span class="dot"></span><span class="lb">界面 · 深浅双色</span></a>
+  <a href="#s15" data-s="s15"><span class="dot"></span><span class="lb">立即下载</span></a>
+  <a href="#s16" data-s="s16"><span class="dot"></span><span class="lb">愿景 · 言出法随</span></a>
+</nav>
+
+<!-- ===== 场景 1 · 封面 ===== -->
+<section class="scene" id="s1">
+  <div class="inner orbwrap">
+    <div class="orb fx"><img src="assets/logo-glyph.png" alt=""></div>
+    <h1 class="h1 fx" style="--d:.2s">言出法随</h1>
+    <p class="sub fx" style="--d:.35s">安卓系统级中文语音控制<br>全离线 · 零数据上传 · 中文原生</p>
+    <p class="fx" style="--d:.5s;margin-top:60px;color:var(--ink3);font-size:13.5px;letter-spacing:4px">往 下 滑 ， 听 完 这 个 故 事</p>
+  </div>
+</section>
+
+<!-- ===== 场景 2 · 问题 ===== -->
+<section class="scene" id="s2">
+  <div class="inner">
+    <div class="kicker fx">THE PROBLEM · 一个被忽视的问题</div>
+    <h2 class="h2 fx" style="--d:.15s">如果，<br>双手不方便呢？</h2>
+    <p class="sub fx" style="--d:.3s">
+      解锁、打字、滑动、点按——手机的每一个动作，都默认你有一双灵巧的手。<br>
+      对肢体障碍用户来说，这不是「不方便」，是「无法使用」。<br><br>
+      全球超过<b>十亿</b>人正与某种形式的残疾共同生活。他们中的绝大多数，用的是安卓。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 场景 3 · 苹果 ===== -->
+<section class="scene" id="s3">
+  <div class="inner">
+    <div class="kicker fx">2019 · APPLE 给出了答案</div>
+    <h2 class="h2 fx" style="--d:.15s">苹果做到了：<br>完全不用手，操作整部 iPhone。</h2>
+    <p class="sub fx" style="--d:.3s">
+      iOS 13 起内置的 Voice Control——点按、滑动、打字、编号与网格选择，
+      把系统级语音控制做成了标杆，<b>甚至支持中文</b>。设备端运行，不联网也能用。
+    </p>
+    <p class="sub fx" style="--d:.45s;color:var(--ink)">
+      但它只属于苹果：硬件昂贵、生态封闭。数亿安卓用户，只能看着。
+    </p>
+    <p class="src fx" style="--d:.55s">来源：<a href="https://support.apple.com" target="_blank" rel="noopener">Apple Support · Voice Control</a></p>
+    <div class="card fx" style="--d:.6s;margin-top:34px"><div class="slot"><b>官方图位 ①</b>Apple Voice Control 官方介绍图 · 来源 apple.com</div></div>
+  </div>
+</section>
+
+<!-- ===== 场景 4 · 谷歌 ===== -->
+<section class="scene" id="s4">
+  <div class="inner">
+    <div class="kicker fx">2016 · GOOGLE 也做了</div>
+    <h2 class="h2 fx" style="--d:.15s">安卓有了 Voice Access，<br>中文不在名单上。</h2>
+    <p class="sub fx" style="--d:.3s">
+      谷歌给安卓交出的答案，官方支持 7 种语言：英语、西班牙语、德语、意大利语、法语，
+      以及仅部分支持的葡萄牙语和日语——<b>没有中文</b>。<br>
+      它还依赖 Google 服务框架，国内环境本就无法使用。
+    </p>
+    <p class="sub fx" style="--d:.45s;color:var(--ink)">
+      全球最多的安卓人群，说着世界上最被广泛使用的语言，却不在支持列表里。
+    </p>
+    <p class="src fx" style="--d:.55s">来源：<a href="https://support.google.com/accessibility/android/answer/6151854" target="_blank" rel="noopener">Google Support · Voice Access 命令</a></p>
+    <div class="card fx" style="--d:.6s;margin-top:34px"><div class="slot"><b>官方图位 ②</b>Voice Access 支持语言列表截图 · 来源 support.google.com</div></div>
+  </div>
+</section>
+
+<!-- ===== 场景 5 · 小米 ===== -->
+<section class="scene" id="s5">
+  <div class="inner">
+    <div class="kicker fx">MIUI · 国内唯一跟进过的厂商</div>
+    <h2 class="h2 fx" style="--d:.15s">小米试过，<br>然后停在了原地。</h2>
+    <p class="sub fx" style="--d:.3s">
+      MIUI「设置 → 无障碍 → 肢体」里的语音控制——屏幕数字标签加语音指令，
+      是国内厂商为肢体障碍用户迈出的难得一步。<br>
+      但长期缺乏更新与维护，已难以适配今天复杂的应用生态。
+    </p>
+    <p class="src fx" style="--d:.4s">来源：小米官方无障碍功能文档</p>
+    <div class="card fx" style="--d:.5s;margin-top:34px"><div class="slot"><b>官方图位 ③</b>MIUI 无障碍语音控制介绍图 · 来源小米官方无障碍文档</div></div>
+  </div>
+</section>
+
+<!-- ===== 场景 6 · 十年的空白 ===== -->
+<section class="scene" id="s6">
+  <div class="inner">
+    <div class="kicker fx">THE GAP · 十年的空白</div>
+    <h2 class="h2 fx" style="--d:.15s;font-size:clamp(44px,7.6vw,110px)">
+      数亿台中文安卓手机，<br>没有系统级语音控制。
+    </h2>
+    <p class="sub fx" style="--d:.35s">
+      硬件在进步，应用在爆炸，这块空白停在原地。<br>
+      直到一个 22 岁的 SMA 患者决定：自己来填。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 场景 7 · 答案 ===== -->
+<section class="scene" id="s7">
+  <div class="inner">
+    <div class="kicker fx">THE ANSWER · 答案</div>
+    <h2 class="h1 fx" style="--d:.15s">言出法随。</h2>
+    <p class="sub fx" style="--d:.3s">安卓系统级中文语音控制。四个承诺，每一个都当真：</p>
+    <div class="bignums">
+      <div class="bn fx" style="--d:.45s"><div class="v">系统级</div><div class="l">无障碍服务直达系统层，全场景可用</div></div>
+      <div class="bn fx" style="--d:.55s"><div class="v">全离线</div><div class="l">SenseVoice 引擎内置，断网也能听懂你</div></div>
+      <div class="bn fx" style="--d:.65s"><div class="v">中文原生</div><div class="l">命令、纠错、听写，都为中文设计</div></div>
+      <div class="bn fx" style="--d:.75s"><div class="v">零上传</div><div class="l">你的每一句话，从不出这台设备</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 8 · 它是怎么工作的 ===== -->
+<section class="scene" id="s8">
+  <div class="inner">
+    <div class="kicker fx">HOW · 它是怎么工作的</div>
+    <h2 class="h2 fx" style="--d:.15s">说话，就是操作。</h2>
+    <div class="flow">
+      <div class="fstep fx" style="--d:.3s"><div class="n">1</div><h4>你说话</h4><p>麦克风拾音，回声消除 + 噪声抑制打底。</p></div>
+      <div class="fstep fx" style="--d:.4s"><div class="n">2</div><h4>本地识别</h4><p>SenseVoice 在手机上整句解码——全程零上传。</p></div>
+      <div class="fstep fx" style="--d:.5s"><div class="n">3</div><h4>拼音纠错</h4><p>同音字纠正、个人词典，把听岔捞回来。</p></div>
+      <div class="fstep fx" style="--d:.6s"><div class="n">4</div><h4>立即执行</h4><p>无障碍手势直达系统层，即刻生效。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 9 · 指哪打哪 ===== -->
+<section class="scene" id="s9">
+  <div class="inner">
+    <div class="kicker fx">能力 01 · 指哪打哪</div>
+    <h2 class="h2 fx" style="--d:.15s">说「点击微信」，<br>微信就打开。</h2>
+    <div class="cards3">
+      <div class="card fx" style="--d:.3s"><div class="no">语义点击</div><p>说出屏幕上的文字，直接点按对应元素——微信等复杂应用同样支持。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">元素编号</div><p>可交互元素自动编号，呼叫数字精准触发。看到的编号，就是点到的编号。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">全屏网格</div><p>3×4 网格覆盖全屏，最多 5 级缩放，无文字界面也能像素级点选。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 10 · 听写与替换 ===== -->
+<section class="scene" id="s10">
+  <div class="inner">
+    <div class="kicker fx">能力 02 · 听写与替换</div>
+    <h2 class="h2 fx" style="--d:.15s">说「听写」，<br>话就变成文字。</h2>
+    <div class="cards3">
+      <div class="card fx" style="--d:.3s"><div class="no">听写落笔</div><p>任意输入框说「听写」，下一句话停顿即填入——聊天、备忘录全都能用。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">语音替换</div><p>「把 X 替换成 Y」——说错了改稿不用动手，拼音模糊照样命中。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">个人词典</div><p>人名、地名、专业词优先识别——软件会越来越懂你的说话方式。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 11 · 深度控制 ===== -->
+<section class="scene" id="s11">
+  <div class="inner">
+    <div class="kicker fx">能力 03 · 系统级深度控制</div>
+    <h2 class="h2 fx" style="--d:.15s">滑动、缩放、锁屏、截屏，<br>全都能说。</h2>
+    <div class="cards3">
+      <div class="card fx" style="--d:.3s"><div class="no">滑动与摇移</div><p>上下左右滑动、短距精准摇移、双指缩放——看图刷视频不用手。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">全局控制</div><p>锁屏、通知中心、控制中心、最近任务、截屏——系统层直接下达。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">安全控音</div><p>媒体音量 80% 硬顶 + 命令冷却 + 熔断——误识别永远闹不出事故。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 12 · 自定义 ===== -->
+<section class="scene" id="s12">
+  <div class="inner">
+    <div class="kicker fx">能力 04 · 你的地盘</div>
+    <h2 class="h2 fx" style="--d:.15s">用自己的话，<br>下自己的命令。</h2>
+    <div class="cards3">
+      <div class="card fx" style="--d:.3s"><div class="no">自定义指令</div><p>用自己的话给任何动作起名，语音录入、立即生效。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">识别灵敏度</div><p>1~10 档无级调节——为小声说话、口齿不清的使用者深度适配。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">配置备份</div><p>指令、词典与偏好一键导出，粘贴导入——换机一份文字全带走。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 13 · 安全 ===== -->
+<section class="scene" id="s13">
+  <div class="inner">
+    <div class="kicker fx">SAFETY · 安全设计</div>
+    <h2 class="h2 fx" style="--d:.15s">麦克风，<br>永远由你说了算。</h2>
+    <div class="cards3">
+      <div class="card fx" style="--d:.3s"><div class="no">会话制占麦</div><p>不常驻麦克风。说「退出」、锁屏或到时未续期，立即归还。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">看门狗</div><p>每 5 分钟续期、单次最长 25 分钟、到期前 20 秒预警——不是限制，是保险。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">熔断与硬顶</div><p>异常密集执行自动中止；媒体音量 80% 硬顶——误识别闹不出事故。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 14 · 界面 ===== -->
+<section class="scene" id="s14">
+  <div class="inner">
+    <div class="kicker fx">INTERFACE · 界面</div>
+    <h2 class="h2 fx" style="--d:.15s">新拟物光影，深浅双色。</h2>
+    <p class="sub fx" style="--d:.3s">与系统同色的凹凸表面、柔和的双向光影——界面本身就是一次触觉提醒。</p>
+    <div class="cards3" style="margin-top:60px">
+      <div class="card fx" style="--d:.3s;padding:12px"><img src="assets/shot-main-light.png" alt="主页 浅色" style="width:100%;border-radius:14px;display:block"></div>
+      <div class="card fx" style="--d:.4s;padding:12px"><img src="assets/shot-main-dark.png" alt="主页 深色" style="width:100%;border-radius:14px;display:block"></div>
+      <div class="card fx" style="--d:.5s;padding:12px"><img src="assets/shot-settings.png" alt="设置" style="width:100%;border-radius:14px;display:block"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 场景 15 · 下载 ===== -->
+<section class="scene" id="s15">
+  <div class="inner center">
+    <div class="kicker fx">DOWNLOAD · 立即体验</div>
+    <h2 class="h2 fx" style="--d:.15s">现在，把操作权<br>交还到嘴边。</h2>
+    <p class="sub fx" style="--d:.3s">
+      安装包约 285MB——完整的离线中文识别模型直接内置。<br>
+      Android 7.0+ · Apache-2.0 开源 · 永久免费
+    </p>
+    <div class="cta fx" style="--d:.45s">
+      <a class="btn" href="https://github.com/qbhugo666/YanChuFaSui/releases/latest" target="_blank" rel="noopener">前往 GitHub 下载</a>
+      <a class="ghost" href="https://github.com/qbhugo666/YanChuFaSui" target="_blank" rel="noopener">查看源码</a>
+    </div>
+    <p class="src fx" style="--d:.55s">装好后按引导开启无障碍服务即可开始使用 · 详细更新见 CHANGELOG</p>
+  </div>
+</section>
+
+<!-- ===== 场景 16 · 愿景 ===== -->
+<section class="scene" id="s16">
+  <div class="inner center">
+    <div class="kicker fx">VISION · 愿景</div>
+    <p class="quote fx" style="--d:.15s">
+      无障碍设计的终极目标，<br>是让「无障碍」<span class="blue">失去存在的必要</span>。
+    </p>
+    <p class="sign fx" style="--d:.35s;margin-top:60px">
+      <b>言出，法随。</b>愿每一次开口，都有回应。
+    </p>
+    <p class="sign fx" style="--d:.45s;margin-top:26px">
+      <b>黄信豪 Hugo</b> · 言出法随作者 · 22 岁 · SMA 患者
+    </p>
+    <p class="fx" style="--d:.55s;margin-top:50px;font-size:15px">
+      <a class="ghost" href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener">爱发电 · 请作者喝杯咖啡</a>&nbsp;&nbsp;
+      <a class="ghost" href="https://github.com/qbhugo666/YanChuFaSui" target="_blank" rel="noopener">GitHub 开源</a>&nbsp;&nbsp;
+      <a class="ghost" href="index.html" style="color:var(--ink2)">← 官网主页</a>
+    </p>
+  </div>
+</section>
+
+<script>
+document.documentElement.classList.add('js');
+// 滚动浮现：进入视口的元素加 .on
+var io = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+},{threshold:.15});
+document.querySelectorAll('.fx').forEach(function(el){ io.observe(el); });
+
+// 意图流侧轨：滚动时高亮当前章节 + 进度线填充
+var railLinks = Array.prototype.slice.call(document.querySelectorAll('#rail a'));
+var fill = document.getElementById('railFill');
+var sceneIds = railLinks.map(function(a){ return a.getAttribute('href'); });
+function updateRail(){
+  var mid = window.scrollY + window.innerHeight * 0.45;
+  var active = sceneIds[0];
+  sceneIds.forEach(function(id){
+    var el = document.querySelector(id);
+    if (el && el.offsetTop <= mid) active = id;
+  });
+  railLinks.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === active); });
+  var done = sceneIds.indexOf(active);
+  fill.style.height = ((done + 1) / sceneIds.length * 100) + '%';
+}
+window.addEventListener('scroll', updateRail, {passive:true});
+window.addEventListener('resize', updateRail);
+updateRail();
+</script>
+</body>
+</html>

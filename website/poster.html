@@ -9,17 +9,17 @@
 /* ============ 新拟物长海报 · 与 App 同源设计 ============ */
 :root{
   --bg:#E0E5EC; --shadow:#A3B1C6; --light:#FFFFFF;
-  --ink:#1A1E24; --ink2:#5A6472; --ink3:#8A94A4;
+  --ink:#1A1E24; --ink2:#47515F; --ink3:#76808F;
   --blue:#246BFE; --blue2:#4D8BFF; --line:#D3D9E2;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   background:var(--bg);color:var(--ink);
   font-family:-apple-system,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased;line-height:1.75;
+  -webkit-font-smoothing:antialiased;line-height:1.95;letter-spacing:.02em;
 }
 .wrap{max-width:860px;margin:0 auto;padding:0 40px}
-.blk{padding:54px 0}
+.blk{padding:64px 0}
 
 /* 新拟物凸起卡（App 同款配方） */
 .neu{background:var(--bg);border-radius:28px;
@@ -31,7 +31,7 @@ body{
 .kicker{font-size:12.5px;font-weight:800;letter-spacing:6px;color:var(--blue);
   text-transform:uppercase;margin-bottom:16px}
 h2{font-size:clamp(26px,3.8vw,38px);font-weight:900;line-height:1.3;letter-spacing:.5px}
-p{font-size:15.5px;color:var(--ink2);line-height:2}
+p{font-size:16.5px;color:var(--ink2);line-height:2.05}
 p b{color:var(--ink)}
 
 /* 封面头部 */
@@ -51,26 +51,26 @@ p b{color:var(--ink)}
 .no{font-size:12px;font-weight:800;letter-spacing:4px;color:var(--blue);margin-bottom:12px}
 
 /* 两栏故事 */
-.duo{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:36px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:52px;margin-top:40px}
 @media(max-width:760px){.duo{grid-template-columns:1fr;gap:28px}}
-.duo h3{font-size:18px;font-weight:800;margin-bottom:14px}
+.duo h3{font-size:19px;font-weight:800;margin-bottom:16px}
 .duo h3 .tag{color:var(--blue);margin-right:8px}
-.duo p{font-size:14.5px;line-height:2}
-.duo p+p{margin-top:12px}
-.duo .em{font-size:15.5px;font-weight:700;color:var(--ink);line-height:1.9}
+.duo p{font-size:15.5px;line-height:2.1}
+.duo p+p{margin-top:14px}
+.duo .em{font-size:16.5px;font-weight:700;color:var(--ink);line-height:2}
 
 /* 功能清单 */
-.flist{margin-top:36px;display:grid;gap:14px}
-.fi{display:flex;gap:20px;align-items:flex-start;
-  padding:22px 26px;border-radius:20px;
+.flist{margin-top:40px;display:grid;gap:18px}
+.fi{display:flex;gap:22px;align-items:flex-start;
+  padding:26px 30px;border-radius:20px;
   box-shadow:inset 5px 5px 12px var(--shadow),inset -5px -5px 12px var(--light)}
-.fi .nn{font-size:13px;font-weight:800;color:var(--blue);min-width:26px;letter-spacing:1px;padding-top:3px}
-.fi h3{font-size:16px;font-weight:800}
-.fi p{font-size:13.5px;line-height:1.85;margin-top:4px}
+.fi .nn{font-size:14px;font-weight:800;color:var(--blue);min-width:28px;letter-spacing:1px;padding-top:4px}
+.fi h3{font-size:17.5px;font-weight:800}
+.fi p{font-size:14.5px;line-height:1.95;margin-top:5px;color:var(--ink2)}
 
 /* 安全徽章行 */
-.badge-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
-.badge-row span{border-radius:999px;padding:11px 26px;font-size:14px;font-weight:700;color:var(--ink);
+.badge-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:36px}
+.badge-row span{border-radius:999px;padding:13px 30px;font-size:15px;font-weight:700;color:var(--ink);
   background:var(--bg);box-shadow:6px 6px 14px var(--shadow),-6px -6px 14px var(--light)}
 
 /* 下载卡 */

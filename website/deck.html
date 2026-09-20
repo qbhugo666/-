@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>言出法随 · 产品发布演示</title>
+<meta name="description" content="言出法随（YanChuFaSui）：安卓系统级中文语音控制。发布会式演示文稿。">
+<style>
+/* ============ 发布会深色设计系统 ============ */
+:root{
+  --bg0:#0C0E12; --bg1:#14171C;
+  --ink:#F2F4F8; --ink2:#9AA3B0; --ink3:#5E6670;
+  --blue:#246BFE; --blue2:#4D8BFF;
+  --line:rgba(255,255,255,.08);
+  --well:rgba(255,255,255,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg0);color:var(--ink);overflow:hidden;
+  font-family:-apple-system,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+/* 无 JS 降级：所有页纵向排列完整可见 */
+.deck{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory}
+.slide{
+  min-height:100vh;scroll-snap-align:start;scroll-snap-stop:always;
+  display:flex;align-items:center;position:relative;
+  background:radial-gradient(1200px 800px at 70% 20%, var(--bg1), var(--bg0));
+  border-bottom:1px solid var(--line);
+}
+.inner{width:100%;max-width:1160px;margin:0 auto;padding:0 7vw}
+
+/* JS 深色放映模式：一屏一页 */
+.js .deck{height:100vh;overflow:hidden}
+.js .slide{
+  position:absolute;inset:0;opacity:0;visibility:hidden;
+  transform:scale(.98);transition:opacity .55s ease,transform .55s ease,visibility .55s;
+}
+.js .slide.active{opacity:1;visibility:visible;transform:none}
+
+/* 页内元素渐入（带 --d 逐个延迟） */
+.js .fx{opacity:0;transform:translateY(34px);
+  transition:opacity .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+.js .slide.active .fx{opacity:1;transform:none}
+
+/* 排版原子 */
+.kicker{font-size:clamp(12px,1.1vw,15px);font-weight:800;letter-spacing:7px;
+  color:var(--blue2);text-transform:uppercase;margin-bottom:26px}
+.h1{font-size:clamp(44px,8vw,104px);font-weight:900;line-height:1.12;letter-spacing:2px}
+.h2{font-size:clamp(34px,5.4vw,72px);font-weight:900;line-height:1.2;letter-spacing:1px}
+.h3{font-size:clamp(26px,3.6vw,44px);font-weight:900;line-height:1.3}
+.sub{font-size:clamp(16px,1.6vw,21px);color:var(--ink2);margin-top:26px;line-height:1.9;max-width:760px}
+.src{font-size:12.5px;color:var(--ink3);margin-top:26px}
+.src a{color:var(--ink3);text-decoration:underline;text-underline-offset:4px}
+.accent{color:var(--blue2)}
+
+/* 封面 logo 圆 */
+.biglogo{width:clamp(110px,13vw,170px);height:clamp(110px,13vw,170px);border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #3E7BFF, var(--blue) 70%);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 44px;
+  box-shadow:0 30px 80px rgba(36,107,254,.35)}
+.biglogo img{width:56%}
+
+/* 卡片栅格（功能/安全/支柱） */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:56px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;margin-top:56px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:56px}
+@media(max-width:960px){.grid3,.grid2,.grid4{grid-template-columns:1fr}}
+.card{
+  background:var(--well);border:1px solid var(--line);border-radius:24px;
+  padding:34px 30px;backdrop-filter:blur(4px);
+}
+.card .no{font-size:13px;font-weight:800;color:var(--blue2);letter-spacing:3px}
+.card h3{font-size:clamp(18px,1.7vw,23px);font-weight:800;margin:12px 0 10px}
+.card p{font-size:15px;color:var(--ink2);line-height:1.85}
+.card.danger{border-color:rgba(77,139,255,.45)}
+
+/* 待补素材坑位 */
+.slot{
+  margin-top:22px;border:2px dashed rgba(154,163,176,.5);border-radius:18px;
+  padding:24px 20px;text-align:center;font-size:13px;color:var(--ink3);line-height:1.9;
+}
+.slot b{display:block;color:var(--ink2);font-size:14px;margin-bottom:6px;letter-spacing:1px}
+
+/* 步骤横排 */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:64px}
+@media(max-width:960px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.steps{grid-template-columns:1fr}}
+.step{
+  background:var(--well);border:1px solid var(--line);border-radius:20px;padding:28px 24px;
+}
+.step .n{width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;margin-bottom:16px}
+.step h4{font-size:17px;font-weight:800;margin-bottom:8px}
+.step p{font-size:13.5px;color:var(--ink2);line-height:1.8}
+
+/* 真机截图 */
+.phones{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px;align-items:end}
+@media(max-width:960px){.phones{grid-template-columns:1fr;max-width:360px;margin:56px auto 0}}
+.ph{background:#000;border-radius:38px;padding:12px;
+  box-shadow:0 40px 90px rgba(0,0,0,.55);border:1px solid var(--line)}
+.ph img{display:block;width:100%;border-radius:28px}
+.phcap{text-align:center;margin-top:20px;font-size:14.5px;color:var(--ink2);font-weight:600}
+
+/* 结尾引言 */
+.quote{font-size:clamp(28px,4.6vw,58px);font-weight:900;line-height:1.5;letter-spacing:1px}
+.quote .blue{color:var(--blue2)}
+
+/* 放映 UI */
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--blue2);width:0;z-index:99;transition:width .4s ease}
+#pager{
+  position:fixed;bottom:34px;right:44px;z-index:99;display:flex;align-items:center;gap:16px;
+  font-variant-numeric:tabular-nums;color:var(--ink3);font-size:14px;letter-spacing:2px;
+}
+#pager button{
+  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);color:var(--ink);font-size:18px;cursor:pointer;
+  transition:all .2s ease;
+}
+#pager button:hover{border-color:var(--blue2);color:var(--blue2)}
+#counter{min-width:64px;text-align:center}
+#hint{
+  position:fixed;bottom:38px;left:50%;transform:translateX(-50%);z-index:99;
+  font-size:13px;color:var(--ink3);letter-spacing:3px;
+  animation:fadeHint 6s ease forwards;
+}
+@keyframes fadeHint{0%,60%{opacity:1}100%{opacity:0}}
+
+/* 无 JS 降级：放映 UI 隐藏 */
+#bar,#pager,#hint{display:none}
+.js #bar,.js #pager{display:flex}
+.js #hint{display:block}
+.js #counter{display:inline}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+<div id="hint">→ 方向键 / 空格 翻页</div>
+
+<main class="deck">
+
+<!-- 01 封面 -->
+<section class="slide cover">
+  <div class="inner" style="text-align:center">
+    <div class="biglogo fx"><img src="assets/logo-glyph.png" alt=""></div>
+    <h1 class="h1 fx" style="--d:.15s">言出法随</h1>
+    <p class="sub fx" style="--d:.3s;margin-left:auto;margin-right:auto">
+      安卓系统级中文语音控制<br>全离线 · 零数据上传 · 中文原生
+    </p>
+  </div>
+</section>
+
+<!-- 02 问题 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">THE PROBLEM · 一个被忽视的问题</div>
+    <h2 class="h2 fx" style="--d:.15s">如果，<br>双手不方便呢？</h2>
+    <p class="sub fx" style="--d:.3s">
+      解锁、打字、滑动、点按——手机的每一个动作，都默认你有一双灵巧的手。<br>
+      对肢体障碍用户来说，这不是「不方便」，是「无法使用」。
+    </p>
+  </div>
+</section>
+
+<!-- 03 苹果 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">2019 · APPLE 给出了答案</div>
+    <h2 class="h2 fx" style="--d:.15s">Voice Control：<br>完全不用手，操作整部 iPhone。</h2>
+    <p class="sub fx" style="--d:.3s">
+      点按、滑动、打字、编号与网格选择——苹果把系统级语音控制做成了标杆，
+      甚至支持中文，设备端运行，不联网也能用。
+    </p>
+    <p class="src fx" style="--d:.4s">但它只属于苹果：硬件昂贵、生态封闭，数亿安卓用户无法受益。来源：Apple Support</p>
+    <div class="slot fx" style="--d:.5s"><b>官方图位 ①</b>Apple Voice Control 官方介绍图 · 来源 apple.com</div>
+  </div>
+</section>
+
+<!-- 04 谷歌 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">2016 · GOOGLE 也做了</div>
+    <h2 class="h2 fx" style="--d:.15s">安卓有了 Voice Access，<br>中文不在名单上。</h2>
+    <p class="sub fx" style="--d:.3s">
+      官方支持 7 种语言：英语、西班牙语、德语、意大利语、法语，
+      以及仅部分支持的葡萄牙语和日语——<b style="color:var(--ink)">没有中文</b>。
+      它还依赖 Google 服务框架，国内环境本就无法使用。
+    </p>
+    <p class="src fx" style="--d:.4s">来源：support.google.com · Voice Access 命令页</p>
+    <div class="slot fx" style="--d:.5s"><b>官方图位 ②</b>Voice Access 支持语言列表截图 · 来源 support.google.com</div>
+  </div>
+</section>
+
+<!-- 05 小米 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">MIUI · 国内唯一跟进过的厂商</div>
+    <h2 class="h2 fx" style="--d:.15s">小米试过，<br>然后停在了原地。</h2>
+    <p class="sub fx" style="--d:.3s">
+      MIUI「设置 → 无障碍 → 肢体」里的语音控制——屏幕数字标签加语音指令，
+      是国内厂商为肢体障碍用户迈出的难得一步。<br>
+      但长期缺乏更新与维护，已难以适配今天复杂的应用生态。
+    </p>
+    <p class="src fx" style="--d:.4s">来源：小米官方无障碍功能文档</p>
+    <div class="slot fx" style="--d:.5s"><b>官方图位 ③</b>MIUI 无障碍语音控制介绍图 · 来源小米官方文档</div>
+  </div>
+</section>
+
+<!-- 06 空白大字页 -->
+<section class="slide">
+  <div class="inner" style="text-align:center">
+    <div class="kicker fx">THE GAP · 十年的空白</div>
+    <h2 class="h2 fx" style="--d:.15s;font-size:clamp(40px,7vw,96px)">
+      数亿台中文安卓手机，<br>没有系统级语音控制。
+    </h2>
+    <p class="sub fx" style="--d:.35s;margin-left:auto;margin-right:auto">
+      硬件在进步，应用在爆炸，这块空白停在原地。<br>
+      直到一个 22 岁的 SMA 患者决定：自己来填。
+    </p>
+  </div>
+</section>
+
+<!-- 07 答案：言出法随 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">THE ANSWER · 答案</div>
+    <h2 class="h2 fx" style="--d:.15s">言出法随。</h2>
+    <p class="sub fx" style="--d:.3s">安卓系统级中文语音控制。四个承诺，每一个都当真：</p>
+    <div class="grid4">
+      <div class="card fx" style="--d:.45s"><div class="no">01</div><h3>系统级</h3><p>无障碍服务直达系统层——滑动、点按、锁屏、通知中心，全场景可用。</p></div>
+      <div class="card fx" style="--d:.55s"><div class="no">02</div><h3>全离线</h3><p>SenseVoice 识别引擎完整内置，断网也能听懂你，识别永远不需要联网。</p></div>
+      <div class="card fx" style="--d:.65s"><div class="no">03</div><h3>中文原生</h3><p>命令、同音字纠错、听写、个人词典——每一个字都是为中文设计的。</p></div>
+      <div class="card fx" style="--d:.75s"><div class="no">04</div><h3>零上传</h3><p>识别与解析全部在本机完成。你的每一句话，从不出这台设备。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 原理四步 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">HOW · 它是怎么工作的</div>
+    <h2 class="h2 fx" style="--d:.15s">说话，就是操作。</h2>
+    <div class="steps">
+      <div class="step fx" style="--d:.3s"><div class="n">1</div><h4>你说话</h4><p>麦克风拾音，回声消除 + 噪声抑制 + 100Hz 高通滤波打底。</p></div>
+      <div class="step fx" style="--d:.4s"><div class="n">2</div><h4>本地识别</h4><p>SenseVoice 引擎在手机上整句解码——全程零上传。</p></div>
+      <div class="step fx" style="--d:.5s"><div class="n">3</div><h4>拼音纠错</h4><p>同音字纠正、个人词典、四层拼音匹配，把听岔捞回来。</p></div>
+      <div class="step fx" style="--d:.6s"><div class="n">4</div><h4>立即执行</h4><p>无障碍手势直达系统层——点按、滑动手势、全局控制即刻生效。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 功能：指哪打哪 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">FEATURE 01 · 指哪打哪</div>
+    <h2 class="h2 fx" style="--d:.15s">说「点击微信」，<br>微信就打开。</h2>
+    <div class="grid3">
+      <div class="card fx" style="--d:.3s"><div class="no">语义点击</div><p>说出屏幕上的文字，直接点按对应元素——微信等复杂应用同样支持。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">元素编号</div><p>可交互元素自动编号，呼叫数字精准触发。看到的编号，就是点到的编号。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">全屏网格</div><p>3×4 网格覆盖全屏，最多 5 级缩放，无文字界面也能像素级点选。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 功能：听写 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">FEATURE 02 · 听写与替换</div>
+    <h2 class="h2 fx" style="--d:.15s">说「听写」，<br>话就变成文字。</h2>
+    <div class="grid3">
+      <div class="card fx" style="--d:.3s"><div class="no">听写落笔</div><p>任意输入框说「听写」，下一句话停顿即填入——微信聊天、写备忘录，全都能用。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">语音替换</div><p>「把 X 替换成 Y」——说错了改稿不用动手，拼音模糊找词照样命中。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">个人词典</div><p>人名、地名、专业词优先识别——软件会越来越懂你的说话方式。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 功能：深度控制 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">FEATURE 03 · 系统级深度控制</div>
+    <h2 class="h2 fx" style="--d:.15s">滑动、缩放、锁屏、截屏，<br>全都能说。</h2>
+    <div class="grid3">
+      <div class="card fx" style="--d:.3s"><div class="no">滑动与摇移</div><p>上下左右滑动、短距离精准摇移、双指缩放——看图片刷视频不用手。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">全局控制</div><p>锁屏、通知中心、控制中心、最近任务、截屏——系统层直接下达。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">安全控音</div><p>媒体音量 80% 硬顶 + 命令冷却 + 熔断——误识别永远闹不出事故。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 功能：自定义 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">FEATURE 04 · 你的地盘</div>
+    <h2 class="h2 fx" style="--d:.15s">用自己的话，<br>下自己的命令。</h2>
+    <div class="grid2">
+      <div class="card fx" style="--d:.3s"><div class="no">自定义指令</div><p>用自己的话给任何动作起名，语音录入、立即生效——「软件适应你，而不是你适应软件」。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">配置备份</div><p>自定义指令、个人词典与偏好一键导出，粘贴即可导入——换机、给家人配置，一份文字全带走。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 安全 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">SAFETY · 安全设计</div>
+    <h2 class="h2 fx" style="--d:.15s">麦克风，<br>永远由你说了算。</h2>
+    <div class="grid2">
+      <div class="card fx" style="--d:.3s"><div class="no">会话制占麦</div><p>不常驻麦克风。说「退出」、锁屏或到时未续期，立即归还。</p></div>
+      <div class="card fx" style="--d:.4s"><div class="no">看门狗</div><p>每 5 分钟续期、单次最长 25 分钟、到期前 20 秒预警——这不是限制，是保险。</p></div>
+      <div class="card fx" style="--d:.5s"><div class="no">熔断与硬顶</div><p>异常密集执行自动中止；媒体音量 80% 硬顶——误识别永远闹不出事故。</p></div>
+      <div class="card fx" style="--d:.6s"><div class="no">静默自愈</div><p>系统强停并撤销无障碍开关后，下次启动自动写回，无需手动重设。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 界面 -->
+<section class="slide">
+  <div class="inner">
+    <div class="kicker fx">INTERFACE · 界面</div>
+    <h2 class="h2 fx" style="--d:.15s">新拟物光影，深浅双色。</h2>
+    <div class="phones">
+      <div class="ph fx" style="--d:.3s"><img src="assets/shot-main-light.png" alt="主页 浅色"></div>
+      <div class="ph fx" style="--d:.45s"><img src="assets/shot-main-dark.png" alt="主页 深色"></div>
+      <div class="ph fx" style="--d:.6s"><img src="assets/shot-settings.png" alt="设置"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 下载 -->
+<section class="slide">
+  <div class="inner" style="text-align:center">
+    <div class="kicker fx">DOWNLOAD · 立即体验</div>
+    <h2 class="h2 fx" style="--d:.15s">现在，把操作权<br>交还到嘴边。</h2>
+    <p class="sub fx" style="--d:.3s;margin-left:auto;margin-right:auto">
+      安装包约 285MB——完整的离线中文识别模型直接内置。<br>
+      Android 7.0+ · Apache-2.0 开源 · 永久免费
+    </p>
+    <div class="cta fx" style="--d:.45s;margin-top:46px">
+      <a class="btn" href="https://github.com/qbhugo666/YanChuFaSui/releases/latest" target="_blank" rel="noopener"
+         style="background:var(--blue);color:#fff;padding:20px 52px;border-radius:999px;font-size:18px;font-weight:800;
+                box-shadow:0 24px 70px rgba(36,107,254,.4)">前往 GitHub 下载</a>
+    </div>
+    <p class="src fx" style="--d:.55s">github.com/qbhugo666/YanChuFaSui/releases · 装好后按引导开启无障碍服务即可</p>
+  </div>
+</section>
+
+<!-- 16 结尾 -->
+<section class="slide">
+  <div class="inner" style="text-align:center">
+    <div class="kicker fx">VISION · 愿景</div>
+    <p class="quote fx" style="--d:.15s">
+      无障碍设计的终极目标，<br>是让「无障碍」失去存在的必要。
+    </p>
+    <p class="h3 fx" style="--d:.35s;margin-top:70px">
+      <span class="accent">言出，法随。</span>愿每一次开口，都有回应。
+    </p>
+    <p class="sub fx" style="--d:.5s;margin-top:44px">
+      <b style="color:var(--ink)">黄信豪 Hugo</b> · 言出法随作者 · 22 岁 · SMA 患者<br><br>
+      <a href="https://afdian.com/a/hugoqb" target="_blank" rel="noopener" style="border-bottom:1px solid var(--blue2)">爱发电 · 请作者喝杯咖啡</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/qbhugo666/YanChuFaSui" target="_blank" rel="noopener" style="border-bottom:1px solid var(--blue2)">GitHub 开源</a>
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- 放映 UI -->
+<div id="bar"></div>
+<div id="hint">→ 方向键 / 空格 翻页</div>
+<div id="pager">
+  <button id="prev" aria-label="上一页">‹</button>
+  <span id="counter">01 / 16</span>
+  <button id="next" aria-label="下一页">›</button>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+var cur = 0, total = slides.length, locked = false;
+
+var bar = document.getElementById('bar');
+var counter = document.getElementById('counter');
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function go(i){
+  i = Math.max(0, Math.min(total - 1, i));
+  if (i === cur && slides[i].classList.contains('active')) return;
+  slides.forEach(function(s, k){ s.classList.toggle('active', k === i); });
+  cur = i;
+  bar.style.width = ((cur + 1) / total * 100) + '%';
+  counter.textContent = pad(cur + 1) + ' / ' + pad(total);
+}
+function next(){ if (!locked) go(cur + 1); }
+function prev(){ go(cur - 1); }
+
+document.getElementById('next').addEventListener('click', next);
+document.getElementById('prev').addEventListener('click', prev);
+document.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+  if (e.key === 'Home') { e.preventDefault(); go(0); }
+  if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+});
+// 触屏滑动翻页
+var tx = 0, ty = 0;
+document.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', function(e){
+  var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? next() : prev(); }
+}, {passive:true});
+
+go(0);
+</script>
+</body>
+</html>

@@ -149,6 +149,12 @@ open class VoiceControlService : AccessibilityService() {
             return svc.editableNodeOrNull()?.text?.toString()
         }
 
+        /** 屏幕上有「用户可交互的输入框」吗（v0.57.10 听写触发前置：严格版，可见+可聚焦+可编辑） */
+        fun hasVisibleEditable(): Boolean {
+            val svc = instance ?: return false
+            return svc.hasVisibleEditable()
+        }
+
         /** 输入框文本操作探针（开发期诊断，商用前移除） */
         fun textProbe(): Boolean {
             val svc = instance ?: return false
@@ -333,6 +339,7 @@ open class VoiceControlService : AccessibilityService() {
         // 用 sessionActive 同时解决启动时序竞态：会话先于服务连接开始时，建条即按会话状态显示。
         island.root.visibility = if (sessionActive) View.VISIBLE else View.GONE
         runCatching { wm.addView(island.root, params) }
+        island.attachedParams = params   // 供会话起止挂/摘 KEEP_SCREEN_ON（v0.57.6 常亮方案）
         islandBar = island
     }
 
@@ -349,10 +356,12 @@ open class VoiceControlService : AccessibilityService() {
 
     private fun doShowBar() {
         islandBar?.show()
+        islandBar?.setKeepScreenOn(true)   // 会话中常亮（v0.57.6）：胶囊可见期间屏幕不灭
     }
 
     private fun doHideBar() {
         islandBar?.hide()
+        islandBar?.setKeepScreenOn(false)  // 会话结束立即摘标志：恢复正常息屏，后台绝无残留
     }
 
     private fun doUpdateBar(text: String) {
@@ -573,6 +582,20 @@ open class VoiceControlService : AccessibilityService() {
         // 未命中的节点也要释放，命中的返回给调用方使用
         all.forEach { if (it !== found) runCatching { it.recycle() } }
         return found
+    }
+
+    /** 严格版可编辑检测（v0.57.10 听写触发前置用）：isEditable 且可见且可聚焦。
+     *  背景：桌面等页面的隐藏节点（如搜索框）isEditable=true 但不可交互——宽松检测会放行
+     *  听写触发、落笔时 SET_TEXT 失败报「未找到输入框」（用户实测吐槽点）。
+     *  只做检测不落笔，节点用完即释放 */
+    private fun hasVisibleEditable(): Boolean {
+        val root = rootInActiveWindow ?: return false
+        if (root.isEditable && root.isVisibleToUser && root.isFocusable) return true
+        val all = mutableListOf<AccessibilityNodeInfo>()
+        runCatching { collectAllNodes(root, all) }
+        val hit = all.any { it.isEditable && it.isVisibleToUser && it.isFocusable }
+        all.forEach { runCatching { it.recycle() } }
+        return hit
     }
 
     private fun runTextProbe() {

@@ -66,7 +66,100 @@ class CommandMatcherTest {
         assertEquals("swipe_right", matcher.matchFuzzy("又滑动")?.action)
     }
 
+    // ===== 近音听岔不加别名，走模糊兜底（2026-09-22 用户拍板：别名会让胶囊显示「已识别经典」很怪） =====
+
+    @Test fun `bug回归 经典 模糊兜住且显示轻点`() {
+        // 用户说「轻点」被 ASR 听成「经典」（q/j 声母混淆，dist 1/2=0.5 达标）；
+        // 不加别名 → matchedWord 保持词表词「轻点」，胶囊/使用记录显示不怪
+        assertNull(matcher.matchStrict("经典"))
+        val m = matcher.matchFuzzy("经典")
+        assertEquals("tap", m?.action)
+        assertEquals("轻点", m?.matchedWord)
+    }
+
+    @Test fun `bug回归 经典经典 连说两遍折叠后兜住`() {
+        // 连说两遍被 ASR 合成「经典经典」：无折叠时 vs「轻点」dist 3 归一化 0.75 > 0.65 被拒
+        // （2026-09-22 使用记录实锤两次未触发）；collapseDoubled 折叠成「经典」后模糊命中
+        assertEquals("tap", matcher.matchFuzzy("经典经典")?.action)
+        assertEquals("轻点", matcher.matchFuzzy("经典经典")?.matchedWord)
+    }
+
+    @Test fun `连说两遍 轻点轻点 折叠后精确命中`() {
+        assertEquals("tap", matcher.matchStrict("轻点轻点")?.action)
+        assertEquals("exact", matcher.matchStrict("轻点轻点")?.method)
+    }
+
+    @Test fun `连说两遍 上滑上滑 折叠后精确命中`() {
+        assertEquals("swipe_up", matcher.matchStrict("上滑上滑")?.action)
+    }
+
+    @Test fun `非重复片段不折叠`() {
+        assertEquals("向左滑动", CommandMatcher.collapseDoubled("向左滑动"))   // 偶数长但前后不同
+        assertEquals("经典大剧院", CommandMatcher.collapseDoubled("经典大剧院")) // 奇数长不动
+        assertEquals("经典好菜", CommandMatcher.collapseDoubled("经典好菜"))    // 前后半不同
+    }
+
+    // ===== 轻点说法扩充（v0.57.2 用户拍板：加「单击」；「点击」二字与「点击屏幕」均不入词表，后者服务层整句直通） =====
+
+    @Test fun `单击 别名精确命中轻点`() {
+        assertEquals("tap", matcher.matchStrict("单击")?.action)
+        // 别名命中显示别名本身（与自定义说法同理：用户有意说的词，显示不怪；
+        // 听岔词如「经典」走 fuzzy 兜底才显示词表词「轻点」——v0.57.1 用户拍板的区别对待）
+        assertEquals("单击", matcher.matchStrict("单击")?.matchedWord)
+    }
+
+    @Test fun `点击与点击屏幕 都不在词表`() {
+        // 「点击」绝不入别名（用户拍板放弃）：说话慢被 VAD 断句截出「点击」会误触轻点，
+        // 且 contains 会劫持所有「点击X」文字点击。
+        // 「点击屏幕」同样不入：contains 反向规则（词含子串即命中）会让截出的「点击」
+        // 作为「点击屏幕」的前缀子串误触——直通逻辑在 VoiceService 整句等值（Android 层，真机验证）
+        assertNull(matcher.matchStrict("点击"))
+        assertNull(matcher.matchStrict("点击屏幕"))
+    }
+
+    // ===== 声母韵母拆分计分（v0.57.9：用户实测说轻点多次被识别成「经电」「经变」不触发） =====
+
+    @Test fun `bug回归 经电 声母混淆兜住轻点`() {
+        // jing dian vs qing dian：jing/qing 只差声母（0.5），dian 全同 → dist 0.5 达标
+        assertEquals("tap", matcher.matchFuzzy("经电")?.action)
+        assertEquals("轻点", matcher.matchFuzzy("经电")?.matchedWord)
+    }
+
+    @Test fun `bug回归 经变 双声母混淆兜住轻点`() {
+        // jing bian vs qing dian：jing/qing=0.5 + bian/dian 只差声母=0.5 → dist 1.0 达标
+        // （旧整音节计分 2/2=1.0 超阈值被拒——本用例即升级动机）
+        assertEquals("tap", matcher.matchFuzzy("经变")?.action)
+    }
+
+    @Test fun `声韵拆分不误配 静音与轻点仍可区分`() {
+        // jing yin vs qing dian：jing/qing=0.5 + yin/dian 声韵全差=1 → dist 1.5 比「经变」的 1.0 远；
+        // 同分竞速时「轻点」在词表 basic_navigation 组先于 device_control 的「静音」遍历——
+        // 但 1.5/2=0.75 > 0.65 静音自身也不达标，无撞车
+        assertEquals("tap", matcher.matchFuzzy("经电")?.action)
+    }
+
+    @Test fun `韵母混淆 an-ang 也受益`() {
+        // fang hui vs fan hui（「放回」→「返回」）：fang/fan 只差韵母=0.5，hui 全同 → dist 0.5
+        assertEquals("go_back", matcher.matchFuzzy("放回")?.action)
+    }
+
     // ===== 匹配不到的情况 =====
+
+    // ===== 在册命令优先判定（v0.57.12 用户拍板：正式命令绝不被听写容差劫持） =====
+
+    private val exactMatcher = CommandMatcher.fromJson(TEST_JSON)
+
+    @Test fun `matchExact 在册命令命中 输入等非词表词不命中`() {
+        assertEquals("swipe_up", exactMatcher.matchExact("上滑")?.action)
+        assertEquals("tap", exactMatcher.matchExact("轻点")?.action)
+        assertEquals("tap", exactMatcher.matchExact("单击")?.action)
+        assertEquals("tap", exactMatcher.matchExact("轻点轻点")?.action)   // 折叠后命中
+        // 非词表词（听写触发词）：matchExact 不拦 → 听写照常可触发
+        assertNull(exactMatcher.matchExact("输入"))
+        assertNull(exactMatcher.matchExact("打字"))
+        // contains 命中不算 exact：「清空输入」对「输入」不构成在册优先
+        assertNull(exactMatcher.matchExact("输入"))
+    }
 
     @Test fun `无意义文本 不匹配`() {
         assertNull(matcher.matchStrict("个活动"))
@@ -97,6 +190,31 @@ class CommandMatcherTest {
 
     @Test fun `自定义说法 进入热词表`() {
         org.junit.Assert.assertTrue(boundMatcher.hotwords().contains("乡上花东"))
+    }
+
+    // ===== 自定义说法享受完整模糊体系（v0.57.13 固化：第三方用户无感受益，用户提问确认） =====
+    // 自定义词与标准词同管线：同音 pinyin_exact / 声韵半差 pinyin_fuzzy / 连说两遍折叠全生效
+
+    @Test fun `自定义说法 同音听岔命中`() {
+        // 「乡上花东」(xiang shang hua dong) 听岔成同音字「香上花冬」→ pinyin_exact
+        assertEquals("swipe_up", boundMatcher.matchStrict("香上花冬")?.action)
+        assertEquals("pinyin_exact", boundMatcher.matchStrict("香上花冬")?.method)
+    }
+
+    @Test fun `自定义说法 声母半差听岔命中`() {
+        // 「乡上花东」听岔「香上法东」(hua→fa 声母 h≠f 韵母 ua=a? f+a=fa 声母差韵母同 a?——hua=fa:
+        // hua 拆 (h,ua)、fa 拆 (f,a)：韵母 ua≠a 声母 h≠f 全差)。换稳例：「香上画东」hua=画同音→exact 层。
+        // 用「相上花东」：xiang vs xiang 同？不对。「箱上花东」xiang 同音。取声母半差：
+        // 「乡上华动」：hua→hua 同、dong→dong? 用 zha ji 家族：绑「炸机」听岔「扎机」(zha→za 声母 zh≠z 韵母 a 同=0.5)
+        val m = CommandMatcher.fromJson(TEST_JSON, customBindings = listOf("炸机" to "swipe_up"))
+        assertEquals("swipe_up", m.matchFuzzy("扎机")?.action)   // 单半差 0.5 达标
+    }
+
+    @Test fun `自定义说法 连说两遍折叠命中`() {
+        // 用户重复说自定义词：「炸机炸机」折叠成「炸机」精确命中
+        val m = CommandMatcher.fromJson(TEST_JSON, customBindings = listOf("炸机" to "swipe_up"))
+        assertEquals("swipe_up", m.matchStrict("炸机炸机")?.action)
+        assertEquals("exact", m.matchStrict("炸机炸机")?.method)
     }
 
     @Test fun `未知动作的绑定 被跳过不影响标准词表`() {
@@ -164,6 +282,7 @@ class CommandMatcherTest {
                     { "id": "swipe_right", "command": "向右轻扫",  "aliases": ["向右滑动", "右滑", "往右滑"], "action": "swipe_right" },
                     { "id": "go_back",     "command": "返回",      "aliases": ["后退", "上一页"],           "action": "go_back" },
                     { "id": "go_home",     "command": "前往主屏幕","aliases": ["回主屏幕", "回桌面", "回首页"], "action": "go_home" },
+                    { "id": "tap",         "command": "轻点",      "aliases": ["点一下", "单击"],         "action": "tap" },
                     { "id": "open_recents","command": "打开 App 切换器", "aliases": ["最近任务", "后台"],   "action": "open_recents" }
                   ]
                 }

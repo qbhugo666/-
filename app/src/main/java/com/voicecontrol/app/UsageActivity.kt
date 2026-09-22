@@ -74,13 +74,15 @@ class UsageActivity : ThemedActivity() {
         val crashes = CrashCatcher.dumpAll(this)
         sb.appendLine(crashes ?: "（无崩溃记录）")
         sb.appendLine()
-        sb.appendLine("---- 使用记录（最近在前）----")
+        sb.appendLine("---- 使用记录（最近在前；你说了=识别原文，箭头行=执行结果）----")
         val all = UsageLog.all()
         if (all.isEmpty()) {
             sb.appendLine("（无记录）")
         } else {
             val f = SimpleDateFormat("MM-dd HH:mm:ss", Locale.CHINA)
-            all.asReversed().forEach { sb.appendLine("${f.format(Date(it.time))}  ${it.text}") }
+            all.asReversed().forEach { e ->
+                sb.appendLine("${f.format(Date(e.time))}  ${e.text.ifBlank { "（未触发操作）" }}${if (e.heard.isNotBlank()) "  ｜原文：${e.heard}" else ""}")
+            }
         }
         sb.appendLine()
         sb.appendLine("---- 诊断事件（关键事件环形缓冲，logcat 被冲掉后的真相来源）----")
@@ -119,7 +121,7 @@ class UsageActivity : ThemedActivity() {
 
         if (entries.isEmpty()) {
             container.addView(TextView(this).apply {
-                text = "还没有使用记录\n开个会话说几句话，这里就会显示最近执行的操作"
+                text = "还没有使用记录\n开个会话说几句话，这里就会显示机器听到的话和执行的操作"
                 textSize = 14f
                 setTextColor(getColor(R.color.text_secondary))
                 setPadding(dp(4), dp(24), dp(4), 0)
@@ -134,11 +136,27 @@ class UsageActivity : ThemedActivity() {
                 setTextColor(getColor(R.color.text_secondary))
                 setPadding(dp(4), dp(12), dp(4), 0)
             })
+            // 识别原文（v0.57.0）：机器听到的话——旧记录没有此字段则跳过
+            if (e.heard.isNotBlank()) {
+                container.addView(TextView(this).apply {
+                    text = "你说了：${e.heard}"
+                    textSize = 13f
+                    setTextColor(getColor(R.color.text_secondary))
+                    setPadding(dp(4), dp(1), dp(4), 0)
+                })
+            }
+            // 执行结果；heard 有值而 text 为空 = 这句话没触发任何操作（语气词/未命中）
             container.addView(TextView(this).apply {
-                text = e.text
-                textSize = 15f
-                setTextColor(getColor(R.color.text_primary))
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                if (e.text.isNotBlank()) {
+                    text = e.text
+                    textSize = 15f
+                    setTextColor(getColor(R.color.text_primary))
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                } else {
+                    text = "（未触发操作）"
+                    textSize = 13f
+                    setTextColor(getColor(R.color.text_secondary))
+                }
                 setPadding(dp(4), dp(1), dp(4), dp(2))
             })
         }

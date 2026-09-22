@@ -40,6 +40,24 @@ class DictationTriggerTest {
     }
 
     @Test
+    fun bug_ducce_tingJian_notTrigger() {
+        // v0.57.10 用户实锤：说「轻点」被听成「听见」(ting jian)，旧口径与「听写」(ting xie)
+        // 整音节差 1 即误入听写；声韵口径收紧后 jian/xie 声韵全差不认，
+        // 句子掉回命令通道被拼音模糊兜住（听见→轻点，CommandMatcherTest 已覆盖）
+        assertFalse("听见", isDictationTrigger("听见"))
+    }
+
+    @Test
+    fun bug_shanChu_notTrigger() {
+        // v0.57.11 用户实锤回归：说「删除删除」第二遍（折叠/分段成「删除」）反进听写——
+        // 「删除」(shan chu) 对「输入」(shu ru) 每音节半差（0.5+0.5=1.0）踩在 v0.57.10 的
+        // 放行线（>1.0 才拒）上；二次收紧只容一个半差后拒绝
+        // v0.57.12 另加在册命令优先（VoiceService 层 matchExact 判定，见 CommandMatcherTest）
+        assertFalse("删除", isDictationTrigger("删除"))
+        assertFalse("删除删除", isDictationTrigger("删除删除"))
+    }
+
+    @Test
     fun knownTradeOff_shuYu_documented() {
         // 音近容错的已知代价：「属于」(shu yu) 与「输入」(shu ru) 差一个音节，会触发；
         // 无实害——12 秒无输入自动超时退出，落笔还需输入框在场

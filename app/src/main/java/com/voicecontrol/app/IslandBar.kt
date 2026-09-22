@@ -164,6 +164,31 @@ class IslandBar(private val context: Context) {
         applyState(COLOR_BLUE, null, listening = true, transientWarn = false)
     }
 
+    /** 悬浮窗参数引用（addView 时由宿主回填）：供运行中挂/摘 KEEP_SCREEN_ON 用 */
+    internal var attachedParams: WindowManager.LayoutParams? = null
+
+    /**
+     * 会话期间屏幕常亮（v0.57.6 用户拍板方案 B）：胶囊可见期间屏幕不灭——
+     * 语音操作不重置系统无操作息屏计时（注入手势也不算真人操作），看抖音非播放页
+     * 1 分钟就灭屏，语音用户得反复唤醒。
+     * **双保险设计**：FLAG_KEEP_SCREEN_ON 官方语义即「窗口**可见**期间生效」（GONE 本就不生效），
+     * 这里仍按会话起止显式挂/摘，绝不依赖单一系统行为——会话结束/退出/锁屏/看门狗到期
+     * 走 doHideBar 同一链路，标志必被摘除；亮屏时长被会话看门狗天然封顶（硬顶 25 分钟），
+     * 不违反「不长时间强制亮屏」红线（防电量耗尽导致无法求救）。
+     */
+    fun setKeepScreenOn(keep: Boolean) {
+        mainHandler.post {
+            val p = attachedParams ?: return@post
+            runCatching {
+                p.flags = if (keep) p.flags or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                          else p.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON.inv()
+                @Suppress("DEPRECATION")
+                (context.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager)
+                    .updateViewLayout(root, p)
+            }
+        }
+    }
+
     /** 显示浮层（会话开始）：淡入 */
     fun show() {
         mainHandler.post {

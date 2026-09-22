@@ -57,9 +57,21 @@ class CommandMatcher private constructor(
         val method: String,
     )
 
+    /** 整词精确命中（v0.57.12）：折叠后与命令词/别名**完全相等**才算（contains/拼音不算）。
+     *  用途：在册命令优先级判定——听写触发容错不得劫持正式命令（用户点破「删除被听写抢走太蠢」）。
+     *  例：「删除」exact 命中 text_delete → 永远按删除命令走；「输入」不是词表词 → 不拦听写 */
+    fun matchExact(text: String): Match? {
+        val t = collapseDoubled(text.trim())
+        if (t.isEmpty()) return null
+        for (e in entries) {
+            if (t == e.word) return Match(e.id, e.action, e.group, e.word, "exact")
+        }
+        return null
+    }
+
     /** 精确匹配：exact / contains / pinyin_exact（可靠，最优先）。匹配不到返回 null。 */
     fun matchStrict(text: String): Match? {
-        val t = text.trim()
+        val t = collapseDoubled(text.trim())
         if (t.isEmpty()) return null
         val tp = pinyinOf(t)
 
@@ -86,12 +98,12 @@ class CommandMatcher private constructor(
 
     /** 模糊匹配：拼音音节级编辑距离（兜底纠错，仅在精确匹配和文字点击都未命中时用） */
     fun matchFuzzy(text: String): Match? {
-        val t = text.trim()
+        val t = collapseDoubled(text.trim())
         if (t.isEmpty()) return null
         val tp = pinyinOf(t)
 
         var best: Match? = null
-        var bestScore = 0
+        var bestScore = 0.0
 
         for (e in entries) {
             val d = pinyinFuzzyDist(tp, e.pinyin)
@@ -116,7 +128,7 @@ class CommandMatcher private constructor(
         // 误匹配到含该字的双字词（「贴吧」tie ba），造成「点击8→吧→贴吧」这类错误。
         if (tp.split(" ").count { it.isNotEmpty() } <= 1) return null
         var best: String? = null
-        var bestDist = Int.MAX_VALUE
+        var bestDist = Double.MAX_VALUE
         for (c in candidates) {
             val d = pinyinFuzzyDist(tp, pinyinOf(c))
             if (d >= 0 && d < bestDist) {
@@ -141,7 +153,7 @@ class CommandMatcher private constructor(
         val wp = pinyinOf(word)
         if (wp.split(" ").count { it.isNotEmpty() } == 0) return null
         var best: String? = null
-        var bestDist = Int.MAX_VALUE
+        var bestDist = Double.MAX_VALUE
         for (e in entries) {
             val d = pinyinFuzzyDist(wp, e.pinyin)
             if (d >= 0 && d < bestDist) {
@@ -155,12 +167,27 @@ class CommandMatcher private constructor(
     companion object {
         // 拼音模糊匹配：音节级编辑距离，最多容忍相差几个音节
         private const val PINYIN_FUZZY_MAX_DIST = 3
+
+        /**
+         * 连说两遍折叠（2026-09-22）：命令没触发时用户自然会说第二遍，VAD 未断句就被 ASR
+         * 合成一句「X X」（如「经典经典」「上滑上滑」）——长度翻倍后 contains/拼音距离全失效
+         * （「经典经典」vs「轻点」4:2 音节 dist 3 归一化 0.75 > 0.65 被拒，用户使用记录实锤）。
+         * 同一 2~4 字片段精确重复两遍时折叠成单份再匹配，全部命令通用受益；
+         * 听写内容不经命令匹配层，不受影响。
+         */
+        internal fun collapseDoubled(t: String): String {
+            if (t.length % 2 != 0 || t.length < 4 || t.length > 8) return t
+            val half = t.length / 2
+            return if (t.substring(0, half) == t.substring(half)) t.substring(0, half) else t
+        }
+
         // 拼音模糊匹配：归一化距离阈值（音节数越多越宽松）。
-        // v0.55.3 从 0.5 放宽到 0.65：2026-09-16 用户拍板「牺牲一点误触率换触发率」——
-        // 半夜小声说话识别残缺（如「显示编号」只听清「死边号」，dist 2/3≈0.67 被 0.5 拒）触发不了；
-        // 误触有三道既有保险兜底（同命令冷却/连续误触熔断/「退出」最高优先）。
-        // 回退条件：误触增多改回 0.5
-        private const val PINYIN_FUZZY_THRESHOLD = 0.65
+        // v0.55.3 0.5→0.65（半夜小声残缺触发不了，用户拍板牺牲误触换触发）；
+        // v0.57.9 声母韵母拆分计分配套校准 0.65→0.55：拆分把差异计细分（原 1 分差可记 0.5），
+        // 同阈值实际容差放宽 ~40%，闲话「个活动」0.625 钻进 0.65 门（单测拦截）——收回等量。
+        // 校验：半夜残缺「死边号」新计分 0.375 仍兜住（比旧 0.67 被拒更好）；「经变」0.5 在内。
+        // 回退条件：声母/韵母混淆样本又开始漏 → 0.55→0.6 微调
+        private const val PINYIN_FUZZY_THRESHOLD = 0.55
 
         /**
          * 在 text 中寻找与 target 拼音最接近的字符窗口（v0.41.0 替换功能用）：
@@ -176,39 +203,71 @@ class CommandMatcher private constructor(
             val targetPy = pinyinOf(target)
             if (targetPy.split(" ").count { it.isNotEmpty() } == 0) return null
             var best: IntRange? = null
-            var bestDist = Int.MAX_VALUE
+            var bestDist = Double.MAX_VALUE
             for (start in 0..text.length - target.length) {
                 val window = text.substring(start, start + target.length)
                 val d = pinyinFuzzyDist(pinyinOf(window), targetPy)
-                if (d in 0 until bestDist) {
+                if (d >= 0 && d < bestDist) {
                     bestDist = d
                     best = IntRange(start, start + target.length - 1)
-                    if (d == 0) break   // 同音即最优，无需继续滑
+                    if (d == 0.0) break   // 同音即最优，无需继续滑
                 }
             }
             return best
         }
 
-        /** 拼音音节级编辑距离：返回距离（不匹配返回 -1），距离越小越接近 */
-        private fun pinyinFuzzyDist(a: String, b: String): Int {
+        /** 拼音音节级编辑距离（v0.57.9 声母韵母拆分计分）：返回距离（不匹配返回 -1），距离越小越接近。
+         *  音节代价格局：全同=0 / 只差声母或只差韵母=0.5 / 全差=1——「经变」(jing bian) 对
+         *  「轻点」(qing dian)：jing/qing 声母差 j≠q 韵母同 ing=0.5，bian/dian 声母差 b≠d 韵母同
+         *  ian=0.5，合计 1.0 达标（旧整音节计分 2/2=1.0 被拒，2026-09-22 用户实测「说轻点多次没用」）。
+         *  声母混淆（q/j、d/b、ch/n…）与韵母混淆（an/ang、in/ing…）是 ASR 两大高发家族，一次覆盖 */
+        private fun pinyinFuzzyDist(a: String, b: String): Double {
             val aa = a.split(" ").filter { it.isNotEmpty() }
             val bb = b.split(" ").filter { it.isNotEmpty() }
-            if (aa.isEmpty() || bb.isEmpty()) return -1
+            if (aa.isEmpty() || bb.isEmpty()) return -1.0
             val dist = levenshteinArr(aa, bb)
             val maxLen = maxOf(aa.size, bb.size)
-            return if (dist <= PINYIN_FUZZY_MAX_DIST && dist.toDouble() / maxLen <= PINYIN_FUZZY_THRESHOLD) dist else -1
+            return if (dist <= PINYIN_FUZZY_MAX_DIST && dist / maxLen <= PINYIN_FUZZY_THRESHOLD) dist else -1.0
         }
 
-        private fun levenshteinArr(a: List<String>, b: List<String>): Int {
-            if (a.isEmpty()) return b.size
-            if (b.isEmpty()) return a.size
-            val dp = Array(a.size + 1) { IntArray(b.size + 1) }
-            for (i in 0..a.size) dp[i][0] = i
-            for (j in 0..b.size) dp[0][j] = j
+        private val INITIALS = listOf(
+            "zh", "ch", "sh",  // 双字母声母先匹配，防 z/h 被拆
+            "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x",
+            "r", "z", "c", "s", "y", "w"
+        )
+
+        /** 拆单音节为 (声母, 韵母)；无合法声母（a/ai/an 等零声母音节）时声母为空串。
+         *  internal（v0.57.10）：DictationTriggers 听写触发容差共用同一声韵口径，勿各写一套 */
+        internal fun splitInitial(s: String): Pair<String, String> {
+            for (ini in INITIALS) {
+                if (s.startsWith(ini)) return ini to s.substring(ini.length)
+            }
+            return "" to s
+        }
+
+        /** 音节相似代价：全同 0 / 只差声母或只差韵母 0.5 / 全差 1（internal 供听写触发共用） */
+        internal fun syllableCost(x: String, y: String): Double {
+            if (x == y) return 0.0
+            val (ix, vx) = splitInitial(x)
+            val (iy, vy) = splitInitial(y)
+            val sameIni = ix == iy
+            val sameFin = vx == vy
+            return when {
+                sameIni || sameFin -> 0.5
+                else -> 1.0
+            }
+        }
+
+        private fun levenshteinArr(a: List<String>, b: List<String>): Double {
+            if (a.isEmpty()) return b.size.toDouble()
+            if (b.isEmpty()) return a.size.toDouble()
+            val dp = Array(a.size + 1) { DoubleArray(b.size + 1) }
+            for (i in 0..a.size) dp[i][0] = i.toDouble()
+            for (j in 0..b.size) dp[0][j] = j.toDouble()
             for (i in 1..a.size) {
                 for (j in 1..b.size) {
-                    val cost = if (a[i - 1] == b[j - 1]) 0 else 1
-                    dp[i][j] = minOf(dp[i - 1][j] + 1, dp[i - 1][j - 1] + cost)
+                    val cost = syllableCost(a[i - 1], b[j - 1])
+                    dp[i][j] = minOf(dp[i - 1][j] + 1.0, dp[i - 1][j - 1] + cost)
                 }
             }
             return dp[a.size][b.size]

@@ -61,6 +61,37 @@ class DigitParserTest {
         assertNull(DigitParser.parseChineseNumber("urchin"))
     }
 
+    /** ASR 起音重复折叠（2026-09-22 用户使用记录实锤：说 26/29 输出「二十二十六」「二十二十九」，
+     *  旧解析把「二十二十六」静默截成 22 点错编号） */
+    @Test
+    fun parse_leadingRepeatCollapsed() {
+        fun num(raw: String): Int? = DigitParser.parseChineseNumber(DigitParser.normalizeDigitHomophones(raw))
+        assertEquals(26, num("二十二十六"))
+        assertEquals(29, num("二十二十九"))
+        assertEquals(16, num("一六一六"))     // 逐位读法 + 起音重复
+        assertEquals(20, num("二十二十"))
+        assertEquals(10, num("十十"))
+        // 正常数不含开头重复段，原样解析（防回归）
+        assertEquals(22, num("二十二"))
+        assertEquals(99, num("九十九"))
+        assertEquals(45, num("四十五"))
+    }
+
+    /** 宽松重复次数提取（v0.57.8：重复命令被吞开头字，「负三次」「两次」「不两次」实锤；
+     *  旧兜底把次数写死 1——用户点破「负三次难道不该执行重复三次吗」） */
+    @Test
+    fun looseRepeatCount_extractsDigits() {
+        assertEquals(3, DigitParser.looseRepeatCount("负三次"))   // 吞「重复」剩谐音开头
+        assertEquals(2, DigitParser.looseRepeatCount("两次"))     // 吞「重复」
+        assertEquals(2, DigitParser.looseRepeatCount("不两次"))   // 「不」=被吞残音
+        assertEquals(1, DigitParser.looseRepeatCount("过一次"))   // 旧行为兼容
+        assertEquals(1, DigitParser.looseRepeatCount("不一次"))
+        assertEquals(1, DigitParser.looseRepeatCount("嗯次"))     // 无数字默认 1
+        assertEquals(5, DigitParser.looseRepeatCount("五遍"))
+        assertEquals(3, DigitParser.looseRepeatCount("三是"))     // 「是」结尾同口径
+        assertEquals(10, DigitParser.looseRepeatCount("十次"))
+    }
+
     /** 普通汉字不受同音表影响（表只在数字解析环节使用，但也要保证非数字字原样保留） */
     @Test
     fun normalize_keepsNonDigitChars() {

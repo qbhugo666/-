@@ -26,16 +26,20 @@ private val CORE_TRIGGERS = listOf("输入", "听写", "打字")
 private fun syllablesOf(s: String): List<String> =
     pinyinOf(s).split(' ').filter { it.isNotEmpty() }
 
-/** 整句音节数与触发词相同、且至多差 1 个音节（同音/近音听岔容错） */
+/** 整句音节数与触发词相同、差异在声韵口径内（v0.57.11 二次收紧）。
+ *  v0.57.10 首次收紧后用户即刻实锤回归：「删除」(shan chu) 对「输入」(shu ru) 每个音节都
+ *  只差一半（shan/shu 声母同韵母差=0.5，chu/ru 韵母同声母差=0.5），累计 1.0 恰好踩在
+ *  放行线（>1.0 才拒）上——说「删除」反进听写。二次收紧：累计只容 **0.5（一个半差音节）**——
+ *  同音（书入/大字=0）与单半差（煜入/属于=0.5，软辅音听岔保护）保留，「删除」(1.0) 拒 */
 private fun nearSyllables(text: String, triggerSyllables: List<String>): Boolean {
     val a = syllablesOf(text)
     if (a.size != triggerSyllables.size) return false
-    var diff = 0
+    var diff = 0.0
     for (i in a.indices) {
-        if (a[i] != triggerSyllables[i]) {
-            diff++
-            if (diff > 1) return false
-        }
+        val cost = CommandMatcher.syllableCost(a[i], triggerSyllables[i])
+        if (cost >= 1.0) return false   // 声韵全差：不是触发词的听岔形态
+        diff += cost
+        if (diff > 0.5) return false   // 只容一个半差音节（删除=0.5+0.5 拒）
     }
     return true
 }

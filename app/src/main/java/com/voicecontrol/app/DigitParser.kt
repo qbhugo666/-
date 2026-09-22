@@ -60,9 +60,49 @@ object DigitParser {
     fun normalizeDigitHomophones(s: String): String =
         s.map { digitHomophones[it] ?: it }.joinToString("")
 
+    /**
+     * 数字前缀重复折叠（2026-09-22）：ASR 起音重复会把「二十六」输出成「二十二十六」
+     * （A+A+rest 形态，用户使用记录实锤：说 26 →「二十二十六」，说 29 同理——识别引擎侧
+     * 现象，与发音无关）。不折叠的话含「十」串会被静默截成 22（点错编号），逐位串则超界
+     * 未触发。开头重复段折掉再解析：「二十二十六」→「二十六」、「一六一六」→「一六」；
+     * 正常 0~99 中文数无此形态，零误伤。
+     */
+    internal fun collapseLeadingRepeat(s: String): String {
+        var t = s
+        while (t.length >= 2) {
+            val half = t.length / 2
+            var folded = false
+            for (i in 1..half) {
+                if (t.substring(0, i) == t.substring(i, 2 * i)) {
+                    t = t.substring(i); folded = true; break
+                }
+            }
+            if (!folded) return t
+        }
+        return t
+    }
+
+    /**
+     * 宽松重复次数提取（v0.57.8）：重复命令被吞开头字后（「重复三次」→「负三次」/「两次」/「不两次」，
+     * 2026-09-22 用户实测使用记录实锤），宽松兜底此前把次数写死 1——用户点破「负三次难道不该执行重复三次吗」。
+     * 规则：剥掉尾部 次/遍/是 → 句中滤出数字字符 → 解析；提不到数字默认 1 次（兼容旧行为「过一次」→1）。
+     * 纯 Kotlin，JVM 可测。
+     */
+    fun looseRepeatCount(s: String): Int {
+        var t = s.trim()
+        if (t.isEmpty()) return 1
+        val last = t.last()
+        if (last == '次' || last == '遍' || last == '是') t = t.dropLast(1)
+        val digits = t.filter { it in DIGIT_CHARS }
+        if (digits.isEmpty()) return 1
+        return parseChineseNumber(digits) ?: 1
+    }
+
+    private val DIGIT_CHARS = "零一二两三四五六七八九十百0123456789".toSet()
+
     /** 中文/阿拉伯数字 → Int（支持 0~99） */
     fun parseChineseNumber(s: String): Int? {
-        val t = s.trim()
+        val t = collapseLeadingRepeat(s.trim())
         t.toIntOrNull()?.let { return it }
         if (t.isEmpty()) return null
         val digits = mapOf(

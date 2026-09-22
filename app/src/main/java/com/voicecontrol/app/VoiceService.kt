@@ -142,9 +142,12 @@ class VoiceService : Service() {
 
         // 纯语气词：ASR 常把口癖/残音识别成这些（如「返回」被听成「喂」）。
         // 商用体验原则（2026-09-08 用户定）：没识别对就保持安静继续聆听，不把误识别展示给用户。
+        // 「点击」（2026-09-22 用户拍板加入）：说话慢被 VAD 断句截出的「点击」二字会被拼音模糊
+        // 兜到「单击」(dian/dan 近音) 误触轻点——整句恰好「点击」时静默忽略；
+        // 带宾语的「点击X」整句不同，不受影响，照常走文字点击
         private val NOISE_WORDS = setOf(
             "喂", "喂喂", "嗯", "嗯嗯", "呃", "啊", "啊啊", "哦", "噢",
-            "哎", "唉", "呀", "哈", "哈哈", "嘿", "诶", "欸"
+            "哎", "唉", "呀", "哈", "哈哈", "嘿", "诶", "欸", "点击"
         )
 
         // 命令冷却：同一动作执行后多久内不重复执行（防误触发连击）。
@@ -536,6 +539,7 @@ class VoiceService : Service() {
                 }
                 if (commit) {
                     recordThread = thread(name = "voice-recognition") { recognitionLoop() }
+                    acquireScreenLock()   // 会话常亮（v0.57.6 用户拍板）：真正会话开始的唯一提交点
                     // 显示顶部识别状态横条
                     VoiceControlService.showBar()
                     VoiceControlService.updateBar("🎤 正在聆听…")
@@ -796,15 +800,13 @@ class VoiceService : Service() {
         // 胶囊声波 RMS 随之放大——小声说话的用户能直接看到"波浪起来了"的正反馈。
         val gain = RecognitionSensitivity.gain(RecognitionSensitivity.level(applicationContext))
         Log.i(TAG, "识别灵敏度增益：${gain}×")
-        // v0.56.29 起音保护（预滚缓冲）：VAD 反应天生慢半拍，快速连说「删除」时开头
-        // 的「删」会被整段吃掉（真机听岔样本实锤：「出走出出出…」——尾音与「退出」
-        // 同音，模糊匹配撞上退出阶梯，会话被误退出）。做法：滚动保留最近 ~0.4s 已处理
-        // 音频，VAD 开闸瞬间把这段垫到分段开头，起音不再缺斤少两。
-        val preRollChunks = ArrayDeque<FloatArray>()
-        var preRollSamples = 0
-        val preRollTarget = (SAMPLE_RATE * 0.4).toInt()
-        var speechWasOn = false
-        var pendingPreRoll: FloatArray? = null
+        // 起音保护（预滚缓冲）已撤（v0.57.7，2026-09-22 用户拍板方案 A）：
+        // v0.56.29 的做法是把开闸前 ~0.4s 音频垫回分段开头防起音被吃——但真机使用记录实锤
+        // 本机 VAD 吐出的分段已含开头，垫上去 = 开头重叠两遍 → 句句叠词（「向上向上滑」
+        // 「二十二十六」，当日会话叠词占比 ~70%），听写原文直接重复落笔。
+        // 撤除后：分段回归 VAD 原生行为；起音偶缺由「再说一遍+折叠匹配（collapseDoubled/
+        // collapseLeadingRepeat 保留）」兜底；防误退有三道防线（阶梯判别/FUZZY_GUARD/精确红线）。
+        // 勿再回加预滚——要治起音先调 VAD 参数，实证后再动。
         try {
             while (recording) {
                 val n = audioRecord?.read(buffer, 0, buffer.size) ?: break
@@ -822,39 +824,13 @@ class VoiceService : Service() {
                 // 实时振幅（RMS 归一化）→ 顶部胶囊声波（每 100ms 一帧，视觉上即实时）
                 VoiceService.liveAmplitude =
                     kotlin.math.sqrt(sumSq / n).toFloat().times(7f).coerceIn(0f, 1f)
-                // 预滚缓冲：滚动保留最近 ~0.4s 已处理音频
-                preRollChunks.addLast(samples)
-                preRollSamples += n
-                while (preRollSamples > preRollTarget) {
-                    preRollSamples -= preRollChunks.removeFirst().size
-                }
-                val speechOn = v.isSpeechDetected()
-                if (speechOn && !speechWasOn) {
-                    // VAD 开闸瞬间：快照预滚（里面正是被吃掉的起音）
-                    val merged = FloatArray(preRollSamples)
-                    var idx = 0
-                    for (c in preRollChunks) {
-                        c.copyInto(merged, idx)
-                        idx += c.size
-                    }
-                    pendingPreRoll = merged
-                }
-                speechWasOn = speechOn
                 // VAD 检测语音段（一句话）；检测到完整一段就交给 SenseVoice 整句识别。
                 // 每句都新建 stream、用完即释放，没有状态累积，不会越跑越慢。
                 v.acceptWaveform(samples)
                 while (!v.empty()) {
                     val segment = v.front()
                     v.pop()
-                    var seg = segment.samples
-                    pendingPreRoll?.let {
-                        // 起音补回：预滚垫在分段开头
-                        val merged = FloatArray(it.size + seg.size)
-                        it.copyInto(merged, 0)
-                        seg.copyInto(merged, it.size)
-                        seg = merged
-                        pendingPreRoll = null
-                    }
+                    val seg = segment.samples
                     if (seg.isEmpty()) continue
                     val stream = rec.createStream()
                     stream.acceptWaveform(seg, SAMPLE_RATE)
@@ -915,6 +891,9 @@ class VoiceService : Service() {
     private fun handleRecognized(text: String) {
         Log.i(TAG, "识别结果: $text")
         updateNotification("🔴 会话中 · 你说：${text.take(15)}")
+        // 使用记录（v0.57.0）：每句识别原文先落一条，本句后续 lastMatch 赋值自动关联同条；
+        // 未触发操作的句子（语气词/未命中）显示「未触发操作」——用户可对出「说了什么被听成什么」
+        UsageLog.appendHeard(text)
 
         // 长按待命模式优先：数字→长按编号 / 中间→长按屏幕 / 退出→取消长按（不结束会话）
         if (longPressMode) {
@@ -976,6 +955,15 @@ class VoiceService : Service() {
             return
         }
 
+        // 整句「点击屏幕」= 轻点屏幕中心（v0.57.2 用户拍板）。**不入词表别名**：
+        // contains 双向规则会让 VAD 断句截出的「点击」二字（「点击屏幕」的前缀子串）误触轻点，
+        // 也会劫持「点击X」文字点击；这里只认整句等值，多说一个字都不触发（用户拍板：宁严勿误）
+        if (text.trim() == "点击屏幕") {
+            Log.i(TAG, "整句点击屏幕直通: -> 轻点")
+            dispatchMatched(CommandMatcher.Match("tap", "tap", "basic_navigation", "轻点", "exact"))
+            return
+        }
+
         // 「继续」：看门狗延期——**仅预警期有效**（2026-09-14 裘晨阳报 bug：没到预警说继续
         // 也会扣延期名额并重置 5 分钟计时=提前浪费。修复：预警未出现时明确拒绝并告知还差多久）
         if (text.contains(CMD_CONTINUE)) {
@@ -1003,8 +991,19 @@ class VoiceService : Service() {
         }
 
         // 听写触发（v0.40.0「输入/听写」；v0.55.12 扩容触发词+短句拼音容错，见 DictationTriggers）：
-        // 下一句识别原文直接写入输入框（小米式短听写）
-        if (isDictationTrigger(text)) {
+        // 下一句识别原文直接写入输入框（小米式短听写）。
+        // v0.57.12 在册命令优先（用户拍板「删除是正式命令，绝不能因近音被听写抢走」）：
+        // 整词精确命中词表命令的句子永远按命令走，不进听写考场——容差边界再怎么调都不可能
+        // 劫持正式命令（v0.57.10「删除」踩线反例治本）。注意只认 exact：contains 不算
+        // （「输入」被「清空输入」contains 命中，但不能因此拦掉真听写）。
+        // v0.57.10 输入框在场前置（用户拍板「识别到对话框才能说打字」）：无「可见可交互」输入框时
+        // **整句静默**——实测「输入」会掉进 contains 反向匹配被「清空输入」劫持、
+        // 执行失败报「未找到输入框」；无框页面说触发词没有任何合理意图。
+        if (isDictationTrigger(text) && currentMatcher().matchExact(text) == null) {
+            if (!VoiceControlService.hasVisibleEditable()) {
+                Log.i(TAG, "听写触发但屏幕无输入框，整句静默: [$text]")
+                return
+            }
             dictationMode = true
             handler.removeCallbacks(dictationTimeoutRunnable)
             handler.postDelayed(dictationTimeoutRunnable, 12_000L)
@@ -1191,7 +1190,11 @@ class VoiceService : Service() {
     }
 
     /** 编号点击匹配：点击 5 / 点第 5 个 / 第 5 个（排除「点一下」这类无参数点击） */
-    private val TAP_LABEL_REGEX = Regex("""(?:点击|点|第)\s*([0-9零一二两三四五六七八九十百]+)\s*(?:个)?(?!下)""")
+    // v0.57.13：「击」被 ASR 听岔成辑/直等（j/zh 混淆，2026-09-23 用户实测「点击4」→「点辑四」
+    // 「点直是」），「点击」前缀断裂致编号通道失配、掉进 fuzzy 命中「点一下」——「点」后容忍
+    // 至多 1 个杂音字再取数字。防误触关卡不变：数字后跟「下」一律拒（点一下/点两下/点三下），
+    // 正则回溯保证「点两下」先试杂字吃「两」再捕获「下」失败、回退后撞 (?!下) 拒。
+    private val TAP_LABEL_REGEX = Regex("""(?:点击|点|第)\s*.{0,1}\s*([0-9零一二两三四五六七八九十百]+)\s*(?:个)?(?!下)""")
 
     /** 网格点击匹配：网格 5 / 格子 5 / 第 5 格（与元素编号「第 5 个」区分） */
     private val GRID_TAP_REGEX = Regex("""(?:网格|格子)\s*([0-9零一二两三四五六七八九十百]+)|第\s*([0-9零一二两三四五六七八九十百]+)\s*格""")
@@ -1491,8 +1494,11 @@ class VoiceService : Service() {
     private fun normalizeDigitHomophones(s: String): String = DigitParser.normalizeDigitHomophones(s)
     private fun parseChineseNumber(s: String): Int? = DigitParser.parseChineseNumber(s)
 
-    /** 重复命令匹配：重复 / 重复 N 次 / 再来一次 */
-    private val REPEAT_REGEX = Regex("""(?:重复|再来)\s*([0-9零一二两三四五六七八九十百]+)?\s*(?:次|遍)?""")
+    /** 重复命令匹配：重复 / 重复 N 次 / 再来一次。
+     *  「农夫」家族（2026-09-22 用户使用记录实锤）：ASR 常把「重复」(chong fu) 听成
+     *  nong fu 音节的三种字形——农夫/农富/农复（「农夫农夫两次」「农富农富五次」均有样本），
+     *  开头即变体时旧正则全漏；三字形并列后次数正确解析，反馈仍显示「重复 N 次」不露怪词 */
+    private val REPEAT_REGEX = Regex("""(?:重复|再来|农夫|农富|农复)\s*([0-9零一二两三四五六七八九十百]+)?\s*(?:次|遍)?""")
 
     /** 替换命令匹配（v0.41.0）：把X替换成Y / 把X换成Y / 把X改成Y（X、Y 各 1~10 字，非贪婪） */
     private val REPLACE_REGEX = Regex("""^把(.{1,10}?)(?:替换成|换成|改成)(.{1,10})$""")
@@ -1506,9 +1512,11 @@ class VoiceService : Service() {
     }
 
     /**
-     * 宽松重复兜底：ASR 常把「重复一次」听成「过一次/不一次/试一次」（音节丢失或替代）。
+     * 宽松重复兜底：ASR 常把「重复一次」听成「过一次/不一次/试一次」（音节丢失或替代），
+     * 吞开头字后形态更杂（「负三次」「两次」「不两次」，2026-09-22 实测）。
      * 口径收得极窄防误触——需同时满足：短句(2~4字)、以 次/遍/是 结尾、不含任何动作动词、
      * 编号/网格未显示（那些模式下短句是数字意图）、且确有可重复动作。
+     * 次数（v0.57.8）：句中提数字（「负三次」→3、「不两次」→2），提不到默认 1（旧行为）。
      */
     private fun extractLooseRepeat(text: String): Int? {
         if (lastAction == null) return null
@@ -1518,7 +1526,7 @@ class VoiceService : Service() {
         if (!(t.endsWith("次") || t.endsWith("遍") || t.endsWith("是"))) return null
         val actionVerbs = listOf("点", "按", "滑", "摇", "打", "退", "长", "显", "网格", "编号", "音量", "锁", "通知", "控制", "继续")
         if (actionVerbs.any { t.contains(it) }) return null
-        return 1
+        return DigitParser.looseRepeatCount(t)
     }
 
     /** 处理「重复 N 次」：校验上限、回放上一次动作 */
@@ -1612,6 +1620,40 @@ class VoiceService : Service() {
         return ok
     }
 
+    /** 会话期间屏幕常亮锁（v0.57.6 用户拍板方案 B）：
+     *  语音操作不重置系统无操作息屏计时（注入手势也不算真人操作），看抖音非播放页 1 分钟灭屏，
+     *  语音用户被迫反复唤醒。会话真正开始（识别线程提交）时获取，releaseAndStop 统一释放——
+     *  说退出/看门狗到期/锁屏自动释放/熔断全走那条路，锁随会话同生共死，后台绝无残留；
+     *  亮屏时长被会话硬顶（25 分钟）天然封顶，不违反「不长时间强制亮屏」红线（防电量耗尽无法求救）。
+     *  双通道（2026-09-22 真机实证，缺一不可）：
+     *  ① IslandBar 胶囊窗口 FLAG_KEEP_SCREEN_ON——本机（HyperOS）实测生效，会话中可见
+     *     SCREEN_BRIGHT 锁 WorkSource=本应用，退出即释放（SIMULATE 短会话时序下偶发不挂，
+     *     故不能单靠它）；② 本 SCREEN_BRIGHT_WAKE_LOCK——deprecated 但多 ROM 仍认，
+     *     runCatching 包裹失败无害，作跨机型兜底。 */
+    private var screenLock: android.os.PowerManager.WakeLock? = null
+    private fun acquireScreenLock() {
+        if (screenLock?.isHeld == true) return
+        runCatching {
+            val pm = getSystemService(android.os.PowerManager::class.java) ?: return
+            screenLock = pm.newWakeLock(
+                android.os.PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+                "VoiceControl:SessionKeepScreen"
+            ).apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+            Log.i(TAG, "SCREEN_KEEP 会话常亮已开启")
+        }
+    }
+    private fun releaseScreenLock() {
+        runCatching {
+            screenLock?.takeIf { it.isHeld }?.let {
+                it.release()
+                Log.i(TAG, "SCREEN_KEEP 会话常亮已释放")
+            }
+        }
+    }
+
     private fun releaseAndStop(reason: String) {
         DiagnosticsHelper.log("会话结束: $reason")
         // 飞行记录仪（v0.51.0）：每次退出严格留痕。底层日志永远记；
@@ -1642,6 +1684,7 @@ class VoiceService : Service() {
         handler.removeCallbacks(longPressModeRunnable)
         dictationMode = false
         handler.removeCallbacks(dictationTimeoutRunnable)
+        releaseScreenLock()   // 会话常亮（v0.57.6）：所有结束路径（退出/看门狗/锁屏/熔断）汇合于此，必释放
         VoiceControlService.hideBar()
         VoiceControlService.hideLabels()
         VoiceControlService.hideGrid()

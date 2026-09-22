@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>言出法随 · 9.18</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#333; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+
+  .card {
+    width:375px; background:#e0e5ec; border-radius:28px;
+    padding:36px 30px 30px; color:#333;
+    box-shadow: 14px 14px 28px #a3b1c6, -14px -14px 28px #ffffff;
+  }
+
+  /* ---- header ---- */
+  .date-row { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; }
+  .date { font-size:34px; font-weight:200; color:#b8bcc2; letter-spacing:2px; }
+  .ver { font-size:11px; color:#b8bcc2; letter-spacing:1px; }
+
+  /* ---- main highlight ---- */
+  .highlight {
+    border-radius:20px; padding:22px 22px 20px; margin-bottom:26px;
+    background:linear-gradient(145deg, #eaeef4, #d6dbe3);
+    box-shadow: inset 3px 3px 8px #c5ccd6, inset -3px -3px 8px #f5f8fc;
+  }
+  .highlight .cat { font-size:10px; letter-spacing:3px; color:#6d5dfc; font-weight:600; margin-bottom:10px; }
+  .highlight h2 { font-size:20px; font-weight:700; color:#2c3038; margin-bottom:6px; }
+  .highlight p { font-size:12.5px; color:#7a8290; line-height:1.6; }
+
+  /* ---- feature list ---- */
+  .features { display:flex; flex-direction:column; gap:0; }
+  .feat {
+    display:flex; align-items:baseline; gap:14px;
+    padding:13px 4px; border-bottom:1px solid #d1d7df;
+  }
+  .feat:last-child { border-bottom:none; }
+  .feat .num { font-size:11px; color:#b8bcc2; font-weight:600; min-width:18px; }
+  .feat .body { flex:1; }
+  .feat .t { font-size:14px; font-weight:600; color:#2c3038; margin-bottom:2px; }
+  .feat .d { font-size:11.5px; color:#949ca8; line-height:1.4; }
+
+  /* ---- footer ---- */
+  .footer { margin-top:26px; text-align:center; }
+  .footer .brand { font-size:10px; letter-spacing:4px; color:#c5ccd6; text-transform:uppercase; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="date-row">
+    <span class="date">09.18</span>
+    <span class="ver">v0.56.2</span>
+  </div>
+
+  <div class="highlight">
+    <div class="cat">INTERFACE</div>
+    <h2>新拟物界面改版</h2>
+    <p>主页与设置页整体换装，柔和双阴影营造自然浮雕质感。浅色与深色双版独立设计。</p>
+  </div>
+
+  <div class="features">
+    <div class="feat">
+      <span class="num">01</span>
+      <div class="body">
+        <div class="t">数字同音全量纠错</div>
+        <div class="d">一到十的同音与近音字全量覆盖，编号点选更精准</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">02</span>
+      <div class="body">
+        <div class="t">听写触发扩容</div>
+        <div class="d">新增「打字」「开始输入」等说法，进入听写更自然</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">03</span>
+      <div class="body">
+        <div class="t">高频误触词下架</div>
+        <div class="d">移除「主页」「关闭」等易误触发的别名</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">04</span>
+      <div class="body">
+        <div class="t">触感反馈</div>
+        <div class="d">点「开始控制」即时短震确认</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">05</span>
+      <div class="body">
+        <div class="t">支持作者升级</div>
+        <div class="d">新增微信 / 支付宝收款码，长按可保存转发</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="brand">言出法随</div>
+  </div>
+</div>
+
+</body>
+</html>

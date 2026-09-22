@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>言出法随 v0.56.2</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#333; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+
+  .card {
+    width:390px; background:#e0e5ec; border-radius:32px;
+    padding:32px 28px 28px; color:#333;
+    box-shadow: 12px 12px 24px #a3b1c6, -12px -12px 24px #ffffff;
+  }
+  .header { text-align:center; margin-bottom:24px; }
+  .header .logo {
+    width:52px; height:52px; border-radius:50%; margin:0 auto 12px;
+    background:#e0e5ec; display:flex; align-items:center; justify-content:center;
+    box-shadow: 3px 3px 6px #a3b1c6, -3px -3px 6px #ffffff;
+    font-size:22px; font-weight:800; color:#6d5dfc;
+  }
+  .header h1 { font-size:18px; color:#333; }
+  .header .ver { font-size:11px; color:#a3b1c6; margin-top:4px; letter-spacing:2px; }
+
+  .list { display:flex; flex-direction:column; gap:14px; margin-bottom:24px; }
+  .item {
+    display:flex; align-items:center; gap:12px;
+    padding:13px 16px; border-radius:16px; background:#e0e5ec;
+    box-shadow: inset 3px 3px 6px #c9d2de, inset -3px -3px 6px #f7faff;
+  }
+  .item .dot { width:8px; height:8px; border-radius:50%; background:#6d5dfc; flex-shrink:0; }
+  .item .txt { font-size:13.5px; color:#444; line-height:1.4; }
+  .item .txt b { font-weight:600; }
+
+  .footer { text-align:center; font-size:10px; color:#b8bcc2; margin-top:18px; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="logo">»</div>
+    <h1>更新日志</h1>
+    <div class="ver">V0.56.2</div>
+  </div>
+
+  <div class="list">
+    <div class="item"><span class="dot"></span><span class="txt"><b>新拟物界面</b>，主页与设置页质感全面升级</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>数字更准了</b>，一到十同音字全量纠错</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>说「打字」也能进听写</b>，触发更容易</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>去掉误触词</b>，主页/关闭不再误触发</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>点开始有震动</b>，不用看屏幕也知道</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>支持作者</b>新增微信/支付宝扫码</span></div>
+    <div class="item"><span class="dot"></span><span class="txt"><b>长按码可保存</b>，转发更方便</span></div>
+  </div>
+
+  <div class="footer">言出法随 · 全离线语音控制</div>
+</div>
+
+</body>
+</html>

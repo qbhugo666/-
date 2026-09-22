@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>言出法随 v0.56.2 更新简报</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0B0B0B; color:#F2F2F2; font-family:"PingFang SC","Microsoft YaHei",sans-serif; padding:0 0 60px; }
+  .hero { text-align:center; padding:48px 20px 36px; background:linear-gradient(180deg,#12203A 0%,#0B0B0B 100%); }
+  .hero .logo { width:64px; height:64px; border-radius:50%; background:#0A84FF; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; color:#fff; }
+  .hero h1 { font-size:28px; letter-spacing:2px; }
+  .hero .ver { font-size:14px; color:#0A84FF; margin-top:6px; font-weight:600; }
+  .hero .date { font-size:12px; color:#666; margin-top:4px; }
+  .hero .tag { display:inline-block; margin-top:14px; padding:6px 18px; border-radius:20px; border:1px solid #0A84FF; color:#0A84FF; font-size:13px; }
+
+  .container { max-width:680px; margin:0 auto; padding:0 20px; }
+
+  .section { margin-top:36px; }
+  .section h2 { font-size:18px; color:#0A84FF; padding-bottom:8px; border-bottom:1px solid #1C1C1E; margin-bottom:16px; }
+  .card { background:#1C1C1E; border-radius:16px; padding:20px; margin-bottom:14px; }
+  .card .icon { font-size:28px; margin-bottom:10px; }
+  .card h3 { font-size:16px; margin-bottom:6px; }
+  .card p { font-size:13px; color:#999; line-height:1.7; }
+  .card .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:6px; margin-bottom:8px; }
+  .tag-new { background:#0A84FF22; color:#0A84FF; }
+  .tag-fix { background:#34C75922; color:#34C759; }
+  .tag-ui  { background:#FF950022; color:#FF9500; }
+
+  .install { background:#1C1C1E; border-radius:16px; padding:22px; margin-top:36px; }
+  .install h2 { font-size:18px; color:#0A84FF; margin-bottom:14px; }
+  .install ol { padding-left:20px; font-size:14px; color:#ccc; line-height:2.2; }
+  .install .warn { font-size:12px; color:#FF9500; margin-top:12px; padding:10px; background:#FF950015; border-radius:8px; }
+
+  .footer { text-align:center; margin-top:48px; font-size:12px; color:#555; }
+  .footer a { color:#0A84FF; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">»</div>
+  <h1>言出法随</h1>
+  <div class="ver">v0.55.6 → v0.56.2</div>
+  <div class="date">2026 年 9 月 18 日</div>
+  <div class="tag">界面大改版 + 识别优化 + 交互升级</div>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <h2>✦ 界面全新升级</h2>
+    <div class="card">
+      <div class="icon">🎨</div>
+      <span class="tag tag-ui">界面改版</span>
+      <h3>新拟物混合风</h3>
+      <p>主页和设置页整体换装：卡片带柔和的双向阴影浮雕感，文字和图标保持高对比清晰可读。浅色/深色两套配色独立绘制，不是简单反转。</p>
+    </div>
+    <div class="card">
+      <div class="icon">👆</div>
+      <span class="tag tag-ui">交互升级</span>
+      <h3>支持弹窗三通道</h3>
+      <p>「支持作者」新增微信和支付宝收款码，与爱发电三选一。点弹窗外的半透明背景即可关闭。</p>
+    </div>
+    <div class="card">
+      <div class="icon">💾</div>
+      <span class="tag tag-new">新功能</span>
+      <h3>长按收款码保存</h3>
+      <p>在支持弹窗里长按任意收款码，自动保存到手机相册，方便转发给朋友。</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✦ 识别更准了</h2>
+    <div class="card">
+      <div class="icon">🔢</div>
+      <span class="tag tag-new">识别优化</span>
+      <h3>数字同音表大扩容</h3>
+      <p>一到十每位数的同音/近音字全量覆盖。以前「四」被听成「斯/思/撕」，「十」被听成「是/事/市」——现在都能纠正回来。</p>
+    </div>
+    <div class="card">
+      <div class="icon">✍️</div>
+      <span class="tag tag-new">触发优化</span>
+      <h3>听写触发扩容</h3>
+      <p>说「输入」进入听写模式更容易了——新增「打字」「我要打字」「开始输入」等触发词，说岔了也能兜住。</p>
+    </div>
+    <div class="card">
+      <div class="icon">🚫</div>
+      <span class="tag tag-fix">误触修复</span>
+      <h3>高频误触别名下架</h3>
+      <p>「主页」「回主页」「最近应用」「关闭」这四个日常高频词容易误触发，已从触发词表中移除。</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✦ 交互更贴心</h2>
+    <div class="card">
+      <div class="icon">📳</div>
+      <span class="tag tag-new">触感反馈</span>
+      <h3>点「开始控制」有震动了</h3>
+      <p>点击开始控制的瞬间会有 30ms 短震动确认，不用看屏幕也知道点到了。</p>
+    </div>
+    <div class="card">
+      <div class="icon">🌊</div>
+      <span class="tag tag-fix">涟漪修复</span>
+      <h3>涟漪动画不再被切断</h3>
+      <p>涟漪动画的四边不再出现平直切口，视觉更完整。</p>
+    </div>
+    <div class="card">
+      <div class="icon">🖱️</div>
+      <span class="tag tag-fix">弹窗关闭</span>
+      <h3>点弹窗外关闭支持弹窗</h3>
+      <p>支持作者弹窗打开后，点弹窗外的半透明背景即可关闭，不再必须点「完成」。</p>
+    </div>
+  </div>
+
+  <div class="install">
+    <h2>📦 如何更新</h2>
+    <ol>
+      <li>收到 <b>yanchufasui_v0.56.2.apk</b> 文件</li>
+      <li>点一下安装（可能提示是否覆盖，选「是」）</li>
+      <li>装完打开，所有设置和自定义指令<b>自动保留</b></li>
+    </ol>
+    <div class="warn">⚠ 无障碍服务如被系统关闭，请到 设置→更多设置→无障碍 重新开启「言出法随」和「随选朗读」两个开关。</div>
+  </div>
+
+  <div class="footer">
+    <p>言出法随 · 全离线中文语音控制</p>
+    <p><a href="https://afdian.com/a/hugoqb">☕ 爱发电支持作者</a></p>
+    <p style="margin-top:8px;color:#333;">v0.56.2 · build 99</p>
+  </div>
+
+</body>
+</html>

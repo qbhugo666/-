@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>言出法随 · 9.23</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#333; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+
+  .card {
+    width:400px; background:#e0e5ec; border-radius:28px;
+    padding:38px 32px 32px; color:#333;
+    box-shadow: 14px 14px 28px #a3b1c6, -14px -14px 28px #ffffff;
+  }
+
+  .date-row { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:30px; }
+  .date { font-size:38px; font-weight:200; color:#8a94a4; letter-spacing:2px; }
+  .ver { font-size:12px; color:#8a94a4; letter-spacing:1px; font-weight:500; }
+
+  .highlight {
+    border-radius:20px; padding:24px 24px 22px; margin-bottom:30px;
+    background:linear-gradient(145deg, #eaeef4, #d6dbe3);
+    box-shadow: inset 3px 3px 8px #c5ccd6, inset -3px -3px 8px #f5f8fc;
+  }
+  .highlight .cat { font-size:11px; letter-spacing:4px; color:#6d5dfc; font-weight:700; margin-bottom:12px; text-transform:uppercase; }
+  .highlight h2 { font-size:22px; font-weight:700; color:#1a1e24; margin-bottom:8px; }
+  .highlight p { font-size:14px; color:#4a5260; line-height:1.7; }
+
+  .features { display:flex; flex-direction:column; }
+  .feat {
+    display:flex; align-items:flex-start; gap:16px;
+    padding:15px 4px; border-bottom:1px solid #d3d9e2;
+  }
+  .feat:last-child { border-bottom:none; }
+  .feat .num { font-size:13px; color:#6d5dfc; font-weight:700; min-width:22px; }
+  .feat .body { flex:1; }
+  .feat .t { font-size:16px; font-weight:700; color:#1a1e24; margin-bottom:4px; }
+  .feat .d { font-size:13px; color:#5a6472; line-height:1.5; }
+
+  .footer { margin-top:30px; text-align:center; }
+  .footer .brand { font-size:11px; letter-spacing:5px; color:#b0b8c4; text-transform:uppercase; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="date-row">
+    <span class="date">09.23</span>
+    <span class="ver">v0.57.13</span>
+  </div>
+
+  <div class="highlight">
+    <div class="cat">RECOGNITION</div>
+    <h2>识别引擎全面升级</h2>
+    <p>语音链路整体翻修：分段架构、拼音匹配、指令优先级三层重构，近音说法的触发率显著提升。</p>
+  </div>
+
+  <div class="features">
+    <div class="feat">
+      <span class="num">01</span>
+      <div class="body">
+        <div class="t">使用记录 · 识别原文</div>
+        <div class="d">每条记录双行呈现「听见的内容 / 执行的动作」，未触发语句同样留痕，误识别可追溯</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">02</span>
+      <div class="body">
+        <div class="t">会话期间屏幕常亮</div>
+        <div class="d">常亮随会话自动启停，会话结束即刻恢复系统息屏策略，零残留</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">03</span>
+      <div class="body">
+        <div class="t">拼音匹配引擎升级</div>
+        <div class="d">声母与韵母独立计分，近音混淆自动纠正至目标指令；自定义指令同步继承全部能力</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">04</span>
+      <div class="body">
+        <div class="t">语音分段重构</div>
+        <div class="d">消除句首重复输出，语音起始判定提速至 0.15 秒，起音更完整</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">05</span>
+      <div class="body">
+        <div class="t">听写智能触发</div>
+        <div class="d">屏幕存在可用输入框时方可进入听写；已注册指令永不被听写模式拦截</div>
+      </div>
+    </div>
+    <div class="feat">
+      <span class="num">06</span>
+      <div class="body">
+        <div class="t">数字指令增强</div>
+        <div class="d">起音重复自动折叠，重复次数完整解析，编号点选更精准</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="brand">YAN CHU FA SUI</div>
+  </div>
+</div>
+
+</body>
+</html>

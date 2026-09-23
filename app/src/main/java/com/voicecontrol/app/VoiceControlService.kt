@@ -278,6 +278,20 @@ open class VoiceControlService : AccessibilityService() {
         if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             lastScrollEventAt = SystemClock.elapsedRealtime()
         }
+        // 跨软件切换检测（v0.57.15）：前台包名变化时追加两次延迟重采——大型 App（抖音）启动时
+        // 首个窗口事件在首页加载完成前到达、且内容就位后不发内容变化通知，编号会停留在启动
+        // 瞬间的采集（用户实测需滑动一下或隐藏重开才对上；微信等轻量 App 无此现象）。
+        // 500ms+1500ms 两段覆盖冷/热启动；doShowLabelsNow 自带 labelsVisible 检查，编号未显示时零动作
+        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val pkg = event.packageName?.toString()
+            if (!pkg.isNullOrEmpty() && pkg != lastEventPackage && pkg != "com.voicecontrol.app") {
+                lastEventPackage = pkg
+                mainHandler.removeCallbacks(appSwitchRefreshRunnable)
+                mainHandler.postDelayed(appSwitchRefreshRunnable, 500L)
+                mainHandler.postDelayed(appSwitchRefreshRunnable, 1500L)
+                Log.i(TAG, "检测到切换软件 [$pkg]，编号将延迟重采×2")
+            }
+        }
         // 编号浮层显示时，屏幕内容变化 → 实时刷新编号
         if (!labelsVisible) return
         when (event?.eventType) {
@@ -286,6 +300,10 @@ open class VoiceControlService : AccessibilityService() {
             AccessibilityEvent.TYPE_WINDOWS_CHANGED -> scheduleLabelsRefresh()
         }
     }
+
+    /** 跨软件切换后的编号延迟重采（与防抖链独立，见 onAccessibilityEvent 注释） */
+    private var lastEventPackage: String? = null
+    private val appSwitchRefreshRunnable = Runnable { doShowLabelsNow() }
 
     override fun onInterrupt() {
         // 无长任务需要中断
@@ -731,14 +749,49 @@ open class VoiceControlService : AccessibilityService() {
 
     /** 听写插入：在光标处写入内容，光标移至插入末尾（小米式短听写的落笔动作） */
     private fun textInsert(content: String): Boolean {
-        val n = editableNodeOrNull()
-        if (n == null) { actionNote = "未找到输入框"; return false }
+        var probe = editableNodeOrNull() ?: run { actionNote = "未找到输入框"; return false }
+        // v0.57.17 先聚焦再落笔（抖音搜索页探针实证）：预填推荐词的搜索框在未聚焦态
+        // 无光标/选区信息（selectionStart=-1），落笔只能按末尾追加 →「推荐词+新词」；
+        // 这类框聚焦瞬间系统触发全选（selectAllOnFocus，键盘打字即整词替换的机制）——
+        // 先 ACTION_FOCUS 再重取节点读选区，全选态走替换。微信聊天框光标语义不受影响
+        if (!probe.isFocused) {
+            runCatching { probe.performAction(AccessibilityNodeInfo.ACTION_FOCUS) }
+            val refocused = editableNodeOrNull()
+            if (refocused != null) {
+                runCatching { probe.recycle() }
+                probe = refocused
+            }
+        }
+        val n = probe
         val text = n.text?.toString() ?: ""
-        val cur = editCursorOf(n).coerceIn(0, text.length)
-        val newText = text.substring(0, cur) + content + text.substring(cur)
-        val ok = editTextSet(n, newText, cur + content.length)
+        // 落笔语义三档（v0.57.18 终局，全部实证驱动）：
+        // ① 有选区（含全选）→ 替换选中段（键盘语义）
+        // ② 无选区但光标有效 → 光标处插入（微信追加/中插）
+        // ③ 光标信息完全缺失（selectionStart=-1，抖音搜索框实证：聚焦后仍不报告）→ 整框替换——
+        //    该类框多为预填推荐词的搜索框，用户语音输入意图即「搜索这个词」；连 SET_SELECTION
+        //    都被拒（探针实证），无任何插入点可用，整框替换是唯一通路
+        val s = runCatching { n.textSelectionStart }.getOrDefault(-1)
+        val e = runCatching { n.textSelectionEnd }.getOrDefault(-1)
+        val head: String
+        val tail: String
+        when {
+            s in 0 until e && e <= text.length -> {
+                head = text.substring(0, s); tail = text.substring(e)
+                Log.i(TAG, "TEXT_INSERT 选区态 [$s,$e) 替换为 [$content]")
+            }
+            s >= 0 -> {
+                val cur = e.coerceIn(0, text.length)
+                head = text.substring(0, cur); tail = text.substring(cur)
+            }
+            else -> {
+                head = ""; tail = ""
+                Log.i(TAG, "TEXT_INSERT 无光标态 整框替换为 [$content]（原[${text.length}]字）")
+            }
+        }
+        val newText = head + content + tail
+        val ok = editTextSet(n, newText, head.length + content.length)
         actionNote = null
-        Log.i(TAG, "TEXT_INSERT [$content]@$cur ok=$ok")
+        Log.i(TAG, "TEXT_INSERT [$content] focused=${n.isFocused} ok=$ok")
         return ok
     }
 

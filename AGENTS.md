@@ -18,6 +18,8 @@
 
 ## 五条最容易翻车的红线（每条都有真实事故）
 
+0. **版本发布等用户发话（2026-09-23 用户拍板）**：完成代码修改后**不要**自动 git 提交/构建签名包/
+   发 GitHub——用户主动说「提交/发包/更新 GitHub」时再做（省 token）。
 1. **无障碍启用列表必须写「伪装组件」**：`com.voicecontrol.app/com.google.android.accessibility.selecttospeak.SelectToSpeakService`
    （本包名+随选朗读类名，v0.47 方案，唯一来源 `AccessibilityHelper.SERVICE_COMPONENT`）。
    它**看起来像畸形条目，但它是正确的**——别"修复"它！写真实类名 `com.voicecontrol.app.VoiceControlService` 会被系统静默清除。

@@ -264,6 +264,8 @@ class VoiceService : Service() {
         data class Command(val action: String) : LastAction()
         data class TapLabel(val number: Int) : LastAction()
         data class TapPoint(val x: Float, val y: Float) : LastAction()
+        /** v0.57.19：网格长按落点（「重复」回放同点位长按） */
+        data class LongPressPoint(val x: Float, val y: Float) : LastAction()
     }
     private var lastAction: LastAction? = null
     private var repeatRunnable: Runnable? = null
@@ -1046,11 +1048,23 @@ class VoiceService : Service() {
         if (repeatCount != null) {
             handleRepeat(repeatCount)
         } else {
-            // 网格：先「点击 N」= 一步式点击第 N 格；否则「第 N 格/网格 N/纯数字」= 缩放
+            // 网格：先「点击 N」= 一步式点击第 N 格；否则「第 N 格/网格 N/纯数字」= 缩放；
+            // 「长按 N」= 网格长按第 N 格（v0.57.19 用户需求：无编号页面的精确定位长按，
+            // 网格显示时数字意图归格子，与点击同哲学；须先于缩放判定否则「第N格」会撞缩放）
             val gridShowing = VoiceControlService.isGridShowing()
-            val gridTap = if (gridShowing) extractGridTapCell(text) else null
-            val gridNum = if (gridTap == null) extractGridNumber(text, gridShowing) else null
-            if (gridTap != null) {
+            val gridLP = if (gridShowing) extractGridLongPressNumber(text) else null
+            val gridTap = if (gridLP == null && gridShowing) extractGridTapCell(text) else null
+            val gridNum = if (gridLP == null && gridTap == null) extractGridNumber(text, gridShowing) else null
+            if (gridLP != null) {
+                val ok = VoiceControlService.longPressGridCell(gridLP)
+                if (ok) {
+                    VoiceControlService.lastGridTapPoint?.let { p ->
+                        lastAction = LastAction.LongPressPoint(p.first, p.second)
+                    }
+                }
+                VoiceControlService.updateBar(if (ok) "⚡ 长按第 $gridLP 格" else "🎤 识别：$text")
+                SessionState.lastMatch = if (ok) "→ 长按第 $gridLP 格 ✅" else "→ 长按第 $gridLP 格"
+            } else if (gridTap != null) {
                 val ok = VoiceControlService.tapGridCell(gridTap)
                 if (ok) {
                     // 记住网格点击的落点，「重复一次」可在同一位置再点（用户明确指令，非自动重试）
@@ -1219,6 +1233,13 @@ class VoiceService : Service() {
         return parseChineseNumber(m.groupValues[1])
     }
 
+    /** 网格长按匹配（v0.57.19）：长按 N / 长按第 N 格 / 按住第 N 格——网格显示时归格子长按 */
+    private val GRID_LONG_PRESS_REGEX = Regex("""(?:长按|按住)\s*第?\s*([0-9零一二两三四五六七八九十百]+)\s*格?""")
+    private fun extractGridLongPressNumber(text: String): Int? {
+        val m = lastMatch(GRID_LONG_PRESS_REGEX, normalizeDigitHomophones(text)) ?: return null
+        return parseChineseNumber(m.groupValues[1])
+    }
+
     /** 识别网格缩放数字；loose=true 时宽容提取任意数字（网格显示中） */
     private fun extractGridNumber(text: String, loose: Boolean): Int? {
         // 撤销类命令（不含数字）优先走命令匹配，双保险排除
@@ -1359,9 +1380,17 @@ class VoiceService : Service() {
             exitLongPressMode()
             return
         }
-        // 数字 → 长按对应编号
+        // 数字 → 网格显示时长按对应格子（v0.57.20 用户实锤：网格定位说「长按」进待命、
+        // 再报数字被当「长按编号 N」处理）；否则长按对应编号
         val num = extractBareNumber(text)
         if (num != null) {
+            if (VoiceControlService.isGridShowing()) {
+                val ok = VoiceControlService.longPressGridCell(num)
+                VoiceControlService.updateBar(if (ok) "⚡ 长按第 $num 格" else "🎤 识别：$text")
+                SessionState.lastMatch = if (ok) "→ 长按第 $num 格 ✅" else "→ 长按第 $num 格"
+                exitLongPressMode()
+                return
+            }
             val ok = VoiceControlService.longPressLabel(num)
             VoiceControlService.updateBar(if (ok) "⚡ 长按编号 $num" else "🎤 识别：$text")
             SessionState.lastMatch = if (ok) "→ 长按编号 $num ✅" else "→ 长按编号 $num"
@@ -1569,6 +1598,10 @@ class VoiceService : Service() {
                         Log.i(TAG, "重复：原坐标再点 (${la.x.toInt()},${la.y.toInt()})")
                         VoiceControlService.tapAtPoint(la.x, la.y)
                     }
+                    is LastAction.LongPressPoint -> {
+                        Log.i(TAG, "重复：原坐标再长按 (${la.x.toInt()},${la.y.toInt()})")
+                        VoiceControlService.longPressAtPoint(la.x, la.y)
+                    }
                 }
                 remaining--
                 if (remaining > 0) handler.postDelayed(this, REPEAT_INTERVAL_MS)
@@ -1617,8 +1650,17 @@ class VoiceService : Service() {
         if (ok && action != "exit_session") {
             // v0.39.1：全部派发动作可被「重复」回放（白名单已废止，防"新功能忘登记"复发）。
             // exit_session 防御性排除：退出走红线直达，本处本就到不了，双保险
-            lastAction = LastAction.Command(action)
-            Log.i(TAG, "可重复动作已记录：$action")
+            // v0.57.21 轻点点中网格格心时记成点位动作（日志实锤：不记点位则「重复」重放
+            // 轻点命令、网格已清 → 落到屏幕几何中心；记点位后重复=原位再点）
+            if (action == "tap" && VoiceControlService.tapHitGridCenter) {
+                VoiceControlService.lastGridTapPoint?.let { p ->
+                    lastAction = LastAction.TapPoint(p.first, p.second)
+                    Log.i(TAG, "轻点命中网格格心，可重复动作记为点位 (${p.first.toInt()},${p.second.toInt()})")
+                } ?: run { lastAction = LastAction.Command(action) }
+            } else {
+                lastAction = LastAction.Command(action)
+                Log.i(TAG, "可重复动作已记录：$action")
+            }
         }
         return ok
     }

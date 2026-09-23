@@ -91,6 +91,7 @@ open class VoiceControlService : AccessibilityService() {
         /** 供识别服务调用：执行某个动作标识，返回是否成功派发。无障碍服务未开启时返回 false。 */
         fun execute(action: String): Boolean {
             val svc = instance ?: return false
+            tapHitGridCenter = false   // 每次执行前清信号（v0.57.21，tap 网格路径同步置位）
             return svc.performAction(action)
         }
 
@@ -228,10 +229,28 @@ open class VoiceControlService : AccessibilityService() {
         var lastGridTapPoint: Pair<Float, Float>? = null
             private set
 
+        /** 本次 tap 是否点中网格格心（v0.57.21：execute 前清，tap 网格路径同步置位；
+         *  识别层据此把「轻点」记成点位动作，「重复」原位回放） */
+        @Volatile
+        var tapHitGridCenter: Boolean = false
+            private set
+
         /** 在指定屏幕坐标点击（供「重复」回放网格点击） */
         fun tapAtPoint(x: Float, y: Float): Boolean {
             val svc = instance ?: return false
             return svc.tapAt(x, y)
+        }
+
+        /** 在指定屏幕坐标长按（v0.57.19 供「重复」回放网格长按） */
+        fun longPressAtPoint(x: Float, y: Float): Boolean {
+            val svc = instance ?: return false
+            return svc.longPressAt(x, y)
+        }
+
+        /** 长按第 number 格中心（v0.57.19 网格长按；点击后清除网格，同点击格语义） */
+        fun longPressGridCell(number: Int): Boolean {
+            val svc = instance ?: return false
+            return svc.doLongPressGridCell(number)
         }
 
         /** 隐藏网格 */
@@ -901,6 +920,7 @@ open class VoiceControlService : AccessibilityService() {
             "tap" -> {
                 // 网格模式下点击当前网格中心；否则点击屏幕中心
                 if (gridStack.isNotEmpty()) {
+                    tapHitGridCenter = true   // v0.57.21：同步信号，供识别层把「轻点」记成点位动作
                     doTapGridCenter()
                 } else {
                     val dm = resources.displayMetrics
@@ -1026,6 +1046,12 @@ open class VoiceControlService : AccessibilityService() {
                      else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
         val all = mutableListOf<AccessibilityNodeInfo>()
         runCatching { collectAllNodes(root, all) }
+        // v0.57.22 面积门槛（抖音实锤：标准滚动选中顶部 tab 的 HorizontalScrollView——
+        // 「关注/经验/热点」被滚而视频内容不翻页）：面积 < 屏幕 1/4 的可滚动容器跳过
+        // （tab 栏 ≈4%，内容列表/翻页容器均 >50%）；全部被过滤则标准滚动返回 false，
+        // 由 scrollSmart 回退手势（翻页类容器 ViewPager2 对标准滚动本就不响应）
+        val dm = resources.displayMetrics
+        val screenArea = dm.widthPixels.toLong() * dm.heightPixels
         // 派发标准滚动（滚动校验由 standardScroll 的滚动事件监听完成）
         var ok = false
         try {
@@ -1033,6 +1059,13 @@ open class VoiceControlService : AccessibilityService() {
             for (n in all.asReversed()) {
                 if (!n.isScrollable) continue
                 if (!matchOrientation(n, vertical)) continue
+                val r = Rect()
+                runCatching { n.getBoundsInScreen(r) }
+                val area = r.width().toLong() * r.height()
+                if (screenArea > 0 && area * 4 < screenArea) {
+                    Log.i(TAG, "跳过小面积滚动容器 ${r.width()}x${r.height()} ${n.className}")
+                    continue
+                }
                 if (runCatching { n.performAction(action) }.getOrDefault(false)) {
                     Log.i(TAG, "标准滚动成功(${if (vertical) "纵" else "横"}): ${n.className}")
                     ok = true
@@ -1193,7 +1226,9 @@ open class VoiceControlService : AccessibilityService() {
     private fun scrollCacheFile(): File = File(filesDir, "scroll_mech_cache.json")
 
     // 缓存格式版本：v1 是「标准优先」时代学的，与手势优先策略语义不兼容（会把丝滑页面记成跳变页），加载时直接弃用
-    private val SCROLL_CACHE_VERSION = 2
+    // v3（v0.57.22）：抖音等翻页容器（ViewPager2）翻页不发滚动事件 → 手势被误学为「拦截→标准滚动」
+    // → 标准滚动选中顶部 tab 小容器（面积门槛修复前的脏数据）——升版本全部弃用重学
+    private val SCROLL_CACHE_VERSION = 3
 
     private fun loadScrollCache() {
         runCatching {
@@ -1783,12 +1818,15 @@ open class VoiceControlService : AccessibilityService() {
     private fun doTapGridCenter() {
         val region = gridStack.lastOrNull() ?: return
         val view = gridOverlayView ?: return
+        // 坐标同步计算并登记（v0.57.21）：execute() 返回时 lastGridTapPoint 已就绪——
+        // 日志实锤的 bug：轻点点中网格格心，但「重复」重放轻点命令→网格已清→落到屏幕
+        // 几何中心；同步登记后识别层可把该次轻点记成点位动作，重复=原位再点
+        val loc = IntArray(2)
+        view.getLocationOnScreen(loc)
+        val cx = region.centerX() * view.width + loc[0]
+        val cy = region.centerY() * view.height + loc[1]
+        lastGridTapPoint = cx to cy
         mainHandler.post {
-            // 归一化比例 × 浮层实际尺寸 + 浮层屏幕偏移 = 精确屏幕坐标
-            val loc = IntArray(2)
-            view.getLocationOnScreen(loc)
-            val cx = region.centerX() * view.width + loc[0]
-            val cy = region.centerY() * view.height + loc[1]
             val ok = tapAt(cx, cy)
             Log.i(TAG, "网格点击中心 @(${cx.toInt()},${cy.toInt()}) -> $ok")
             gridStack.clear()
@@ -1797,8 +1835,7 @@ open class VoiceControlService : AccessibilityService() {
     }
 
     /** 点击第 number 格中心（网格显示时一步式直接点该格，不用先缩到最小），点击后清除网格 */
-    private fun doTapGridCell(number: Int): Boolean {
-        val region = gridStack.lastOrNull() ?: return false
+    private fun doTapGridCell(number: Int): Boolean {        val region = gridStack.lastOrNull() ?: return false
         val total = GRID_COLS * GRID_ROWS
         if (number < 1 || number > total) {
             Log.w(TAG, "点击失败：编号 $number 超出范围（1~$total）")
@@ -1818,6 +1855,34 @@ open class VoiceControlService : AccessibilityService() {
         mainHandler.post {
             val ok = tapAt(cx, cy)
             Log.i(TAG, "点击第 $number 格 @(${cx.toInt()},${cy.toInt()}) -> $ok")
+            gridStack.clear()
+            removeGridOverlay()
+        }
+        return true
+    }
+
+    /** 长按第 number 格中心（v0.57.19 用户需求：无编号页面用网格精确定位长按）。
+     *  坐标计算与点击格同源；长按后清除网格；lastGridTapPoint 同步记录（供「重复」回放） */
+    private fun doLongPressGridCell(number: Int): Boolean {
+        val region = gridStack.lastOrNull() ?: return false
+        val total = GRID_COLS * GRID_ROWS
+        if (number < 1 || number > total) {
+            Log.w(TAG, "长按失败：编号 $number 超出范围（1~$total）")
+            return false
+        }
+        val view = gridOverlayView ?: return false
+        val cellW = region.width() / GRID_COLS
+        val cellH = region.height() / GRID_ROWS
+        val col = (number - 1) % GRID_COLS
+        val row = (number - 1) / GRID_COLS
+        val loc = IntArray(2)
+        view.getLocationOnScreen(loc)
+        val cx = (region.left + (col + 0.5f) * cellW) * view.width + loc[0]
+        val cy = (region.top + (row + 0.5f) * cellH) * view.height + loc[1]
+        lastGridTapPoint = cx to cy
+        mainHandler.post {
+            val ok = longPressAt(cx, cy)
+            Log.i(TAG, "长按第 $number 格 @(${cx.toInt()},${cy.toInt()}) -> $ok")
             gridStack.clear()
             removeGridOverlay()
         }
